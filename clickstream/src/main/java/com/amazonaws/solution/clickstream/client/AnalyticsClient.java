@@ -13,17 +13,23 @@
  * permissions and limitations under the License.
  */
 
-apply plugin: 'com.android.library'
-apply from: rootProject.file("configuration/checkstyle.gradle")
-apply plugin: 'kotlin-android'
+package com.amazonaws.solution.clickstream.client;
 
-dependencies {
-    implementation dependency.androidx.appcompat
-    implementation dependency.aws.mobileclient
-    implementation dependency.amplifyframework.core
+import androidx.annotation.NonNull;
 
-    testImplementation dependency.junit
-    testImplementation dependency.mockito
-    testImplementation dependency.robolectric
-    testImplementation project(path: ':clickstream')
+/**
+ * A client to manage creating and sending analytics events.
+ */
+public class AnalyticsClient {
+    private final ClickstreamContext context;
+
+    /**
+     * A client to manage creating and sending analytics events.
+     *
+     * @param context The {@link ClickstreamContext} of the Web Analytics Manager.
+     */
+    public AnalyticsClient(@NonNull final ClickstreamContext context) {
+        this.context = context;
+    }
+
 }

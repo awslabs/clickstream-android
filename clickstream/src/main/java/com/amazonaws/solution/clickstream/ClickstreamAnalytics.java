@@ -18,6 +18,9 @@ package com.amazonaws.solution.clickstream;
 import android.app.Application;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.Amplify;
+
 /**
  * This is the top-level customer-facing interface to The ClickstreamAnalytics.
  */
@@ -29,9 +32,12 @@ public final class ClickstreamAnalytics {
 
     /**
      * Init ClickstreamAnalytics Plugin.
-     *
      * @param context ApplicationContext
+     * @throws AmplifyException Exception of init.
      */
-    public static void init(@NonNull Application context) {
+    public static void init(@NonNull Application context) throws AmplifyException {
+        Amplify.addPlugin(new AWSClickstreamPlugin(context));
+        Amplify.configure(context);
     }
+
 }
