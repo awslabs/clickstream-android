@@ -16,6 +16,8 @@
 package com.amazonaws.solution.clickstream;
 
 import android.app.Activity;
+import android.content.Context;
+import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.AmplifyException;
 
@@ -26,11 +28,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.robolectric.RobolectricTestRunner;
 
 import static org.mockito.Mockito.mock;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(RobolectricTestRunner.class)
 public class InitClientTest {
     private AWSClickstreamPluginConfiguration clickstreamPluginConfiguration = null;
 
@@ -39,12 +41,10 @@ public class InitClientTest {
      */
     @Before
     public void init() {
-        AWSClickstreamPluginConfiguration.Builder configurationBuilder =
-            AWSClickstreamPluginConfiguration.builder();
-        configurationBuilder
-            .withEndpoint("http://click-serve-HCJIDWGD3S9F-1166279006.ap-southeast-1.elb.amazonaws.com/collect")
-            .withSendEventsInterval(15000)
-            .withTrackAppLifecycleEvents(false);
+        AWSClickstreamPluginConfiguration.Builder configurationBuilder = AWSClickstreamPluginConfiguration.builder();
+        configurationBuilder.withEndpoint(
+                "http://click-serve-HCJIDWGD3S9F-1166279006.ap-southeast-1.elb.amazonaws.com/collect")
+            .withSendEventsInterval(15000).withTrackAppLifecycleEvents(false);
         clickstreamPluginConfiguration = configurationBuilder.build();
     }
 
@@ -54,11 +54,9 @@ public class InitClientTest {
      */
     @Test
     public void initClientParam() {
-        Activity activity = mock(Activity.class);
-        ClickstreamManager clickstreamManager = ClickstreamManagerFactory.create(
-            activity.getApplicationContext(),
-            clickstreamPluginConfiguration
-        );
+        Context context = ApplicationProvider.getApplicationContext();
+        ClickstreamManager clickstreamManager =
+            ClickstreamManagerFactory.create(context, clickstreamPluginConfiguration);
         AnalyticsClient analyticsClient = clickstreamManager.getAnalyticsClient();
         ClickstreamContext clickstreamContext = clickstreamManager.getClickstreamContext();
 
