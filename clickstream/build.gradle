@@ -25,5 +25,6 @@ dependencies {
     testImplementation dependency.junit
     testImplementation dependency.mockito
     testImplementation dependency.robolectric
+    testImplementation dependency.androidx.test
     testImplementation project(path: ':clickstream')
 }

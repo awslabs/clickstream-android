@@ -17,6 +17,9 @@ package com.amazonaws.solution.clickstream.client;
 
 import android.content.Context;
 
+import com.amazonaws.solution.clickstream.client.system.AndroidSystem;
+import com.amazonaws.solution.clickstream.client.uniqueid.SharedPrefsUniqueIdService;
+
 import java.io.Serializable;
 
 /**
@@ -40,6 +43,14 @@ public class ClickstreamContext implements Serializable {
      * The instance of AnalyticsClient.
      */
     private AnalyticsClient analyticsClient;
+    /**
+     * The system of Android.
+     */
+    private final AndroidSystem system;
+    /**
+     * The unique ID.
+     */
+    private String uniqueId;
 
     /**
      * The default constructor of ClickstreamContext.
@@ -49,6 +60,8 @@ public class ClickstreamContext implements Serializable {
         this.sdkInfo = null;
         this.applicationContext = null;
         this.analyticsClient = null;
+        this.system = null;
+        this.uniqueId = null;
     }
 
     /**
@@ -64,6 +77,8 @@ public class ClickstreamContext implements Serializable {
         this.sdkInfo = sdkInfo;
         this.clickstreamConfiguration = clickstreamConfiguration;
         this.applicationContext = applicationContext;
+        this.system = new AndroidSystem(applicationContext);
+        this.uniqueId = new SharedPrefsUniqueIdService().getUniqueId(this);
     }
 
     /**
@@ -109,6 +124,24 @@ public class ClickstreamContext implements Serializable {
      */
     public Context getApplicationContext() {
         return applicationContext;
+    }
+
+    /**
+     * Get the system of Android.
+     *
+     * @return The system of Android.
+     */
+    public AndroidSystem getSystem() {
+        return system;
+    }
+
+    /**
+     * Get the unique ID.
+     *
+     * @return The unique ID.
+     */
+    public String getUniqueId() {
+        return uniqueId;
     }
 
 }

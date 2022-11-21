@@ -26,7 +26,7 @@ public class AnalyticsClient {
     /**
      * A client to manage creating and sending analytics events.
      *
-     * @param context The {@link ClickstreamContext} of the Web Analytics Manager.
+     * @param context The {@link ClickstreamContext} of the ClickStream Manager.
      */
     public AnalyticsClient(@NonNull final ClickstreamContext context) {
         this.context = context;

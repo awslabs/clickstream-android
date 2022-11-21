@@ -53,6 +53,7 @@ ext {
         ],
         androidx: [
             appcompat: 'androidx.appcompat:appcompat:1.2.0',
+            test: 'androidx.test:core:1.5.0'
         ],
         amplifyframework: [
             core: "com.amplifyframework:core:$amplifySdkVersion"
