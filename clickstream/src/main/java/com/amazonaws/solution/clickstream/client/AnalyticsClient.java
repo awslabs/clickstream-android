@@ -15,13 +15,23 @@
 
 package com.amazonaws.solution.clickstream.client;
 
+import android.util.DisplayMetrics;
 import androidx.annotation.NonNull;
+
+import com.amazonaws.logging.Log;
+import com.amazonaws.logging.LogFactory;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A client to manage creating and sending analytics events.
  */
 public class AnalyticsClient {
+    private static final Log LOG = LogFactory.getLog(AnalyticsClient.class);
+    private static final int MAX_EVENT_TYPE_LENGTH = 50;
     private final ClickstreamContext context;
+    private EventRecorder eventRecorder;
 
     /**
      * A client to manage creating and sending analytics events.
@@ -30,6 +40,50 @@ public class AnalyticsClient {
      */
     public AnalyticsClient(@NonNull final ClickstreamContext context) {
         this.context = context;
+        eventRecorder = EventRecorder.newInstance(context);
     }
 
+    /**
+     * Create an event with the specified eventType. The eventType is a
+     * developer defined String that can be used to distinguish between
+     * different scenarios within an application. Note: You can have at most
+     * 500 different eventTypes per app.
+     *
+     * @param eventType the type of event to create.
+     * @return an Event with the specified eventType.
+     * @throws IllegalArgumentException throws when fail to check the argument.
+     */
+    public AnalyticsEvent createEvent(@NonNull String eventType) {
+        if (eventType.length() > MAX_EVENT_TYPE_LENGTH) {
+            LOG.error("The event type is too long, the max event type length is "
+                + MAX_EVENT_TYPE_LENGTH + " characters.");
+            throw new IllegalArgumentException("The eventType passed into create event was too long");
+        }
+        Map<String, String> attributes = new HashMap<>();
+        Map<String, Double> metrics = new HashMap<>();
+
+        long timestamp = System.currentTimeMillis();
+        String uniqueId = this.context.getUniqueId();
+        AnalyticsEvent event = new AnalyticsEvent(eventType, attributes, metrics, timestamp, uniqueId);
+        event.setAndroidId(context.getSystem().getAndroidId());
+        event.setSdkInfo(context.getSDKInfo());
+        event.setAppDetails(context.getSystem().getAppDetails());
+        event.setDeviceDetails(context.getSystem().getDeviceDetails());
+        event.setConnectivity(context.getSystem().getConnectivity());
+        return event;
+    }
+
+    /**
+     * Record event for AnalyticsEvent object.
+     *
+     * @param event AnalyticsEvent object.
+     */
+    public void recordEvent(@NonNull AnalyticsEvent event) {
+        DisplayMetrics dm = this.context.getApplicationContext().getResources().getDisplayMetrics();
+        if (dm != null) {
+            event.setHeightPixels(dm.heightPixels);
+            event.setWidthPixels(dm.widthPixels);
+        }
+        eventRecorder.recordEvent(event);
+    }
 }

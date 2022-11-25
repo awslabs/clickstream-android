@@ -20,18 +20,26 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.analytics.AnalyticsBooleanProperty;
+import com.amplifyframework.analytics.AnalyticsDoubleProperty;
 import com.amplifyframework.analytics.AnalyticsEventBehavior;
 import com.amplifyframework.analytics.AnalyticsException;
+import com.amplifyframework.analytics.AnalyticsIntegerProperty;
 import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsProperties;
+import com.amplifyframework.analytics.AnalyticsPropertyBehavior;
+import com.amplifyframework.analytics.AnalyticsStringProperty;
 import com.amplifyframework.analytics.UserProfile;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.logging.Logger;
 
 import com.amazonaws.solution.clickstream.client.AnalyticsClient;
+import com.amazonaws.solution.clickstream.client.AnalyticsEvent;
 import com.amazonaws.solution.clickstream.client.ClickstreamManager;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.Map;
 
 /**
  * The plugin implementation for Clickstream in Analytics category.
@@ -66,10 +74,34 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
 
     @Override
     public void recordEvent(@NonNull String eventName) {
+        final AnalyticsEvent event = analyticsClient.createEvent(eventName);
+        analyticsClient.recordEvent(event);
     }
 
     @Override
     public void recordEvent(@NonNull AnalyticsEventBehavior analyticsEvent) {
+        final AnalyticsEvent clickstreamEvent =
+            analyticsClient.createEvent(analyticsEvent.getName());
+
+        if (analyticsEvent.getProperties() != null) {
+            for (Map.Entry<String, AnalyticsPropertyBehavior<?>> entry : analyticsEvent.getProperties()) {
+                String key = entry.getKey();
+                AnalyticsPropertyBehavior<?> property = entry.getValue();
+                Object value = null;
+                if (property instanceof AnalyticsStringProperty) {
+                    value = ((AnalyticsStringProperty) property).getValue();
+                } else if (property instanceof AnalyticsBooleanProperty) {
+                    value = ((AnalyticsBooleanProperty) property).getValue().toString();
+                } else if (property instanceof AnalyticsDoubleProperty) {
+                    value = ((AnalyticsDoubleProperty) property).getValue();
+                } else if (property instanceof AnalyticsIntegerProperty) {
+                    value = ((AnalyticsIntegerProperty) property).getValue().doubleValue();
+                }
+                clickstreamEvent.addAttribute(key, value);
+            }
+
+            analyticsClient.recordEvent(clickstreamEvent);
+        }
     }
 
     @Override
