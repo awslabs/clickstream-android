@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * An event for clickstream.
  */
 public class AnalyticsEvent implements JSONSerializable {
+
     static final int MAX_NUM_OF_ATTRIBUTES = 500;
     private static final Log LOG = LogFactory.getLog(AnalyticsEvent.class);
     private static final int INDENTATION = 4;
