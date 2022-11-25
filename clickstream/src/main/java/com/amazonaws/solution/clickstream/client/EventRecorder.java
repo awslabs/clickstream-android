@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amazonaws.logging.Log;
 import com.amazonaws.logging.LogFactory;
+import com.amazonaws.solution.clickstream.client.db.ClickstreamDBUtil;
 import com.amazonaws.solution.clickstream.client.util.StringUtil;
 
 /**
@@ -29,18 +30,22 @@ public class EventRecorder {
 
     private final int clippedEventLength = 10;
     private final ClickstreamContext clickstreamContext;
+    private final ClickstreamDBUtil dbUtil;
 
-    EventRecorder(final ClickstreamContext clickstreamContext) {
+    EventRecorder(final ClickstreamContext clickstreamContext, final ClickstreamDBUtil dbUtil) {
         this.clickstreamContext = clickstreamContext;
+        this.dbUtil = dbUtil;
     }
 
     /**
      * Constructs a new EventRecorder specifying the client to use.
+     *
      * @param clickstreamContext The ClickstreamContext.
      * @return The instance of the ClickstreamContext.
      */
     public static EventRecorder newInstance(final ClickstreamContext clickstreamContext) {
-        return new EventRecorder(clickstreamContext);
+        return new EventRecorder(clickstreamContext,
+            new ClickstreamDBUtil(clickstreamContext.getApplicationContext().getApplicationContext()));
     }
 
     /**
@@ -49,11 +54,10 @@ public class EventRecorder {
      * @param event the analytics event
      */
     public void recordEvent(@NonNull final AnalyticsEvent event) {
-
         LOG.info(String.format("Event Recorded to database with EventType: %s",
             StringUtil.clipString(event.getEventType(), clippedEventLength, true)));
         LOG.info("event json:\n" + event);
-
+        this.dbUtil.saveEvent(event);
     }
 
 }
