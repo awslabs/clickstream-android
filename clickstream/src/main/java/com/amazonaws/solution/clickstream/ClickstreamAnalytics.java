@@ -19,6 +19,7 @@ import android.app.Application;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.core.Amplify;
 
 /**
@@ -40,4 +41,21 @@ public final class ClickstreamAnalytics {
         Amplify.configure(context);
     }
 
+    /**
+     * Use this method to record Event.
+     *
+     * @param event AnalyticsEvent to record
+     */
+    public static void recordEvent(@NonNull final AnalyticsEvent event) {
+        Amplify.Analytics.recordEvent(event);
+    }
+
+    /**
+     * Use this method to record Event.
+     *
+     * @param eventName the event name
+     */
+    public static void recordEvent(@NonNull final String eventName) {
+        Amplify.Analytics.recordEvent(eventName);
+    }
 }
