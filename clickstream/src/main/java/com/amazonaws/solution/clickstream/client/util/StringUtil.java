@@ -29,10 +29,6 @@ import java.util.zip.GZIPOutputStream;
  * String utility methods.
  */
 public final class StringUtil {
-    /**
-     * The default encoding.
-     */
-    public static final String UTF_8 = "UTF-8";
     private static final Log LOG = LogFactory.getLog(StringUtil.class);
 
     /**
@@ -48,38 +44,17 @@ public final class StringUtil {
      * @return The string using the gzip to compress and encoding with base64.
      */
     public static String compressForGzip(String ungzipStr) {
-        ByteArrayOutputStream baos = null;
-        GZIPOutputStream gzip = null;
         byte[] encode = null;
-        try {
-            baos = new ByteArrayOutputStream();
-            gzip = new GZIPOutputStream(baos);
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             GZIPOutputStream gzip = new GZIPOutputStream(baos)) {
             gzip.write(ungzipStr.getBytes());
             gzip.close();
             encode = baos.toByteArray();
             baos.flush();
-            baos.close();
         } catch (UnsupportedEncodingException uee) {
             LOG.error("UnsupportedEncodingException occur when compressForGzip.");
         } catch (IOException ioe) {
             LOG.error("IOException occur when compressForGzip.");
-        } finally {
-            if (baos != null) {
-                try {
-                    baos.close();
-                    baos = null;
-                } catch (IOException ioe) {
-                    LOG.warn("IOException occur when compressForGzip clean resource.");
-                }
-            }
-            if (gzip != null) {
-                try {
-                    gzip.close();
-                    gzip = null;
-                } catch (IOException ioe) {
-                    LOG.warn("IOException occur when compressForGzip clean resource.");
-                }
-            }
         }
         if (encode != null) {
             return Base64.encodeToString(encode, Base64.DEFAULT);
@@ -123,9 +98,7 @@ public final class StringUtil {
         int end = Math.min(numChars, input.length());
         String output = input.substring(0, end);
         if (appendEllipses) {
-            output = (output.length() < input.length())
-                ? output + "..."
-                : output;
+            output = (output.length() < input.length()) ? output + "..." : output;
         }
         return output;
     }

@@ -95,14 +95,14 @@ public class DBUtilTest {
         assertEquals(c.getCount(), 2);
         c.close();
 
-        int delete1 = dbUtil.deleteEvent(idInserted1, null);
+        int delete1 = dbUtil.deleteEvent(idInserted1);
         assertEquals(delete1, 1);
         Cursor c1 = dbUtil.queryAllEvents();
         assertNotNull(c1);
         assertEquals(c1.getCount(), 1);
         c1.close();
 
-        int delete2 = dbUtil.deleteEvent(idInserted2, null);
+        int delete2 = dbUtil.deleteEvent(idInserted2);
         assertEquals(delete2, 1);
         Cursor c2 = dbUtil.queryAllEvents();
         assertNotNull(c2);
@@ -128,6 +128,21 @@ public class DBUtilTest {
         assertEquals(c.getCount(), 2);
         c.close();
         Assert.assertEquals(dbUtil.getTotalSize(), eventLength * 2);
+    }
+
+    /**
+     * test get total number.
+     */
+    @Test
+    public void testGetTotalDbNumber() {
+        AnalyticsEvent analyticsEvent = AnalyticsEventTest.getAnalyticsClient().createEvent("testEvent");
+        Uri uri1 = dbUtil.saveEvent(analyticsEvent);
+        Uri uri2 = dbUtil.saveEvent(analyticsEvent);
+        int idInserted1 = Integer.parseInt(uri1.getLastPathSegment());
+        int idInserted2 = Integer.parseInt(uri2.getLastPathSegment());
+        assertNotEquals(idInserted1, 0);
+        assertNotEquals(idInserted2, 0);
+        assertEquals(dbUtil.getTotalNumber(), 2);
     }
 
     /**

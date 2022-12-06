@@ -83,12 +83,22 @@ public class ClickstreamDBUtil {
      * Deletes the event with the given eventId.
      *
      * @param eventId The eventId of the event to be deleted.
-     * @param size    Known size of event.
      * @return Number of rows deleted.
      */
-    public int deleteEvent(final int eventId, final Integer size) {
+    public int deleteEvent(final int eventId) {
         return clickstreamDBBase.delete(getEventUri(eventId), null,
-            null, size);
+            null);
+    }
+
+    /**
+     * Deletes all the event where eventId is not larger than lastEventId.
+     *
+     * @param lastEventId The last eventId.
+     * @return Number of rows deleted.
+     */
+    public int deleteBatchEvents(final int lastEventId) {
+        return clickstreamDBBase.delete(getLastEventIdUri(lastEventId), null,
+            null);
     }
 
     /**
@@ -102,12 +112,31 @@ public class ClickstreamDBUtil {
     }
 
     /**
+     * Gets the Uri of an event.
+     *
+     * @param lastEventId The id of the event which is the last.
+     * @return The Uri of the event specified by the id.
+     */
+    public Uri getLastEventIdUri(final int lastEventId) {
+        return Uri.parse(clickstreamDBBase.getContentUri() + "/last-event-id/" + lastEventId);
+    }
+
+    /**
      * Get the total event size calculate by sum of all event string's length.
      *
      * @return The total size.
      */
     public long getTotalSize() {
         return clickstreamDBBase.getTotalSize();
+    }
+
+    /**
+     * Get the total event number calculate by sum of all events.
+     *
+     * @return The total number.
+     */
+    public long getTotalNumber() {
+        return clickstreamDBBase.getTotalNumber();
     }
 }
 

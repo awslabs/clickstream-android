@@ -26,24 +26,24 @@ public final class EventTable {
      */
     public static final String TABLE_EVENT = "clickstreamevent";
     /**
-     * A unique id of the web analytics event.
+     * A unique id of the clickstream event.
      */
     public static final String COLUMN_ID = "event_id";
     /**
-     * The JSON body of the web analytics event.
+     * The JSON body of the clickstream event.
      */
     public static final String COLUMN_JSON = "event_json";
     /**
-     * The size of JSON body of the web analytics event.
+     * The size of JSON body of the clickstream event.
      */
     public static final String COLUMN_SIZE = "event_size";
-
     /**
      * Database creation SQL statement.
      */
     private static final String DATABASE_CREATE = "create table if not exists " + TABLE_EVENT +
-        "(" + COLUMN_ID + " integer primary key autoincrement, " + COLUMN_SIZE
-        + " INTEGER NOT NULL," + COLUMN_JSON + " TEXT NOT NULL" + ");";
+        "(" + COLUMN_ID + " integer primary key autoincrement, "
+        + COLUMN_SIZE + " INTEGER NOT NULL,"
+        + COLUMN_JSON + " TEXT NOT NULL" + ");";
 
     /**
      * The default constructor.

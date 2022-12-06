@@ -86,4 +86,14 @@ public class AnalyticsClient {
         }
         eventRecorder.recordEvent(event);
     }
+
+    /**
+     * Submit all recorded events
+     * If the device is off line, this is a no-op. See
+     * {@link ClickstreamConfiguration}
+     * for customizing which Internet connection the SDK can submit on.
+     */
+    public void submitEvents() {
+        eventRecorder.submitEvents();
+    }
 }

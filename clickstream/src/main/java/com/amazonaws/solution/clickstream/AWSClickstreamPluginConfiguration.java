@@ -23,6 +23,7 @@ public final class AWSClickstreamPluginConfiguration {
     private static final long DEFAULT_SEND_EVENTS_SIZE = 100;
 
     // Clickstream configuration options
+    private final String appId;
     private final String endpoint;
     private final long sendEventsInterval;
     private final long sendEventsSize;
@@ -30,11 +31,21 @@ public final class AWSClickstreamPluginConfiguration {
     private final boolean isCompressEvents;
 
     private AWSClickstreamPluginConfiguration(Builder builder) {
+        this.appId = builder.appId;
         this.isTrackAppLifecycleEvents = builder.isTrackAppLifecycleEvents;
         this.sendEventsInterval = builder.sendEventsInterval;
         this.endpoint = builder.endpoint;
         this.sendEventsSize = builder.sendEventsSize;
         this.isCompressEvents = builder.isCompressEvents;
+    }
+
+    /**
+     * AppId getter.
+     *
+     * @return appId
+     */
+    String getAppId() {
+        return appId;
     }
 
     /**
@@ -96,19 +107,15 @@ public final class AWSClickstreamPluginConfiguration {
      * Used for fluent construction of an immutable {@link AWSClickstreamPluginConfiguration} object.
      */
     static final class Builder {
+        private String appId;
         private String endpoint;
         private long sendEventsSize = DEFAULT_SEND_EVENTS_SIZE;
         private long sendEventsInterval = DEFAULT_SEND_EVENTS_INTERVAL;
         private boolean isCompressEvents = true;
         private boolean isTrackAppLifecycleEvents = true;
 
-        Builder withSendEventsInterval(final long sendEventsInterval) {
-            this.sendEventsInterval = sendEventsInterval;
-            return this;
-        }
-
-        Builder withTrackAppLifecycleEvents(final boolean trackAppLifecycleEvents) {
-            this.isTrackAppLifecycleEvents = trackAppLifecycleEvents;
+        Builder withAppId(final String appId) {
+            this.appId = appId;
             return this;
         }
 
@@ -122,8 +129,18 @@ public final class AWSClickstreamPluginConfiguration {
             return this;
         }
 
+        Builder withSendEventsInterval(final long sendEventsInterval) {
+            this.sendEventsInterval = sendEventsInterval;
+            return this;
+        }
+
         Builder withCompressEvents(final boolean compressEvents) {
             this.isCompressEvents = compressEvents;
+            return this;
+        }
+
+        Builder withTrackAppLifecycleEvents(final boolean trackAppLifecycleEvents) {
+            this.isTrackAppLifecycleEvents = trackAppLifecycleEvents;
             return this;
         }
 

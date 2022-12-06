@@ -30,6 +30,7 @@ import android.text.TextUtils;
 public class ClickstreamDBBase {
     private static final int EVENTS = 10;
     private static final int EVENT_ID = 20;
+    private static final int EVENT_LAST_ID = 30;
     private static final String BASE_PATH = "clickstream-sdk/events";
 
     private final Context context;
@@ -37,7 +38,6 @@ public class ClickstreamDBBase {
     private final UriMatcher uriMatcher;
     private final ClickstreamDatabaseHelper databaseHelper;
     // total size of event, calculated by add all event's COLUMN_SIZE
-    private long totalSize = -1;
 
     /**
      * Constructs TransferDBBase with the given Context.
@@ -56,6 +56,8 @@ public class ClickstreamDBBase {
 
         // The Uri of EVENT_ID is for a single event record.
         uriMatcher.addURI(mAuthority, BASE_PATH + "/#", EVENT_ID);
+        // The Uri of EVENT_LAST_ID is for delete batch of event which id is equal or smaller than last event id.
+        uriMatcher.addURI(mAuthority, BASE_PATH + "/last-event-id/#", EVENT_LAST_ID);
     }
 
     /**
@@ -86,9 +88,7 @@ public class ClickstreamDBBase {
         final SQLiteDatabase db = databaseHelper.getWritableDatabase();
         long id;
         if (uriType == EVENTS) {
-            final long size = getTotalSize();
             id = db.insertOrThrow(EventTable.TABLE_EVENT, null, values);
-            totalSize = size + values.getAsLong(EventTable.COLUMN_SIZE);
         } else {
             throw new IllegalArgumentException("Unknown URI: " + uri);
         }
@@ -101,26 +101,34 @@ public class ClickstreamDBBase {
      * @return Total size.
      */
     public long getTotalSize() {
-        Cursor cursor = null;
-        try {
-            if (totalSize < 0) {
-                cursor = databaseHelper.getReadableDatabase().rawQuery(
-                    "SELECT SUM(" + EventTable.COLUMN_SIZE + ") FROM " +
-                        EventTable.TABLE_EVENT, null);
-                if (!cursor.moveToNext()) {
-                    totalSize = 0;
-                } else if (cursor.isNull(0)) {
-                    totalSize = 0;
-                } else {
-                    totalSize = cursor.getLong(0);
-                }
-            }
-        } finally {
-            if (cursor != null) {
-                cursor.close();
+        long totalSize;
+        try (Cursor cursor = databaseHelper.getReadableDatabase()
+            .rawQuery("SELECT SUM(" + EventTable.COLUMN_SIZE + ") FROM " + EventTable.TABLE_EVENT, null)) {
+            if (!cursor.moveToNext()) {
+                totalSize = 0;
+            } else if (cursor.isNull(0)) {
+                totalSize = 0;
+            } else {
+                totalSize = cursor.getLong(0);
             }
         }
         return totalSize;
+    }
+
+    /**
+     * Get total number of event records.
+     *
+     * @return Total number.
+     */
+    public long getTotalNumber() {
+        long totalNumber = 0;
+        try (Cursor cursor = databaseHelper.getReadableDatabase()
+            .rawQuery("SELECT count(*) FROM " + EventTable.TABLE_EVENT, null)) {
+            if (cursor.moveToNext() && !cursor.isNull(0)) {
+                totalNumber = cursor.getLong(0);
+            }
+        }
+        return totalNumber;
     }
 
     /**
@@ -149,8 +157,7 @@ public class ClickstreamDBBase {
                 throw new IllegalArgumentException("Unknown URI: " + uri);
         }
         final SQLiteDatabase db = databaseHelper.getWritableDatabase();
-        return queryBuilder.query(db, projection, selection, selectionArgs,
-            null, null, sortOrder, limit);
+        return queryBuilder.query(db, projection, selection, selectionArgs, null, null, sortOrder, limit);
     }
 
     /**
@@ -159,38 +166,29 @@ public class ClickstreamDBBase {
      * @param uri           A Uri of the specific record.
      * @param selection     The "where" clause of sql.
      * @param selectionArgs Strings in the "where" clause.
-     * @param knownSize     Known size (If known).
      * @return Number of rows deleted.
      */
-    public int delete(final Uri uri, final String selection, final String[] selectionArgs, final Integer knownSize) {
+    public int delete(final Uri uri, final String selection, final String[] selectionArgs) {
         final int uriType = uriMatcher.match(uri);
         final SQLiteDatabase db = databaseHelper.getWritableDatabase();
         int rowsDeleted;
         switch (uriType) {
             case EVENTS:
                 rowsDeleted = db.delete(EventTable.TABLE_EVENT, selection, selectionArgs);
-                totalSize = -1;
                 break;
             case EVENT_ID:
                 final String id = uri.getLastPathSegment();
-                final long size = getTotalSize();
                 if (TextUtils.isEmpty(selection)) {
-                    rowsDeleted = db.delete(EventTable.TABLE_EVENT,
-                        EventTable.COLUMN_ID + "=" + id, null);
+                    rowsDeleted = db.delete(EventTable.TABLE_EVENT, EventTable.COLUMN_ID + "=" + id, null);
                 } else {
-                    rowsDeleted = db.delete(EventTable.TABLE_EVENT,
-                        EventTable.COLUMN_ID + "=" + id + " and " + selection,
-                        selectionArgs);
+                    rowsDeleted =
+                        db.delete(EventTable.TABLE_EVENT, EventTable.COLUMN_ID + "=" + id + " and " + selection,
+                            selectionArgs);
                 }
-                if (rowsDeleted == 1) {
-                    if (knownSize != null) {
-                        totalSize = size - knownSize;
-                    } else {
-                        totalSize = -1;
-                    }
-                } else {
-                    totalSize = -1;
-                }
+                break;
+            case EVENT_LAST_ID:
+                final String lastId = uri.getLastPathSegment();
+                rowsDeleted = db.delete(EventTable.TABLE_EVENT, EventTable.COLUMN_ID + "<=" + lastId, null);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown URI: " + uri);

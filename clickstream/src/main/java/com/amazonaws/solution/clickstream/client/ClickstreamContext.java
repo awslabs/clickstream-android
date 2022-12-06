@@ -17,6 +17,7 @@ package com.amazonaws.solution.clickstream.client;
 
 import android.content.Context;
 
+import com.amazonaws.solution.clickstream.client.config.AndroidPreferencesConfiguration;
 import com.amazonaws.solution.clickstream.client.system.AndroidSystem;
 import com.amazonaws.solution.clickstream.client.uniqueid.SharedPrefsUniqueIdService;
 
@@ -31,6 +32,10 @@ public class ClickstreamContext implements Serializable {
      * The configuration of Clickstream.
      */
     private final ClickstreamConfiguration clickstreamConfiguration;
+    /**
+     * The configuration of Android preference.
+     */
+    private final AndroidPreferencesConfiguration configuration;
     /**
      * The info of SDK.
      */
@@ -53,18 +58,6 @@ public class ClickstreamContext implements Serializable {
     private String uniqueId;
 
     /**
-     * The default constructor of ClickstreamContext.
-     */
-    public ClickstreamContext() {
-        this.clickstreamConfiguration = null;
-        this.sdkInfo = null;
-        this.applicationContext = null;
-        this.analyticsClient = null;
-        this.system = null;
-        this.uniqueId = null;
-    }
-
-    /**
      * The constructor with parameters.
      *
      * @param applicationContext       The context of Android.
@@ -79,6 +72,7 @@ public class ClickstreamContext implements Serializable {
         this.applicationContext = applicationContext;
         this.system = new AndroidSystem(applicationContext);
         this.uniqueId = new SharedPrefsUniqueIdService().getUniqueId(this);
+        this.configuration = AndroidPreferencesConfiguration.newInstance(this);
     }
 
     /**
@@ -106,6 +100,14 @@ public class ClickstreamContext implements Serializable {
      */
     public ClickstreamConfiguration getClickstreamConfiguration() {
         return clickstreamConfiguration;
+    }
+
+    /**
+     * Get the configuration of Android preference.
+     * @return The configuration of Android preference.
+     */
+    public AndroidPreferencesConfiguration getConfiguration() {
+        return configuration;
     }
 
     /**
