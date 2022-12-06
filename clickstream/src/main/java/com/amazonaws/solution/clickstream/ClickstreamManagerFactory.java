@@ -37,7 +37,8 @@ final class ClickstreamManagerFactory {
 
         // Construct configuration using information from the configure method
         ClickstreamConfiguration clickstreamConfiguration =
-            new ClickstreamConfiguration(context, clickstreamPluginConfiguration.getEndpoint())
+            new ClickstreamConfiguration(context, clickstreamPluginConfiguration.getAppId(),
+                clickstreamPluginConfiguration.getEndpoint())
                 .withClientConfiguration(clientConfiguration)
                 .withSendEventsSize(clickstreamPluginConfiguration.getSendEventsSize())
                 .withSendEventsInterval(clickstreamPluginConfiguration.getSendEventsInterval())

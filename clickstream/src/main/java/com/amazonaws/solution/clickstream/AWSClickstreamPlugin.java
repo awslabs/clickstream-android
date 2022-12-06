@@ -49,6 +49,7 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
     private static final Logger LOG = Amplify.Logging.forNamespace("clickstream:AWSClickstreamPlugin");
     private final Application application;
     private AnalyticsClient analyticsClient;
+    private AutoEventSubmitter autoEventSubmitter;
 
     /**
      * Constructs a new {@link AWSClickstreamPlugin}.
@@ -66,10 +67,12 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
 
     @Override
     public void disable() {
+        autoEventSubmitter.stop();
     }
 
     @Override
     public void enable() {
+        autoEventSubmitter.start();
     }
 
     @Override
@@ -99,7 +102,6 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
                 }
                 clickstreamEvent.addAttribute(key, value);
             }
-
             analyticsClient.recordEvent(clickstreamEvent);
         }
     }
@@ -116,6 +118,7 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
 
     @Override
     public void flushEvents() {
+        analyticsClient.submitEvents();
     }
 
     @NonNull
@@ -142,6 +145,9 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
 
         // Read all the data from the configuration object to be used for record event
         try {
+            configurationBuilder.withAppId(pluginConfiguration
+                .getString(ConfigurationKey.APP_ID.getConfigurationKey()));
+
             configurationBuilder.withEndpoint(pluginConfiguration
                 .getString(ConfigurationKey.ENDPOINT.getConfigurationKey()));
 
@@ -166,7 +172,7 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
             }
         } catch (JSONException exception) {
             throw new AnalyticsException(
-                "Unable to read endpoint from the amplify configuration json.", exception,
+                "Unable to read appId or endpoint from the amplify configuration json.", exception,
                 "Make sure amplifyconfiguration.json is a valid json object in expected format. " +
                     "Please take a look at the documentation for expected format of amplifyconfiguration.json."
             );
@@ -178,6 +184,10 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
             clickstreamPluginConfiguration
         );
         this.analyticsClient = clickstreamManager.getAnalyticsClient();
+
+        LOG.debug("AWSClickstreamPlugin create AutoEventSubmitter.");
+        autoEventSubmitter = new AutoEventSubmitter(clickstreamPluginConfiguration.getSendEventsInterval());
+        autoEventSubmitter.start();
     }
 
     @Override
@@ -195,6 +205,12 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
      * Clickstream configuration in amplifyconfiguration.json contains following values.
      */
     public enum ConfigurationKey {
+
+        /**
+         * The Clickstream appId.
+         */
+        APP_ID("appId"),
+
         /**
          * the Clickstream Endpoint.
          */

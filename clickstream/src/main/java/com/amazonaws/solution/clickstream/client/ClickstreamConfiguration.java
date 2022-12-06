@@ -25,6 +25,7 @@ import com.amazonaws.ClientConfiguration;
 public class ClickstreamConfiguration {
 
     private Context context;
+    private String appId;
     private String endpoint;
     private long sendEventsSize;
     private long sendEventsInterval;
@@ -37,11 +38,13 @@ public class ClickstreamConfiguration {
      * Create an {@link ClickstreamConfiguration} object with the specified parameters.
      *
      * @param context  the android context object.
+     * @param appId the Clickstream appId.
      * @param endpoint the Clickstream endpoint.
      */
-    public ClickstreamConfiguration(final Context context, final String endpoint) {
+    public ClickstreamConfiguration(final Context context, final String appId, final String endpoint) {
         this.clientConfiguration = new ClientConfiguration();
         this.context = context;
+        this.appId = appId;
         this.endpoint = endpoint;
     }
 
@@ -87,6 +90,27 @@ public class ClickstreamConfiguration {
      */
     public ClickstreamConfiguration withAppContext(final Context context) {
         this.context = context;
+        return this;
+    }
+
+    /**
+     * The Clickstream AppId.
+     *
+     * @return the Clickstream AppId.
+     */
+    public String getAppId() {
+        return this.appId;
+    }
+
+    /**
+     * The Clickstream AppId.
+     *
+     * @param appId The Clickstream Application Id.
+     * @return the current ClickstreamConfiguration instance.
+     */
+    @SuppressWarnings("checkstyle:hiddenfield")
+    public ClickstreamConfiguration withAppId(final String appId) {
+        this.appId = appId;
         return this;
     }
 
