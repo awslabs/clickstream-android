@@ -37,7 +37,6 @@ public class ClickstreamDBBase {
     private final Uri contentUri;
     private final UriMatcher uriMatcher;
     private final ClickstreamDatabaseHelper databaseHelper;
-    // total size of event, calculated by add all event's COLUMN_SIZE
 
     /**
      * Constructs TransferDBBase with the given Context.

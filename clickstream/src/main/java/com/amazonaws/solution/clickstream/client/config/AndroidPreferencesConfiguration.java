@@ -42,7 +42,7 @@ public class AndroidPreferencesConfiguration {
     /**
      * The construct function with parameters.
      *
-     * @param context The context of Web Analytics plugin.
+     * @param context The context of Clickstream plugin.
      */
     AndroidPreferencesConfiguration(@NonNull final ClickstreamContext context) {
         this.context = context;
@@ -71,7 +71,7 @@ public class AndroidPreferencesConfiguration {
     /**
      * Get the instance of AndroidPreferencesConfiguration.
      *
-     * @param context The context of Web Analytics context.
+     * @param context The context of Clickstream context.
      * @return AndroidPreferencesConfiguration.
      */
     public static AndroidPreferencesConfiguration newInstance(@NonNull final ClickstreamContext context) {

@@ -30,9 +30,9 @@ import com.amplifyframework.analytics.AnalyticsProperties;
 import com.amplifyframework.analytics.AnalyticsPropertyBehavior;
 import com.amplifyframework.analytics.AnalyticsStringProperty;
 import com.amplifyframework.analytics.UserProfile;
-import com.amplifyframework.core.Amplify;
-import com.amplifyframework.logging.Logger;
 
+import com.amazonaws.logging.Log;
+import com.amazonaws.logging.LogFactory;
 import com.amazonaws.solution.clickstream.client.AnalyticsClient;
 import com.amazonaws.solution.clickstream.client.AnalyticsEvent;
 import com.amazonaws.solution.clickstream.client.ClickstreamManager;
@@ -46,10 +46,11 @@ import java.util.Map;
  */
 public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
 
-    private static final Logger LOG = Amplify.Logging.forNamespace("clickstream:AWSClickstreamPlugin");
+    private static final Log LOG = LogFactory.getLog(AWSClickstreamPlugin.class);
     private final Application application;
     private AnalyticsClient analyticsClient;
     private AutoEventSubmitter autoEventSubmitter;
+    private AutoSessionTracker autoSessionTracker;
 
     /**
      * Constructs a new {@link AWSClickstreamPlugin}.
@@ -68,11 +69,13 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
     @Override
     public void disable() {
         autoEventSubmitter.stop();
+        autoSessionTracker.stopSessionTracking(application);
     }
 
     @Override
     public void enable() {
         autoEventSubmitter.start();
+        autoSessionTracker.startSessionTracking(application);
     }
 
     @Override
@@ -188,6 +191,9 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
         LOG.debug("AWSClickstreamPlugin create AutoEventSubmitter.");
         autoEventSubmitter = new AutoEventSubmitter(clickstreamPluginConfiguration.getSendEventsInterval());
         autoEventSubmitter.start();
+
+        autoSessionTracker = new AutoSessionTracker(clickstreamManager.getSessionClient());
+        autoSessionTracker.startSessionTracking(application);
     }
 
     @Override

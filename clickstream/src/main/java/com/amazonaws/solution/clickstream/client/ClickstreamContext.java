@@ -49,6 +49,10 @@ public class ClickstreamContext implements Serializable {
      */
     private AnalyticsClient analyticsClient;
     /**
+     * The instance of SessionClient.
+     */
+    private SessionClient sessionClient;
+    /**
      * The system of Android.
      */
     private final AndroidSystem system;
@@ -94,6 +98,24 @@ public class ClickstreamContext implements Serializable {
     }
 
     /**
+     * Get the SessionClient.
+     *
+     * @return The instance of SessionClient.
+     */
+    public SessionClient getSessionClient() {
+        return sessionClient;
+    }
+
+    /**
+     * Set the SessionClient.
+     *
+     * @param sessionClient The instance of SessionClient.
+     */
+    public void setSessionClient(SessionClient sessionClient) {
+        this.sessionClient = sessionClient;
+    }
+
+    /**
      * Get the configuration of Clickstream.
      *
      * @return The configuration of Clickstream.
@@ -104,6 +126,7 @@ public class ClickstreamContext implements Serializable {
 
     /**
      * Get the configuration of Android preference.
+     *
      * @return The configuration of Android preference.
      */
     public AndroidPreferencesConfiguration getConfiguration() {
