@@ -49,6 +49,7 @@ public class AnalyticsEvent implements JSONSerializable {
     private final JSONObject attributes = new JSONObject();
     private Long timestamp;
     private String uniqueId;
+    private Session session;
     private AndroidAppDetails appDetails;
     private AndroidDeviceDetails deviceDetails;
     private AndroidConnectivity connectivity;
@@ -61,17 +62,16 @@ public class AnalyticsEvent implements JSONSerializable {
      *
      * @param eventType  The eventType of the new event.
      * @param attributes A list of attributes of the new event.
-     * @param metrics    A list of metrics of the new event.
      * @param timestamp  The timestamp of the new event.
      * @param uniqueId   The uniqueId of the new event.
      */
-    AnalyticsEvent(final String eventType, final Map<String, String> attributes, final Map<String, Double> metrics,
+    AnalyticsEvent(final String eventType, final Map<String, String> attributes,
                    final long timestamp, final String uniqueId) {
-        this(UUID.randomUUID().toString(), eventType, attributes, metrics, timestamp, uniqueId);
+        this(UUID.randomUUID().toString(), eventType, attributes, timestamp, uniqueId);
     }
 
     private AnalyticsEvent(final String eventId, final String eventType, final Map<String, String> attributes,
-                           final Map<String, Double> metrics, final long timestamp, final String uniqueId) {
+                           final long timestamp, final String uniqueId) {
         this.eventId = eventId;
         this.timestamp = timestamp;
         this.uniqueId = uniqueId;
@@ -81,23 +81,6 @@ public class AnalyticsEvent implements JSONSerializable {
                 this.addAttribute(kvp.getKey(), kvp.getValue());
             }
         }
-    }
-
-    /**
-     * Creates a new instance of an AnalyticsEvent.
-     *
-     * @param eventId    The eventId of the new event.
-     * @param eventType  The eventType of the new event.
-     * @param attributes A list of attributes of the new event.
-     * @param metrics    A list of metrics of the new event.
-     * @param timestamp  The timestamp of the new event.
-     * @param uniqueId   The uniqueId of the new event.
-     * @return An instance of an AnalyticsEvent object.
-     */
-    public static AnalyticsEvent newInstance(final String eventId, final String eventType,
-                                             final Map<String, String> attributes, final Map<String, Double> metrics,
-                                             final long timestamp, final String uniqueId) {
-        return new AnalyticsEvent(eventId, eventType, attributes, metrics, timestamp, uniqueId);
     }
 
     /**
@@ -157,6 +140,15 @@ public class AnalyticsEvent implements JSONSerializable {
      */
     public void setUniqueId(String uniqueId) {
         this.uniqueId = uniqueId;
+    }
+
+    /**
+     * Setter for session.
+     *
+     * @param session The session.
+     */
+    public void setSession(Session session) {
+        this.session = session;
     }
 
     /**
@@ -256,28 +248,6 @@ public class AnalyticsEvent implements JSONSerializable {
      */
     public void setWidthPixels(int widthPixels) {
         this.widthPixels = widthPixels;
-    }
-
-    /**
-     * Create a event object.
-     *
-     * @param context      The client context.
-     * @param sessionId    The ID of the session.
-     * @param sessionStart The start timestamp of the session.
-     * @param sessionEnd   The end timestamp of the session.
-     * @param duration     The duration of the session.
-     * @param timestamp    The timestamp of the event.
-     * @param eventType    The type of the event.
-     * @return The event object.
-     */
-    public static AnalyticsEvent newInstance(ClickstreamContext context, String sessionId, long sessionStart,
-                                             Long sessionEnd, Long duration, long timestamp, String eventType) {
-        AnalyticsEvent event = new AnalyticsEvent(eventType, null, null, timestamp, context.getUniqueId());
-        event.setSdkInfo(context.getSDKInfo());
-        event.setAppDetails(context.getSystem().getAppDetails());
-        event.setDeviceDetails(context.getSystem().getDeviceDetails());
-        event.setConnectivity(context.getSystem().getConnectivity());
-        return event;
     }
 
     /**
@@ -516,8 +486,22 @@ public class AnalyticsEvent implements JSONSerializable {
         // ****************************************************
         builder.withAttribute("country", displayCountryString);
         builder.withAttribute("country_code", countryString);
-        //builder.withAttribute("province", "");
-        //builder.withAttribute("city", "");
+
+        // ****************************************************
+        // ==============Session Attributes=============
+        // ****************************************************
+        if (session != null) {
+            final JSONObject sessionObject = new JSONObject();
+            try {
+                sessionObject.put("id", session.getSessionID());
+                sessionObject.put("startTimestamp", session.getStartTime());
+                sessionObject.put("stopTimestamp", session.getStopTime());
+                sessionObject.put("duration", session.getSessionDuration().longValue());
+            } catch (final JSONException jsonException) {
+                LOG.error("Error serializing session information " + jsonException.getMessage());
+            }
+            builder.withAttribute("session", sessionObject);
+        }
 
         // ****************************************************
         // ====SDK Details Attributes -- Prefix with 'sdk_'====

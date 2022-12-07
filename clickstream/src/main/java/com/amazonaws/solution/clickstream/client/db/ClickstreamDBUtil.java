@@ -23,7 +23,7 @@ import android.net.Uri;
 import com.amazonaws.solution.clickstream.client.AnalyticsEvent;
 
 /**
- * Web Analytics Database Util.
+ * Clickstream Database Util.
  */
 public class ClickstreamDBUtil {
     /**
