@@ -451,14 +451,14 @@ public class EventRecorderTest {
      */
     @Test
     public void testSubmitAllEventForOneRequest() throws Exception {
-        setRequestPath(COLLECT_SUCCESS_LATENCY200);
+        setRequestPath(COLLECT_SUCCESS);
         for (int i = 0; i < 20; i++) {
             eventRecorder.recordEvent(event);
         }
         assertEquals(20, dbUtil.getTotalNumber());
         eventRecorder.submitEvents();
-        assertEquals(1, ((ThreadPoolExecutor) executorService).getTaskCount());
-        Thread.sleep(1500);
+        assertTrue(((ThreadPoolExecutor) executorService).getActiveCount() < 2);
+        Thread.sleep(3000);
         assertEquals(0, dbUtil.getTotalNumber());
     }
 

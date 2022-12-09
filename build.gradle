@@ -37,6 +37,7 @@ allprojects {
 
 task clean(type: Delete) {
     delete rootProject.buildDir
+    delete "clickstream/build/"
 }
 
 
@@ -72,6 +73,7 @@ ext {
 subprojects { project ->
     afterEvaluate {
         configAndroidLibrary(project)
+        project.apply from: '../jacoco.gradle'
     }
 }
 
