@@ -458,7 +458,7 @@ public class EventRecorderTest {
         assertEquals(20, dbUtil.getTotalNumber());
         eventRecorder.submitEvents();
         assertTrue(((ThreadPoolExecutor) executorService).getActiveCount() < 2);
-        Thread.sleep(3000);
+        Thread.sleep(1000);
         assertEquals(0, dbUtil.getTotalNumber());
     }
 
