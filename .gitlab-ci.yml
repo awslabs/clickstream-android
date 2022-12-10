@@ -9,7 +9,9 @@
 
 default:
   image: openjdk:8-jdk
-
+  tags:
+    - size:2xlarge
+    - arch:amd64
 variables:
 
   # ANDROID_COMPILE_SDK is the version of Android you're compiling with.
@@ -78,7 +80,7 @@ build:
     # Not necessary, but just for security
     - chmod +x ./gradlew
   script:
-    - ./gradlew -Dorg.gradle.jvmargs="-Xmx1024m" build -p clickstream
+    - ./gradlew build -p clickstream
     - ./gradlew jacocoTestReport
     - grep -Eo "Total.*?([0–9]{1,3})%" clickstream/build/reports/jacoco/index.html
   coverage: '/Total.*?([0-9]{1,3})%/'

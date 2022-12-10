@@ -11,6 +11,7 @@ The Clickstream SDK supports Android API level 16 (Android 4.1) and above.
 
 ## How to build locally
 ### Config your local environment
+First of all you should install the latest version of [Android Studio](https://developer.android.com/studio).
 ####  Config your checkstyle:
 1. Open your Android Studio -> Preferences -> Tools -> check style window.
 2. Change the check style version to 8.29.
@@ -30,6 +31,21 @@ The Clickstream SDK supports Android API level 16 (Android 4.1) and above.
 open an terminal window,at the root project folder to execute:
 ```shell
 ./gradlew build -p clickstream
+```
+## How to build in GitLab
+### Runner tags select
+Because We need to allow 64-bit machines to run Android's 32-bit tools, so we need to execute:
+```shell
+- apt-get --quiet install --yes wget tar unzip lib32stdc++6 lib32z1
+```
+This command needs to be executed in amd64 architecture machine,
+so we should config the runner both size and arch tag below at `.gitlab-ci.yml` to ensure the architecture is right to execute.
+```shell
+default:
+  image: openjdk:8-jdk
+  tags:
+    - size:2xlarge
+    - arch:amd64
 ```
 
 
