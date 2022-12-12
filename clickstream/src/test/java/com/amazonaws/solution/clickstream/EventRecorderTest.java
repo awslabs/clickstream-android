@@ -458,7 +458,7 @@ public class EventRecorderTest {
         assertEquals(20, dbUtil.getTotalNumber());
         eventRecorder.submitEvents();
         assertTrue(((ThreadPoolExecutor) executorService).getActiveCount() < 2);
-        Thread.sleep(1000);
+        Thread.sleep(1500);
         assertEquals(0, dbUtil.getTotalNumber());
     }
 
@@ -593,7 +593,7 @@ public class EventRecorderTest {
     }
 
     /**
-     * close db and stop mock server runner.
+     * close db and finish executorService.
      */
     @After
     public void tearDown() {

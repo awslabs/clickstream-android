@@ -1,0 +1,14 @@
+{
+  "UserAgent": "aws-amplify-cli/2.0",
+  "Version": "1.0",
+  "analytics": {
+    "plugins": {
+      "awsClickstreamPlugin": {
+        "appId": "uba-app",
+        "endpoint": "http://localhost:8082/collect/success",
+        "isCompressEvents": false,
+        "autoFlushEventsInterval": 1000
+      }
+    }
+  }
+}
