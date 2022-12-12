@@ -19,6 +19,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Objects;
 
 /**
  * reflect Util for test.
@@ -60,6 +61,9 @@ public final class ReflectUtil {
     public static Object getFiled(Object object, String fieldName) throws Exception {
         Field field = object.getClass().getDeclaredField(fieldName);
         field.setAccessible(true);
+        Field modifiersField = Field.class.getDeclaredField("modifiers");
+        modifiersField.setAccessible(true);
+        modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
         return field.get(object);
     }
 
@@ -78,10 +82,25 @@ public final class ReflectUtil {
     }
 
     /**
+     * to invoke private method for not has param in super class.
+     *
+     * @param object     the object to invoke.
+     * @param methodName the method name of the object to invoke.
+     * @return the object of the method return.
+     * @throws Exception exception.
+     */
+    public static Object invokeSuperMethod(Object object, String methodName) throws Exception {
+        Method method = Objects.requireNonNull(object.getClass().getSuperclass()).getDeclaredMethod(methodName);
+        method.setAccessible(true);
+        return method.invoke(object);
+    }
+
+    /**
      * invokeMethod with method and args.
+     *
      * @param object object to invoke.
      * @param method the method to invoke.
-     * @param args the method args.
+     * @param args   the method args.
      * @return the method return object.
      * @throws Exception exception
      */

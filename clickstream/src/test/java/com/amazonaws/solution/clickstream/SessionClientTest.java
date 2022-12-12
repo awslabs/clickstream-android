@@ -150,5 +150,6 @@ public class SessionClientTest {
     @After
     public void tearDown() {
         dbUtil.closeDB();
+        client.stopSession();
     }
 }
