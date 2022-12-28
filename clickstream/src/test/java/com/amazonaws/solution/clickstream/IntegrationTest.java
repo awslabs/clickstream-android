@@ -21,13 +21,13 @@ import android.database.Cursor;
 import android.os.Handler;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.core.Amplify;
 
 import com.amazonaws.logging.Log;
 import com.amazonaws.solution.clickstream.client.AnalyticsClient;
 import com.amazonaws.solution.clickstream.client.ClickstreamConfiguration;
 import com.amazonaws.solution.clickstream.client.ClickstreamContext;
+import com.amazonaws.solution.clickstream.client.Event;
 import com.amazonaws.solution.clickstream.client.EventRecorder;
 import com.amazonaws.solution.clickstream.client.db.ClickstreamDBUtil;
 import com.amazonaws.solution.clickstream.util.ReflectUtil;
@@ -53,7 +53,6 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -116,7 +115,7 @@ public class IntegrationTest {
         executeBackground();
         ClickstreamAnalytics.recordEvent("testRecordEventWithName");
         assertEquals(1, dbUtil.getTotalNumber());
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         assertEquals(0, dbUtil.getTotalNumber());
     }
 
@@ -129,13 +128,13 @@ public class IntegrationTest {
     @Test
     public void testRecordOneEvent() throws Exception {
         executeBackground();
-        AnalyticsEvent event =
-            AnalyticsEvent.builder()
+        ClickstreamEvent event =
+            ClickstreamEvent.builder()
                 .name("PasswordReset")
-                .addProperty("Channel", "SMS")
-                .addProperty("Successful", true)
-                .addProperty("ProcessDuration", 792)
-                .addProperty("UserAge", 120.3)
+                .add("Channel", "SMS")
+                .add("Successful", true)
+                .add("ProcessDuration", 792)
+                .add("UserAge", 120.3)
                 .build();
         ClickstreamAnalytics.recordEvent(event);
         assertEquals(1, dbUtil.getTotalNumber());
@@ -151,10 +150,164 @@ public class IntegrationTest {
         Assert.assertEquals(792, attribute.getInt("ProcessDuration"));
         Assert.assertEquals(120.3, attribute.getDouble("UserAge"), 0.01);
 
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         assertEquals(0, dbUtil.getTotalNumber());
         cursor.close();
     }
+
+    /**
+     * test add global attribute.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testAddGlobalAttribute() throws Exception {
+        ClickstreamAttribute globalAttribute = ClickstreamAttribute.builder()
+            .add("channel", "HUAWEI")
+            .add("level", 5.1)
+            .add("class", 6)
+            .add("isOpenNotification", true)
+            .build();
+        ClickstreamAnalytics.addGlobalAttributes(globalAttribute);
+        ClickstreamEvent event = ClickstreamEvent.builder()
+            .name("PasswordReset")
+            .add("Message", "SMS")
+            .add("Successful", true)
+            .add("ProcessDuration", 792)
+            .add("UserAge", 120.3)
+            .build();
+        ClickstreamAnalytics.recordEvent(event);
+        assertEquals(1, dbUtil.getTotalNumber());
+        Cursor cursor = dbUtil.queryAllEvents();
+        cursor.moveToFirst();
+        String eventString = cursor.getString(2);
+        JSONObject jsonObject = new JSONObject(eventString);
+        JSONObject attribute = jsonObject.getJSONObject("attributes");
+
+        Assert.assertEquals("HUAWEI", attribute.getString("channel"));
+        Assert.assertEquals(5.1, attribute.getDouble("level"), 0.01);
+        Assert.assertEquals(6, attribute.getInt("class"));
+        Assert.assertTrue(attribute.getBoolean("isOpenNotification"));
+
+        Assert.assertEquals("SMS", attribute.getString("Message"));
+        Assert.assertTrue(attribute.getBoolean("Successful"));
+        Assert.assertEquals(792, attribute.getInt("ProcessDuration"));
+        Assert.assertEquals(120.3, attribute.getDouble("UserAge"), 0.01);
+
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1000);
+        assertEquals(0, dbUtil.getTotalNumber());
+        cursor.close();
+    }
+
+
+    /**
+     * test add delete global attribute.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testDeleteGlobalAttribute() throws Exception {
+        ClickstreamAttribute globalAttribute = ClickstreamAttribute.builder()
+            .add("channel", "HUAWEI")
+            .add("level", 5.1)
+            .add("class", 6)
+            .add("isOpenNotification", true)
+            .build();
+        ClickstreamAnalytics.addGlobalAttributes(globalAttribute);
+        ClickstreamEvent event = ClickstreamEvent.builder()
+            .name("PasswordReset")
+            .add("Message", "SMS")
+            .add("Successful", true)
+            .add("ProcessDuration", 792)
+            .add("Number", 20.1)
+            .build();
+        ClickstreamAnalytics.deleteGlobalAttributes("level");
+        ClickstreamAnalytics.recordEvent(event);
+        assertEquals(1, dbUtil.getTotalNumber());
+        Cursor cursor = dbUtil.queryAllEvents();
+        cursor.moveToFirst();
+        String eventString = cursor.getString(2);
+        JSONObject jsonObject = new JSONObject(eventString);
+        JSONObject attribute = jsonObject.getJSONObject("attributes");
+
+        Assert.assertEquals("HUAWEI", attribute.getString("channel"));
+        Assert.assertFalse(attribute.has("level"));
+        Assert.assertTrue(attribute.getBoolean("isOpenNotification"));
+
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1000);
+        assertEquals(0, dbUtil.getTotalNumber());
+        cursor.close();
+    }
+
+    /**
+     * test add user attribute.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testAddUserAttributes() throws Exception {
+        executeBackground();
+        ClickstreamUserAttribute clickstreamUserAttribute = ClickstreamUserAttribute.builder()
+            .userId("13212")
+            .add("_user_age", 21)
+            .add("isFirstOpen", true)
+            .add("score", 85.5)
+            .add("_user_name", "carl")
+            .build();
+        ClickstreamAnalytics.addUserAttributes(clickstreamUserAttribute);
+        ClickstreamEvent event = ClickstreamEvent.builder()
+            .name("PasswordReset")
+            .add("Message", "SMS")
+            .add("Successful", true)
+            .add("ProcessDuration", 792)
+            .add("Number", 20.1)
+            .build();
+        ClickstreamAnalytics.recordEvent(event);
+        assertEquals(1, dbUtil.getTotalNumber());
+
+        Cursor cursor = dbUtil.queryAllEvents();
+        cursor.moveToFirst();
+        String eventString = cursor.getString(2);
+        JSONObject jsonObject = new JSONObject(eventString);
+        JSONObject attribute = jsonObject.getJSONObject("attributes");
+        JSONObject user = jsonObject.getJSONObject("user");
+        Assert.assertEquals("13212", user.getString(Event.ReservedAttribute.USER_ID));
+        Assert.assertEquals(21, user.getInt("_user_age"));
+        Assert.assertEquals("carl", user.getString("_user_name"));
+
+        Assert.assertTrue(attribute.getBoolean("Successful"));
+        Assert.assertEquals("SMS", attribute.getString("Message"));
+
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1000);
+        assertEquals(0, dbUtil.getTotalNumber());
+        cursor.close();
+    }
+
+    /**
+     * test flush event.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testFlushEvent() throws Exception {
+        ClickstreamEvent event =
+            ClickstreamEvent.builder()
+                .name("PasswordReset")
+                .add("Channel", "SMS")
+                .add("Successful", true)
+                .add("ProcessDuration", 792)
+                .add("UserAge", 120.3)
+                .build();
+        ClickstreamAnalytics.recordEvent(event);
+        assertEquals(1, dbUtil.getTotalNumber());
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1000);
+        assertEquals(0, dbUtil.getTotalNumber());
+    }
+
 
     /**
      * test record one event use ClickstreamAnalytics api and
@@ -168,7 +321,7 @@ public class IntegrationTest {
         setRequestPathToFail();
         ClickstreamAnalytics.recordEvent("testRecordEventWithName");
         assertEquals(1, dbUtil.getTotalNumber());
-        Thread.sleep(2000);
+        Thread.sleep(1000);
         assertEquals(1, dbUtil.getTotalNumber());
     }
 
@@ -181,29 +334,23 @@ public class IntegrationTest {
     @Test
     public void testRecordEventWithSubmitterTwice() throws Exception {
         executeBackground();
-        Log log = mock(Log.class);
-        ReflectUtil.modifyFiled(eventRecorder, "LOG", log);
-
-        AnalyticsEvent.Builder builder = AnalyticsEvent.builder()
+        ClickstreamEvent.Builder builder = ClickstreamEvent.builder()
             .name("PasswordReset")
-            .addProperty("Channel", "SMS")
-            .addProperty("Successful", true)
-            .addProperty("ProcessDuration", 792)
-            .addProperty("UserAge", 120.3);
+            .add("Channel", "SMS")
+            .add("Successful", true)
+            .add("ProcessDuration", 792)
+            .add("UserAge", 120.3);
         String longString = analyticsClient.createEvent("testEvent").toString();
-        for (int i = 0; i < 20; i++) {
-            builder.addProperty("str" + i, longString);
+        for (int i = 0; i < 80; i++) {
+            builder.add("str" + i, longString);
         }
-        AnalyticsEvent event = builder.build();
+        ClickstreamEvent event = builder.build();
         for (int i = 0; i < 20; i++) {
             ClickstreamAnalytics.recordEvent(event);
         }
         assertEquals(20, dbUtil.getTotalNumber());
-        Thread.sleep(3000);
+        Thread.sleep(1000);
         assertEquals(0, dbUtil.getTotalNumber());
-        verify(log, times(3)).info("deleted event number: 6");
-        verify(log).info("reached maxSubmissions: 3");
-        verify(log).info("deleted event number: 2");
     }
 
     /**
@@ -258,7 +405,7 @@ public class IntegrationTest {
      */
     private void mockHandler(Handler handler) {
         when(handler.postDelayed(any(Runnable.class), anyLong())).thenAnswer(invocation -> {
-            Thread.sleep(1000);
+            Thread.sleep(200);
             invocation.getArgument(0, Runnable.class).run();
             return null;
         });

@@ -31,74 +31,60 @@ import java.util.Calendar;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * An event for clickstream.
  */
 public class AnalyticsEvent implements JSONSerializable {
-
-    static final int MAX_NUM_OF_ATTRIBUTES = 500;
     private static final Log LOG = LogFactory.getLog(AnalyticsEvent.class);
     private static final int INDENTATION = 4;
     private String androidId;
-    private String eventId;
-    private String eventType;
+    private final String eventId;
+    private final String eventType;
     private String sdkName;
     private String sdkVersion;
     private final JSONObject attributes = new JSONObject();
-    private Long timestamp;
-    private String uniqueId;
+    private final JSONObject userAttributes = new JSONObject();
+    private final Long timestamp;
+    private final String uniqueId;
     private Session session;
     private AndroidAppDetails appDetails;
     private AndroidDeviceDetails deviceDetails;
     private AndroidConnectivity connectivity;
     private int heightPixels;
     private int widthPixels;
-    private AtomicInteger currentNumOfAttributes = new AtomicInteger(0);
 
     /**
      * The default constructor.
      *
-     * @param eventType  The eventType of the new event.
-     * @param attributes A list of attributes of the new event.
-     * @param timestamp  The timestamp of the new event.
-     * @param uniqueId   The uniqueId of the new event.
+     * @param eventType        The eventType of the new event.
+     * @param globalAttributes A list of global attributes of the new event.
+     * @param userAttributes   A list of user attributes of the new event.
+     * @param timestamp        The timestamp of the new event.
+     * @param uniqueId         The uniqueId of the new event.
      */
-    AnalyticsEvent(final String eventType, final Map<String, String> attributes,
+    AnalyticsEvent(final String eventType, final Map<String, Object> globalAttributes,
+                   final Map<String, Object> userAttributes,
                    final long timestamp, final String uniqueId) {
-        this(UUID.randomUUID().toString(), eventType, attributes, timestamp, uniqueId);
+        this(UUID.randomUUID().toString(), eventType, globalAttributes, userAttributes, timestamp, uniqueId);
     }
 
-    private AnalyticsEvent(final String eventId, final String eventType, final Map<String, String> attributes,
-                           final long timestamp, final String uniqueId) {
+    private AnalyticsEvent(final String eventId, final String eventType, final Map<String, Object> globalAttributes,
+                           final Map<String, Object> userAttributes, final long timestamp, final String uniqueId) {
         this.eventId = eventId;
         this.timestamp = timestamp;
         this.uniqueId = uniqueId;
         this.eventType = eventType;
         if (null != attributes) {
-            for (final Map.Entry<String, String> kvp : attributes.entrySet()) {
-                this.addAttribute(kvp.getKey(), kvp.getValue());
+            for (final Map.Entry<String, Object> kvp : globalAttributes.entrySet()) {
+                this.addGlobalAttribute(kvp.getKey(), kvp.getValue());
             }
         }
-    }
-
-    /**
-     * Setter for eventId.
-     *
-     * @param eventId The eventId.
-     */
-    public void setEventId(String eventId) {
-        this.eventId = eventId;
-    }
-
-    /**
-     * Setter for eventType.
-     *
-     * @param eventType The eventType.
-     */
-    public void setEventType(String eventType) {
-        this.eventType = eventType;
+        if (null != userAttributes) {
+            for (final Map.Entry<String, Object> kvp : userAttributes.entrySet()) {
+                this.addUserAttribute(kvp.getKey(), kvp.getValue());
+            }
+        }
     }
 
     /**
@@ -122,24 +108,6 @@ public class AnalyticsEvent implements JSONSerializable {
                 this.addAttribute(kvp.getKey(), kvp.getValue());
             }
         }
-    }
-
-    /**
-     * Setter for timestamp.
-     *
-     * @param timestamp The timestamp.
-     */
-    public void setTimestamp(Long timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    /**
-     * Setter for uniqueId.
-     *
-     * @param uniqueId The uniqueId.
-     */
-    public void setUniqueId(String uniqueId) {
-        this.uniqueId = uniqueId;
     }
 
     /**
@@ -170,21 +138,12 @@ public class AnalyticsEvent implements JSONSerializable {
     }
 
     /**
-     * Setter for currentNumOfAttributes.
+     * Getter for currentNumOfAttributes.
      *
-     * @param currentNumOfAttributes The currentNumOfAttributes.
+     * @return currentNumOfAttributes AtomicInteger
      */
-    public void setCurrentNumOfAttributes(AtomicInteger currentNumOfAttributes) {
-        this.currentNumOfAttributes = currentNumOfAttributes;
-    }
-
-    /**
-     * Get the connectivity.
-     *
-     * @return The connectivity.
-     */
-    public AndroidConnectivity getConnectivity() {
-        return connectivity;
+    public int getCurrentNumOfAttributes() {
+        return this.attributes.length();
     }
 
     /**
@@ -260,9 +219,26 @@ public class AnalyticsEvent implements JSONSerializable {
     }
 
     /**
+     * add global attribute and do not check the attribute.
+     *
+     * @param name  The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    private void addGlobalAttribute(final String name, final Object value) {
+        try {
+            attributes.putOpt(name, value);
+        } catch (JSONException exception) {
+            LOG.error("error parsing json, error message:" + exception.getMessage());
+        }
+    }
+
+    /**
      * Adds an attribute to this {@link AnalyticsEvent} with the specified key.
      * Only 500 attributes are allowed to be added to an Event. If 500
-     * attribute already exist on this Event, the call may be ignored.
+     * attribute already exist on this Event, the call will be ignored and log error.
+     * If the attribute name if not valid or exceed the length limit the error will be record.
+     * If the attribute value exceed the length limit the error will be record.
+     * see the event limit definitions {@link Event.Limit} for detail.
      *
      * @param name  The name of the attribute.
      * @param value The value of the attribute.
@@ -271,21 +247,44 @@ public class AnalyticsEvent implements JSONSerializable {
         if (null == name) {
             return;
         }
-
         if (null != value) {
-            if (currentNumOfAttributes.get() < MAX_NUM_OF_ATTRIBUTES) {
-                try {
+            Event.EventError attributeError = Event.checkAttribute(getCurrentNumOfAttributes(), name, value);
+            try {
+                if (attributeError != null) {
+                    if (!attributes.has(attributeError.getErrorType())) {
+                        attributes.putOpt(attributeError.getErrorType(), attributeError.getErrorMessage());
+                    }
+                } else {
                     attributes.putOpt(name, value);
-                    currentNumOfAttributes.incrementAndGet();
-                } catch (JSONException exception) {
-                    LOG.warn("error parsing json");
                 }
-            } else {
-                LOG.warn("Event: " + name + ", reached the max number of attributes limit ("
-                    + MAX_NUM_OF_ATTRIBUTES + ").");
+            } catch (JSONException exception) {
+                LOG.error("error parsing json, error message:" + exception.getMessage());
             }
         } else {
             attributes.remove(name);
+        }
+    }
+
+    /**
+     * Adds an user attribute to this {@link AnalyticsEvent} with the specified key.
+     * Only 100 user attributes are allowed to be added to an Event. If 100
+     * attribute already exist on this Event, the call will be ignored.
+     *
+     * @param name  The name of the user attribute.
+     * @param value The value of the user attribute.
+     */
+    public void addUserAttribute(final String name, final Object value) {
+        if (null == name) {
+            return;
+        }
+        if (null != value) {
+            try {
+                userAttributes.putOpt(name, value);
+            } catch (JSONException exception) {
+                LOG.error("error parsing json, error message:" + exception.getMessage());
+            }
+        } else {
+            userAttributes.remove(name);
         }
     }
 
@@ -365,22 +364,6 @@ public class AnalyticsEvent implements JSONSerializable {
      */
     public String getSdkVersion() {
         return sdkVersion;
-    }
-
-    /**
-     * Adds an attribute to this {@link AnalyticsEvent} with the specified key.
-     * Only 500 attributes are allowed to be added to an.
-     * {@link AnalyticsEvent}. If 500 attribute already exist on this
-     * {@link AnalyticsEvent}, the call may be ignored.
-     *
-     * @param name  The name of the attribute.
-     * @param value The value of the attribute.
-     * @return The same {@link AnalyticsEvent} instance is returned to allow for
-     * method chaining.
-     */
-    public AnalyticsEvent withAttribute(String name, String value) {
-        addAttribute(name, value);
-        return this;
     }
 
     /**
@@ -491,16 +474,14 @@ public class AnalyticsEvent implements JSONSerializable {
         // ==============Session Attributes=============
         // ****************************************************
         if (session != null) {
-            final JSONObject sessionObject = new JSONObject();
             try {
-                sessionObject.put("id", session.getSessionID());
-                sessionObject.put("startTimestamp", session.getStartTime());
-                sessionObject.put("stopTimestamp", session.getStopTime());
-                sessionObject.put("duration", session.getSessionDuration().longValue());
+                attributes.put("_session_id", session.getSessionID());
+                attributes.put("_session_start_timestamp", session.getStartTime());
+                attributes.put("_session_stop_timestamp", session.getStopTime());
+                attributes.put("_session_duration", session.getSessionDuration().longValue());
             } catch (final JSONException jsonException) {
                 LOG.error("Error serializing session information " + jsonException.getMessage());
             }
-            builder.withAttribute("session", sessionObject);
         }
 
         // ****************************************************
@@ -516,6 +497,7 @@ public class AnalyticsEvent implements JSONSerializable {
         //builder.withAttribute("app_version_code", this.appDetails.versionCode());
         builder.withAttribute("app_package_name", this.appDetails.packageName());
         builder.withAttribute("app_title", this.appDetails.getAppTitle());
+        builder.withAttribute("user", this.userAttributes);
         builder.withAttribute("attributes", this.attributes);
         return builder.toJSONObject();
     }

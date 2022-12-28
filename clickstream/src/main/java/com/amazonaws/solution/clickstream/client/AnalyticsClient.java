@@ -21,8 +21,8 @@ import androidx.annotation.NonNull;
 import com.amazonaws.logging.Log;
 import com.amazonaws.logging.LogFactory;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A client to manage creating and sending analytics events.
@@ -31,6 +31,8 @@ public class AnalyticsClient {
     private static final Log LOG = LogFactory.getLog(AnalyticsClient.class);
     private static final int MAX_EVENT_TYPE_LENGTH = 50;
     private final ClickstreamContext context;
+    private final Map<String, Object> globalAttributes = new ConcurrentHashMap<>();
+    private final Map<String, Object> userAttributes = new ConcurrentHashMap<>();
     private final EventRecorder eventRecorder;
     private Session session;
 
@@ -45,27 +47,78 @@ public class AnalyticsClient {
     }
 
     /**
+     * add global attribute for all event, the max limit of attribute in single event is 500,
+     * if exceed, the attribute will not be record.
+     *
+     * @param name  attribute name.
+     * @param value attribute value.
+     * @throws IllegalArgumentException throws when fail to check the attribute name.
+     */
+    public void addGlobalAttribute(String name, Object value) {
+        Event.EventError error = Event.checkAttribute(globalAttributes.size(), name, value);
+        if (error != null) {
+            if (!globalAttributes.containsKey(error.getErrorType())) {
+                globalAttributes.put(error.getErrorType(), error.getErrorMessage());
+            }
+            return;
+        }
+        globalAttributes.put(name, value);
+    }
+
+    /**
+     * delete global attribute for all event.
+     *
+     * @param name attribute name.
+     */
+    public void deleteGlobalAttribute(String name) {
+        globalAttributes.remove(name);
+    }
+
+    /**
+     * add user attribute for all event, the max limit of user attribute in single event is 100,
+     * if exceed, the user attribute will not be record.
+     * if the user attribute name if not valid or exceed the length limit the user attribute will discard and log error.
+     * if the user attribute value exceed the length limit the user attribute will discard and log error.
+     * see the event limit definitions {@link Event.Limit} for detail.
+     *
+     * @param name  user attribute name.
+     * @param value user attribute value.
+     */
+    public void addUserAttribute(String name, Object value) {
+        Event.EventError error = Event.checkUserAttribute(userAttributes.size(), name, value);
+        if (error != null) {
+            if (!userAttributes.containsKey(error.getErrorType())) {
+                userAttributes.put(error.getErrorType(), error.getErrorMessage());
+            }
+            return;
+        }
+        userAttributes.put(name, value);
+    }
+
+    /**
      * Create an event with the specified eventType. The eventType is a
      * developer defined String that can be used to distinguish between
      * different scenarios within an application. Note: You can have at most
      * 500 different eventTypes per app.
      *
-     * @param eventType  the type of event to create.
+     * @param eventType the type of event to create.
      * @return AnalyticsEvent.
      * @throws IllegalArgumentException throws when fail to check the argument.
      */
     public AnalyticsEvent createEvent(String eventType) {
         if (eventType.length() > MAX_EVENT_TYPE_LENGTH) {
-            LOG.error("The event type is too long, the max event type length is "
-                + MAX_EVENT_TYPE_LENGTH + " characters.");
-            throw new IllegalArgumentException("The eventType passed into create event was too long");
+            LOG.error("The event name is too long, the max event type length is "
+                + MAX_EVENT_TYPE_LENGTH + " characters. event name:" + eventType);
+            throw new IllegalArgumentException("The event name passed into create event was too long");
         }
-        Map<String, String> attributes = new HashMap<>();
-
+        if (!Event.isValidName(eventType)) {
+            LOG.error("Event name can only contains uppercase and lowercase letters, underscores, number, " +
+                "and is not start with a number. event name:" + eventType);
+            throw new IllegalArgumentException("The event name was not valid");
+        }
         long timestamp = System.currentTimeMillis();
         String uniqueId = this.context.getUniqueId();
-
-        AnalyticsEvent event = new AnalyticsEvent(eventType, attributes, timestamp, uniqueId);
+        AnalyticsEvent event = new AnalyticsEvent(eventType, globalAttributes, userAttributes, timestamp, uniqueId);
         event.setAndroidId(context.getSystem().getAndroidId());
         event.setSdkInfo(context.getSDKInfo());
         event.setAppDetails(context.getSystem().getAppDetails());

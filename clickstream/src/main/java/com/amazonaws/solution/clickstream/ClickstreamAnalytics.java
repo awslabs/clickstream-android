@@ -19,7 +19,6 @@ import android.app.Application;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.core.Amplify;
 
 /**
@@ -33,6 +32,7 @@ public final class ClickstreamAnalytics {
 
     /**
      * Init ClickstreamAnalytics Plugin.
+     *
      * @param context ApplicationContext
      * @throws AmplifyException Exception of init.
      */
@@ -44,9 +44,9 @@ public final class ClickstreamAnalytics {
     /**
      * Use this method to record Event.
      *
-     * @param event AnalyticsEvent to record
+     * @param event ClickstreamEvent to record
      */
-    public static void recordEvent(@NonNull final AnalyticsEvent event) {
+    public static void recordEvent(@NonNull final ClickstreamEvent event) {
         Amplify.Analytics.recordEvent(event);
     }
 
@@ -57,5 +57,39 @@ public final class ClickstreamAnalytics {
      */
     public static void recordEvent(@NonNull final String eventName) {
         Amplify.Analytics.recordEvent(eventName);
+    }
+
+    /**
+     * Use this method to send events immediately.
+     */
+    public static void flushEvents() {
+        Amplify.Analytics.flushEvents();
+    }
+
+    /**
+     * add user clickstreamAttribute.
+     *
+     * @param clickstreamAttribute the global clickstreamAttribute.
+     */
+    public static void addGlobalAttributes(ClickstreamAttribute clickstreamAttribute) {
+        Amplify.Analytics.registerGlobalProperties(clickstreamAttribute.getAttributes());
+    }
+
+    /**
+     * delete global attributes.
+     *
+     * @param attributeName the attribute name to delete.
+     */
+    public static void deleteGlobalAttributes(@NonNull String... attributeName) {
+        Amplify.Analytics.unregisterGlobalProperties(attributeName);
+    }
+
+    /**
+     * add user.
+     *
+     * @param userProfile user
+     */
+    public static void addUserAttributes(ClickstreamUserAttribute userProfile) {
+        Amplify.Analytics.identifyUser(userProfile.getUserId(), userProfile);
     }
 }

@@ -35,6 +35,7 @@ import com.github.dreamhead.moco.Runner;
 import org.json.JSONArray;
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -56,6 +57,7 @@ import static com.github.dreamhead.moco.Moco.text;
 import static com.github.dreamhead.moco.Moco.uri;
 import static com.github.dreamhead.moco.Runner.runner;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -145,6 +147,35 @@ public class EventRecorderTest {
         c.close();
     }
 
+
+    /**
+     * test insert single event when exceed attribute number limit.
+     */
+    @Test
+    public void testRecordEventExceedAttributeNumberLimit() {
+        for (int i = 0; i < 501; i++) {
+            event.addAttribute("name" + i, "value" + i);
+        }
+        assertEquals("value499", event.getStringAttribute("name499"));
+        assertFalse(event.hasAttribute("name500"));
+        assertTrue(event.hasAttribute("_error_attribute_size_exceed"));
+        assertEquals("attribute name: name500", event.getStringAttribute("_error_attribute_size_exceed"));
+    }
+
+    /**
+     * test insert single event when add same attribute name multi times, the value of the attribute name
+     * will covered by the last value.
+     */
+    @Test
+    public void testRecordEventAddSameAttributeMultiTimes() {
+        for (int i = 0; i < 501; i++) {
+            event.addAttribute("name", "value" + i);
+        }
+        assertEquals("value500", event.getStringAttribute("name"));
+        Assert.assertEquals(1, event.getCurrentNumOfAttributes());
+        assertFalse(event.hasAttribute("_error_attribute_size_exceed"));
+    }
+
     /**
      * test getBatchOfEvents for one event.
      *
@@ -168,16 +199,27 @@ public class EventRecorderTest {
      */
     @Test
     public void testGetBatchOfEventsForOneEventReachedLimitSize() throws Exception {
+        String str = "abcdefghij";
         String json = event.toString();
-        for (int i = 0; i < 300; i++) {
-            event.addAttribute("test_json_" + i, json);
+        StringBuilder nameBuilder = new StringBuilder();
+        for (int i = 0; i < 4; i++) {
+            nameBuilder.append(str);
+        }
+        String name = nameBuilder.toString();
+        for (int i = 0; i < 100; i++) {
+            event.addUserAttribute(name + i, name + name + i);
+        }
+        for (int i = 0; i < 500; i++) {
+            event.addAttribute(name + i, json + i);
         }
         eventRecorder.recordEvent(event);
+        Assert.assertTrue(event.toString().length() > 512 * 1024);
         Cursor cursor = dbUtil.queryAllEvents();
         String[] result = getBatchOfEvents(cursor);
         assertEquals(result.length, 2);
-        assertEquals("", result[0]);
-        assertEquals("-1", result[1]);
+        assertNotNull(result[0]);
+        assertTrue(result[0].length() > 512 * 1024);
+        assertEquals("1", result[1]);
         cursor.close();
     }
 
@@ -200,6 +242,24 @@ public class EventRecorderTest {
     }
 
     /**
+     * test getBatchOfEvents when reached default limited event number 100.
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testGetBatchOfEventsReachedLimitNumber() throws Exception {
+        for (int i = 0; i < 110; i++) {
+            eventRecorder.recordEvent(event);
+        }
+        Cursor cursor = dbUtil.queryAllEvents();
+        String[] result = getBatchOfEvents(cursor);
+        assertEquals(2, result.length);
+        assertEquals(new JSONArray(result[0]).length(), 100);
+        assertEquals("100", result[1]);
+        cursor.close();
+    }
+
+    /**
      * test getBatchOfEvents when reached default limited size.
      *
      * @throws Exception exception.
@@ -207,17 +267,17 @@ public class EventRecorderTest {
     @Test
     public void testGetBatchOfEventsReachedDefaultLimitSize() throws Exception {
         String json = event.toString();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 20; i++) {
             event.addAttribute("test_json_" + i, json);
         }
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 30; i++) {
             eventRecorder.recordEvent(event);
         }
         Cursor cursor = dbUtil.queryAllEvents();
         String[] result = getBatchOfEvents(cursor);
         assertEquals(2, result.length);
         int length = new JSONArray(result[0]).length();
-        assertTrue(length < 20);
+        assertTrue(length < 30);
         assertEquals(String.valueOf(length), result[1]);
         cursor.close();
     }
@@ -335,7 +395,7 @@ public class EventRecorderTest {
     public void testProcessEventNearReachMaxSubmissions() throws Exception {
         setRequestPath(COLLECT_SUCCESS);
         String json = event.toString();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 40; i++) {
             event.addAttribute("test_json_" + i, json);
         }
         for (int i = 0; i < 20; i++) {
@@ -359,7 +419,7 @@ public class EventRecorderTest {
     public void testProcessEventReachedMaxSubmissions() throws Exception {
         setRequestPath(COLLECT_SUCCESS);
         String json = event.toString();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 40; i++) {
             event.addAttribute("test_json_" + i, json);
         }
         for (int i = 0; i < 40; i++) {
@@ -397,8 +457,8 @@ public class EventRecorderTest {
         assertEquals(40, dbUtil.getTotalNumber());
         int eventNumber = (int) ReflectUtil.invokeMethod(eventRecorder, "processEvents");
         assertEquals(40, eventNumber);
-        verify(log, times(3)).info("deleted event number: 12");
-        verify(log).info("deleted event number: 4");
+        verify(log, times(3)).info("deleted event number: 11");
+        verify(log).info("deleted event number: 7");
         verify(log, never()).info("reached maxSubmissions: 3");
         assertEquals(0, dbUtil.getTotalNumber());
     }
@@ -430,7 +490,7 @@ public class EventRecorderTest {
     public void testProcessEventForMultiSubmissionsInLatency() throws Exception {
         setRequestPath(COLLECT_SUCCESS_LATENCY2000);
         String json = event.toString();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 40; i++) {
             event.addAttribute("test_json_" + i, json);
         }
         for (int i = 0; i < 20; i++) {
@@ -471,7 +531,7 @@ public class EventRecorderTest {
     public void testSubmitPartOfEventForMultiRequest() throws Exception {
         setRequestPath(COLLECT_SUCCESS_LATENCY200);
         String json = event.toString();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 40; i++) {
             event.addAttribute("test_json_" + i, json);
         }
         for (int i = 0; i < 40; i++) {
@@ -495,7 +555,7 @@ public class EventRecorderTest {
     public void testSubmitAllEventForMultiRequest() throws Exception {
         setRequestPath(COLLECT_SUCCESS_LATENCY200);
         String json = event.toString();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 40; i++) {
             event.addAttribute("test_json_" + i, json);
         }
         for (int i = 0; i < 40; i++) {
@@ -523,7 +583,7 @@ public class EventRecorderTest {
     public void testTimerThreeTimesSubmitAllEventForMultiRequest() throws Exception {
         setRequestPath(COLLECT_SUCCESS_LATENCY200);
         String json = event.toString();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 40; i++) {
             event.addAttribute("test_json_" + i, json);
         }
         for (int i = 0; i < 40; i++) {
@@ -552,7 +612,7 @@ public class EventRecorderTest {
     public void testSubmitAllEventForReachTheQueueLimit() throws Exception {
         setRequestPath(COLLECT_SUCCESS_LATENCY200);
         String json = event.toString();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 40; i++) {
             event.addAttribute("test_json_" + i, json);
         }
         for (int i = 0; i < 120; i++) {
