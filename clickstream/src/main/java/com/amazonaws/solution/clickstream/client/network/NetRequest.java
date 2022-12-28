@@ -88,7 +88,6 @@ public final class NetRequest {
      */
     private static Response request(@NonNull String eventJson, @NonNull ClickstreamConfiguration configuration)
         throws IOException {
-        LOG.debug(String.format(Locale.US, "Submitting %d events.", eventJson.length()));
         String appId = configuration.getAppId();
         String endpoint = configuration.getEndpoint();
         String curStr = eventJson;

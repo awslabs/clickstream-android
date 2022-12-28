@@ -42,7 +42,7 @@ public class EventRecorder {
 
     private static final int DEFAULT_MAX_SUBMISSIONS_ALLOWED = 3;
     private static final int MAX_EVENT_OPERATIONS = 1000;
-    private static final long DEFAULT_MAX_SUBMISSION_SIZE = 128 * 1024;
+    private static final long DEFAULT_MAX_SUBMISSION_SIZE = 512 * 1024;
     private static final Log LOG = LogFactory.getLog(EventRecorder.class);
 
     private static final int JSON_COLUMN_INDEX = EventTable.ColumnIndex.JSON.getValue();
@@ -165,23 +165,22 @@ public class EventRecorder {
             clickstreamContext.getConfiguration().optLong(KEY_MAX_SUBMISSION_SIZE, DEFAULT_MAX_SUBMISSION_SIZE);
         final StringBuilder eventBuilder = new StringBuilder();
         eventBuilder.append("[");
+        int eventNumber = 0;
         String suffix = ",";
         do {
             int size = cursor.getInt(SIZE_COLUMN_INDEX);
             String eventJson = cursor.getString(JSON_COLUMN_INDEX);
             if (!StringUtil.isNullOrEmpty(eventJson)) {
                 currentRequestSize += size;
-                if (currentRequestSize > maxRequestSize) {
+                eventNumber++;
+                if (currentRequestSize > maxRequestSize || eventNumber > Event.Limit.MAX_EVENT_NUMBER_OF_BATCH) {
                     if (eventBuilder.length() > 2) {
                         int length = eventBuilder.length();
                         eventBuilder.replace(length - 1, length, "]");
                         lastEventId = String.valueOf(cursor.getInt(ID_COLUMN_INDEX) - 1);
                         cursor.moveToPrevious();
-                    } else {
-                        eventBuilder.deleteCharAt(0);
-                        lastEventId = "-1";
+                        break;
                     }
-                    break;
                 }
                 if (cursor.isLast()) {
                     lastEventId = String.valueOf(cursor.getInt(ID_COLUMN_INDEX));

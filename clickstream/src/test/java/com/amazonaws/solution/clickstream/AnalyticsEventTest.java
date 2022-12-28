@@ -84,9 +84,7 @@ public class AnalyticsEventTest {
     public void eventAttribute() {
         AnalyticsEvent event = analyticsClient.createEvent("testEvent");
         StringBuilder eventName = new StringBuilder();
-        for (int i = 0; i < 25; i++) {
-            eventName.append("abcdefghijabcdefghijabcdefghijabcdefghijabcdefghija");
-        }
+        eventName.append("abcdefghijabcdefghijabcde");
         event.addAttribute("name", "value");
         event.addAttribute(eventName.toString(), "123");
         Assert.assertEquals(event.getStringAttribute("name"), "value");
@@ -106,7 +104,9 @@ public class AnalyticsEventTest {
         Assert.assertEquals(event.getStringAttribute("name11"), "value11");
         Assert.assertEquals(event.getStringAttribute("name500"), "value500");
         Assert.assertNull(event.getStringAttribute("name501"));
-        Assert.assertEquals(event.getAttributes().length(), 500);
+        Assert.assertEquals(event.getCurrentNumOfAttributes(), 501);
+        Assert.assertTrue(event.hasAttribute("_error_attribute_size_exceed"));
+        Assert.assertNotNull(event.getStringAttribute("_error_attribute_size_exceed"));
     }
 
     /**

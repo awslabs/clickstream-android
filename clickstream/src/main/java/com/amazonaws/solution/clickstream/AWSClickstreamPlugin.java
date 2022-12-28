@@ -20,15 +20,11 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.analytics.AnalyticsBooleanProperty;
-import com.amplifyframework.analytics.AnalyticsDoubleProperty;
 import com.amplifyframework.analytics.AnalyticsEventBehavior;
 import com.amplifyframework.analytics.AnalyticsException;
-import com.amplifyframework.analytics.AnalyticsIntegerProperty;
 import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsProperties;
 import com.amplifyframework.analytics.AnalyticsPropertyBehavior;
-import com.amplifyframework.analytics.AnalyticsStringProperty;
 import com.amplifyframework.analytics.UserProfile;
 
 import com.amazonaws.logging.Log;
@@ -36,6 +32,7 @@ import com.amazonaws.logging.LogFactory;
 import com.amazonaws.solution.clickstream.client.AnalyticsClient;
 import com.amazonaws.solution.clickstream.client.AnalyticsEvent;
 import com.amazonaws.solution.clickstream.client.ClickstreamManager;
+import com.amazonaws.solution.clickstream.client.Event;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -63,7 +60,14 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
 
     @Override
     public void identifyUser(@NonNull String userId, @Nullable UserProfile profile) {
-
+        analyticsClient.addUserAttribute(Event.ReservedAttribute.USER_ID, userId);
+        if (profile instanceof ClickstreamUserAttribute) {
+            for (Map.Entry<String, AnalyticsPropertyBehavior<?>> entry :
+                ((ClickstreamUserAttribute) profile).getUserAttributes()) {
+                AnalyticsPropertyBehavior<?> property = entry.getValue();
+                analyticsClient.addUserAttribute(entry.getKey(), property.getValue());
+            }
+        }
     }
 
     @Override
@@ -91,19 +95,8 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
 
         if (analyticsEvent.getProperties() != null) {
             for (Map.Entry<String, AnalyticsPropertyBehavior<?>> entry : analyticsEvent.getProperties()) {
-                String key = entry.getKey();
                 AnalyticsPropertyBehavior<?> property = entry.getValue();
-                Object value = null;
-                if (property instanceof AnalyticsStringProperty) {
-                    value = ((AnalyticsStringProperty) property).getValue();
-                } else if (property instanceof AnalyticsBooleanProperty) {
-                    value = ((AnalyticsBooleanProperty) property).getValue().toString();
-                } else if (property instanceof AnalyticsDoubleProperty) {
-                    value = ((AnalyticsDoubleProperty) property).getValue();
-                } else if (property instanceof AnalyticsIntegerProperty) {
-                    value = ((AnalyticsIntegerProperty) property).getValue().doubleValue();
-                }
-                clickstreamEvent.addAttribute(key, value);
+                clickstreamEvent.addAttribute(entry.getKey(), property.getValue());
             }
             analyticsClient.recordEvent(clickstreamEvent);
         }
@@ -111,12 +104,17 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
 
     @Override
     public void registerGlobalProperties(@NonNull AnalyticsProperties properties) {
-
+        for (Map.Entry<String, AnalyticsPropertyBehavior<?>> entry : properties) {
+            AnalyticsPropertyBehavior<?> property = entry.getValue();
+            analyticsClient.addGlobalAttribute(entry.getKey(), property.getValue());
+        }
     }
 
     @Override
     public void unregisterGlobalProperties(@NonNull String... propertyNames) {
-
+        for (String name : propertyNames) {
+            analyticsClient.deleteGlobalAttribute(name);
+        }
     }
 
     @Override

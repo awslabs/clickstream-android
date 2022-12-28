@@ -88,11 +88,11 @@ public class SessionClientTest {
         cursor.moveToFirst();
         String eventString = cursor.getString(2);
         JSONObject jsonObject = new JSONObject(eventString);
-        JSONObject sessionObject = jsonObject.getJSONObject("session");
-        assertNotNull(sessionObject.getString("id"));
-        assertNotNull(sessionObject.getString("startTimestamp"));
-        assertNotNull(sessionObject.getString("duration"));
-        assertFalse(sessionObject.has("stopTimestamp"));
+        JSONObject attributes = jsonObject.getJSONObject("attributes");
+        assertNotNull(attributes.getString("_session_id"));
+        assertNotNull(attributes.getString("_session_start_timestamp"));
+        assertNotNull(attributes.getString("_session_duration"));
+        assertFalse(attributes.has("_session_stop_timestamp"));
         cursor.close();
     }
 
@@ -127,20 +127,20 @@ public class SessionClientTest {
         cursor.moveToFirst();
         String eventString = cursor.getString(2);
         JSONObject jsonObject = new JSONObject(eventString);
-        JSONObject sessionObject = jsonObject.getJSONObject("session");
-        assertNotNull(sessionObject.getString("id"));
-        assertNotNull(sessionObject.getString("startTimestamp"));
-        assertNotNull(sessionObject.getString("duration"));
-        assertFalse(sessionObject.has("stopTimestamp"));
+        JSONObject attributes = jsonObject.getJSONObject("attributes");
+        assertNotNull(attributes.getString("_session_id"));
+        assertNotNull(attributes.getString("_session_start_timestamp"));
+        assertNotNull(attributes.getString("_session_duration"));
+        assertFalse(attributes.has("_session_stop_timestamp"));
 
         cursor.moveToNext();
         eventString = cursor.getString(2);
         jsonObject = new JSONObject(eventString);
-        sessionObject = jsonObject.getJSONObject("session");
-        assertNotNull(sessionObject.getString("id"));
-        assertNotNull(sessionObject.getString("startTimestamp"));
-        assertNotNull(sessionObject.getString("duration"));
-        assertNotNull(sessionObject.getString("stopTimestamp"));
+        attributes = jsonObject.getJSONObject("attributes");
+        assertNotNull(attributes.getString("_session_id"));
+        assertNotNull(attributes.getString("_session_start_timestamp"));
+        assertNotNull(attributes.getString("_session_duration"));
+        assertNotNull(attributes.getString("_session_stop_timestamp"));
         cursor.close();
     }
 
