@@ -43,6 +43,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.Map;
+
 import static com.github.dreamhead.moco.Moco.by;
 import static com.github.dreamhead.moco.Moco.httpServer;
 import static com.github.dreamhead.moco.Moco.status;
@@ -79,7 +81,6 @@ public class IntegrationTest {
         runner = runner(server);
         runner.start();
     }
-
 
     /**
      * setup Amplify get dbUtil and init handler background environment.
@@ -248,7 +249,6 @@ public class IntegrationTest {
      */
     @Test
     public void testAddUserAttributes() throws Exception {
-        executeBackground();
         ClickstreamUserAttribute clickstreamUserAttribute = ClickstreamUserAttribute.builder()
             .userId("13212")
             .add("_user_age", 21)
@@ -279,6 +279,88 @@ public class IntegrationTest {
 
         Assert.assertTrue(attribute.getBoolean("Successful"));
         Assert.assertEquals("SMS", attribute.getString("Message"));
+
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1000);
+        assertEquals(0, dbUtil.getTotalNumber());
+        cursor.close();
+    }
+
+    /**
+     * test add user id.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testModifyUserId() throws Exception {
+        ClickstreamUserAttribute clickstreamUserAttribute = ClickstreamUserAttribute.builder()
+            .userId("13212")
+            .add("_user_age", 21)
+            .add("null", true)
+            .add("score", 85.5)
+            .add("_user_name", "carl")
+            .build();
+        ClickstreamAnalytics.addUserAttributes(clickstreamUserAttribute);
+        ClickstreamEvent event = ClickstreamEvent.builder()
+            .name("PasswordReset")
+            .add("Message", "SMS")
+            .add("Successful", true)
+            .add("ProcessDuration", 792)
+            .add("Number", 20.1)
+            .build();
+        ClickstreamAnalytics.setUserId("12345");
+        ClickstreamAnalytics.recordEvent(event);
+        assertEquals(1, dbUtil.getTotalNumber());
+
+        Cursor cursor = dbUtil.queryAllEvents();
+        cursor.moveToFirst();
+        String eventString = cursor.getString(2);
+        JSONObject jsonObject = new JSONObject(eventString);
+        JSONObject user = jsonObject.getJSONObject("user");
+        Assert.assertEquals("12345", user.getString(Event.ReservedAttribute.USER_ID));
+        Assert.assertEquals(21, user.getInt("_user_age"));
+        Assert.assertEquals("carl", user.getString("_user_name"));
+
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1000);
+        assertEquals(0, dbUtil.getTotalNumber());
+        cursor.close();
+    }
+
+    /**
+     * test set user id null.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testSetUserIdNull() throws Exception {
+        ClickstreamUserAttribute clickstreamUserAttribute = ClickstreamUserAttribute.builder()
+            .userId("13212")
+            .add("_user_age", 21)
+            .add("isFirstOpen", true)
+            .add("score", 85.5)
+            .add("_user_name", "carl")
+            .build();
+        ClickstreamAnalytics.addUserAttributes(clickstreamUserAttribute);
+        ClickstreamEvent event = ClickstreamEvent.builder()
+            .name("PasswordReset")
+            .add("Message", "SMS")
+            .add("Successful", true)
+            .add("ProcessDuration", 792)
+            .add("Number", 20.1)
+            .build();
+        ClickstreamAnalytics.setUserId(null);
+        ClickstreamAnalytics.recordEvent(event);
+        assertEquals(1, dbUtil.getTotalNumber());
+
+        Cursor cursor = dbUtil.queryAllEvents();
+        cursor.moveToFirst();
+        String eventString = cursor.getString(2);
+        JSONObject jsonObject = new JSONObject(eventString);
+        JSONObject user = jsonObject.getJSONObject("user");
+        Assert.assertFalse(user.has(Event.ReservedAttribute.USER_ID));
+        Assert.assertEquals(21, user.getInt("_user_age"));
+        Assert.assertEquals("carl", user.getString("_user_name"));
 
         ClickstreamAnalytics.flushEvents();
         Thread.sleep(1000);
@@ -449,6 +531,12 @@ public class IntegrationTest {
     public void tearDown() throws Exception {
         dbUtil.closeDB();
         stopThreadSafely();
+        Map<String, Object> globalAttribute =
+            (Map<String, Object>) ReflectUtil.getFiled(analyticsClient, "globalAttributes");
+        Map<String, Object> userAttributes =
+            (Map<String, Object>) ReflectUtil.getFiled(analyticsClient, "userAttributes");
+        globalAttribute.clear();
+        userAttributes.clear();
     }
 
     /**

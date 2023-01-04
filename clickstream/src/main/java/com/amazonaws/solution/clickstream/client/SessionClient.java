@@ -29,16 +29,6 @@ import com.amazonaws.logging.LogFactory;
  */
 public class SessionClient {
     /**
-     * The eventType recorded for session start events.
-     */
-    public static final String SESSION_START_EVENT_TYPE = "cs_session_start";
-
-    /**
-     * The eventType recorded for session stop events.
-     */
-    public static final String SESSION_STOP_EVENT_TYPE = "cs_session_stop";
-
-    /**
      * Logger instance for SessionClient.
      */
     private static final Log LOG = LogFactory.getLog(SessionClient.class);
@@ -59,6 +49,11 @@ public class SessionClient {
     private Session session;
 
     /**
+     * whether app is first open from install.
+     */
+    private boolean isFirstOpen;
+
+    /**
      * CONSTRUCTOR.
      *
      * @param clickstreamContext The {@link ClickstreamContext}.
@@ -69,6 +64,7 @@ public class SessionClient {
             throw new IllegalArgumentException("A valid AnalyticsClient must be provided!");
         }
         this.clickstreamContext = clickstreamContext;
+        this.isFirstOpen = clickstreamContext.getSystem().getPreferences().getBoolean("isFirstOpen", true);
     }
 
     /**
@@ -112,7 +108,8 @@ public class SessionClient {
     protected void executeStart() {
         session = Session.newInstance(clickstreamContext);
         this.clickstreamContext.getAnalyticsClient().setSession(session);
-        final AnalyticsEvent event = this.clickstreamContext.getAnalyticsClient().createEvent(SESSION_START_EVENT_TYPE);
+        final AnalyticsEvent event =
+            this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.SESSION_START);
         this.clickstreamContext.getAnalyticsClient().recordEvent(event);
     }
 
@@ -132,11 +129,25 @@ public class SessionClient {
         // pause the session if it's not already
         session.pause();
 
-        final AnalyticsEvent event = this.clickstreamContext.getAnalyticsClient().createEvent(SESSION_STOP_EVENT_TYPE);
+        final AnalyticsEvent event =
+            this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.SESSION_STOP);
         this.clickstreamContext.getAnalyticsClient().recordEvent(event);
 
         // Kill Session Object
         session = null;
+    }
+
+    /**
+     * handle the first open event.
+     */
+    public void handleFirstOpen() {
+        if (isFirstOpen) {
+            final AnalyticsEvent event =
+                this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.FIRST_OPEN);
+            this.clickstreamContext.getAnalyticsClient().recordEvent(event);
+            clickstreamContext.getSystem().getPreferences().putBoolean("isFirstOpen", false);
+            isFirstOpen = false;
+        }
     }
 }
 

@@ -65,7 +65,7 @@ public final class Event {
             int valueLength = ((String) value).length();
             if (valueLength > Limit.MAX_LENGTH_OF_VALUE) {
                 LOG.error("attribute : " + name + ", reached the max length of attributes value limit ("
-                    + Limit.MAX_LENGTH_OF_NAME + "). current length is:(" + valueLength +
+                    + Limit.MAX_LENGTH_OF_VALUE + "). current length is:(" + valueLength +
                     "). and the attribute will not be recorded, attribute value:" + value);
 
                 return new EventError(ErrorType.ATTRIBUTE_VALUE_LENGTH_EXCEED,
@@ -227,6 +227,28 @@ public final class Event {
         public static final String USER_ID = "_user_id";
 
         private ReservedAttribute() {
+        }
+    }
+
+    /**
+     * preset event for Clickstream.
+     */
+    public static final class PresetEvent {
+        /**
+         * The eventType recorded for session start events.
+         */
+        public static final String SESSION_START = "_session_start";
+
+        /**
+         * The eventType recorded for session stop events.
+         */
+        public static final String SESSION_STOP = "_session_stop";
+        /**
+         * The eventType recorded for app first open from install.
+         */
+        public static final String FIRST_OPEN = "_first_open";
+
+        private PresetEvent() {
         }
     }
 }

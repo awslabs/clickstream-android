@@ -92,4 +92,13 @@ public final class ClickstreamAnalytics {
     public static void addUserAttributes(ClickstreamUserAttribute userProfile) {
         Amplify.Analytics.identifyUser(userProfile.getUserId(), userProfile);
     }
+
+    /**
+     * set user id.
+     *
+     * @param userId user
+     */
+    public static void setUserId(String userId) {
+        Amplify.Analytics.identifyUser(userId, new ClickstreamUserAttribute.Builder().build());
+    }
 }

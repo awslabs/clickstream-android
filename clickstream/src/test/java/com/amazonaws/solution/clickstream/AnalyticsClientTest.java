@@ -110,13 +110,13 @@ public class AnalyticsClientTest {
 
         analyticsClient.addGlobalAttribute(invalidName, "value");
         Assert.assertTrue(globalAttributes.containsKey("_error_name_invalid"));
-        Assert.assertTrue(Objects.requireNonNull(globalAttributes.get("_error_name_invalid")).toString()
-            .contains(invalidName));
+        Assert.assertTrue(
+            Objects.requireNonNull(globalAttributes.get("_error_name_invalid")).toString().contains(invalidName));
 
         analyticsClient.addGlobalAttribute("name01", exceedLengthValue);
         Assert.assertTrue(globalAttributes.containsKey("_error_value_length_exceed"));
-        Assert.assertTrue(Objects.requireNonNull(globalAttributes.get("_error_value_length_exceed")).toString()
-            .contains("name01"));
+        Assert.assertTrue(
+            Objects.requireNonNull(globalAttributes.get("_error_value_length_exceed")).toString().contains("name01"));
         Assert.assertTrue(Objects.requireNonNull(globalAttributes.get("_error_value_length_exceed")).toString()
             .contains("attribute value:"));
     }
@@ -144,8 +144,7 @@ public class AnalyticsClientTest {
         }
         Assert.assertFalse(globalAttributes.containsKey("_error_attribute_size_exceed"));
         Assert.assertEquals(1, globalAttributes.size());
-        Assert.assertEquals("value500",
-            Objects.requireNonNull(globalAttributes.get("name")).toString());
+        Assert.assertEquals("value500", Objects.requireNonNull(globalAttributes.get("name")).toString());
     }
 
     /**
@@ -170,13 +169,13 @@ public class AnalyticsClientTest {
 
         analyticsClient.addUserAttribute(invalidName, "value");
         Assert.assertTrue(userAttributes.containsKey("_error_name_invalid"));
-        Assert.assertTrue(Objects.requireNonNull(userAttributes.get("_error_name_invalid")).toString()
-            .contains(invalidName));
+        Assert.assertTrue(
+            Objects.requireNonNull(userAttributes.get("_error_name_invalid")).toString().contains(invalidName));
 
         analyticsClient.addUserAttribute("name01", exceedLengthValue);
         Assert.assertTrue(userAttributes.containsKey("_error_value_length_exceed"));
-        Assert.assertTrue(Objects.requireNonNull(userAttributes.get("_error_value_length_exceed")).toString()
-            .contains("name01"));
+        Assert.assertTrue(
+            Objects.requireNonNull(userAttributes.get("_error_value_length_exceed")).toString().contains("name01"));
         Assert.assertTrue(Objects.requireNonNull(userAttributes.get("_error_value_length_exceed")).toString()
             .contains("attribute value:"));
     }
@@ -205,8 +204,83 @@ public class AnalyticsClientTest {
         }
         Assert.assertFalse(userAttributes.containsKey("_error_attribute_size_exceed"));
         Assert.assertEquals(1, userAttributes.size());
-        Assert.assertEquals("value100",
-            Objects.requireNonNull(userAttributes.get("name")).toString());
+        Assert.assertEquals("value100", Objects.requireNonNull(userAttributes.get("name")).toString());
+    }
+
+    /**
+     * test add global attribute for null value and verify the global attribute is deleted.
+     */
+    @Test
+    public void testAddGlobalAttributeForNullValue() {
+        analyticsClient.addGlobalAttribute("Channel", "HUAWEI");
+        Assert.assertTrue(globalAttributes.containsKey("Channel"));
+        analyticsClient.addGlobalAttribute("Channel", null);
+        Assert.assertFalse(globalAttributes.containsKey("Channel"));
+    }
+
+    /**
+     * test add user attribute for null value and verify the user attribute is deleted.
+     */
+    @Test
+    public void testAddUserAttributeForNullValue() {
+        analyticsClient.addUserAttribute("UserAge", 20);
+        Assert.assertTrue(userAttributes.containsKey("UserAge"));
+        analyticsClient.addUserAttribute("UserAge", null);
+        Assert.assertFalse(userAttributes.containsKey("UserAge"));
+    }
+
+    /**
+     * test add global attribute for null value when reached max length,
+     * and verify the global attribute is deleted.
+     */
+    @Test
+    public void testAddGlobalAttributeForNullValueWhenReachedMaxLength() {
+        for (int i = 0; i < 500; i++) {
+            analyticsClient.addGlobalAttribute("name" + i, "value" + i);
+        }
+        Assert.assertTrue(globalAttributes.containsKey("name0"));
+        analyticsClient.addGlobalAttribute("name0", null);
+        Assert.assertFalse(globalAttributes.containsKey("name0"));
+        Assert.assertEquals(499, globalAttributes.size());
+    }
+
+    /**
+     * test add user attribute for null value when reached max length,
+     * and verify the user attribute is deleted.
+     */
+    @Test
+    public void testAddUserAttributeForNullValueWhenReachedMaxLength() {
+        for (int i = 0; i < 100; i++) {
+            analyticsClient.addUserAttribute("name" + i, "value" + i);
+        }
+        Assert.assertTrue(userAttributes.containsKey("name0"));
+        analyticsClient.addUserAttribute("name0", null);
+        Assert.assertFalse(userAttributes.containsKey("name0"));
+        Assert.assertEquals(99, userAttributes.size());
+    }
+
+    /**
+     * test delete and non-existing global attribute.
+     */
+    @Test
+    public void deleteNonExistingGlobalAttribute() {
+        for (int i = 0; i < 500; i++) {
+            analyticsClient.addGlobalAttribute("name" + i, "value" + i);
+        }
+        analyticsClient.addGlobalAttribute("name1000", null);
+        Assert.assertEquals(500, globalAttributes.size());
+    }
+
+    /**
+     * test delete and non-existing user attribute.
+     */
+    @Test
+    public void deleteNonExistingUserAttribute() {
+        for (int i = 0; i < 100; i++) {
+            analyticsClient.addUserAttribute("name" + i, "value" + i);
+        }
+        analyticsClient.addUserAttribute("name1000", null);
+        Assert.assertEquals(100, userAttributes.size());
     }
 
     /**

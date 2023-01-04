@@ -434,7 +434,6 @@ public class AnalyticsEvent implements JSONSerializable {
         // The non-login ID, it be changed after uninstalling then reinstalling the app.
         // https://developer.android.com/training/articles/user-data-ids
         builder.withAttribute("unique_id", getUniqueId());
-        builder.withAttribute("type", "track"); // track for event, user_* for user
         builder.withAttribute("event_type", getEventType()); // event_name AKA event_type, NOT NULL when type = track
         builder.withAttribute("event_id", getEventId());
         // Unix time is the number of seconds since January 1st, 1970.
@@ -449,6 +448,7 @@ public class AnalyticsEvent implements JSONSerializable {
         builder.withAttribute("platform", this.deviceDetails.platform());
         builder.withAttribute("platform_version", this.deviceDetails.platformVersion());
         builder.withAttribute("make", this.deviceDetails.manufacturer());
+        builder.withAttribute("brand", this.deviceDetails.brand());
         builder.withAttribute("model", this.deviceDetails.model());
         builder.withAttribute("locale", localeString);
         builder.withAttribute("carrier", carrierString);

@@ -76,6 +76,7 @@ public class EventRecorderTest {
     private static final String COLLECT_SUCCESS_LATENCY2000 = "/collect/success/latency3";
     private static final String COLLECT_FAIL = "/collect/fail";
     private static Runner runner;
+    private static String jsonString;
 
     private ClickstreamDBUtil dbUtil;
     private EventRecorder eventRecorder;
@@ -100,6 +101,12 @@ public class EventRecorderTest {
         server.request(by(uri(COLLECT_FAIL))).response(status(403), text("fail"));
         runner = runner(server);
         runner.start();
+        StringBuilder sb = new StringBuilder();
+        String str = "abcdeabcde";
+        for (int i = 0; i < 100; i++) {
+            sb.append(str);
+        }
+        jsonString = sb.toString();
     }
 
     /**
@@ -130,7 +137,6 @@ public class EventRecorderTest {
             (EventRecorder) ReflectUtil.newInstance(EventRecorder.class, clickstreamContext, dbUtil, executorService);
         log = mock(Log.class);
         ReflectUtil.modifyFiled(eventRecorder, "LOG", log);
-
     }
 
     /**
@@ -200,7 +206,6 @@ public class EventRecorderTest {
     @Test
     public void testGetBatchOfEventsForOneEventReachedLimitSize() throws Exception {
         String str = "abcdefghij";
-        String json = event.toString();
         StringBuilder nameBuilder = new StringBuilder();
         for (int i = 0; i < 4; i++) {
             nameBuilder.append(str);
@@ -210,7 +215,7 @@ public class EventRecorderTest {
             event.addUserAttribute(name + i, name + name + i);
         }
         for (int i = 0; i < 500; i++) {
-            event.addAttribute(name + i, json + i);
+            event.addAttribute(name + i, jsonString + i);
         }
         eventRecorder.recordEvent(event);
         Assert.assertTrue(event.toString().length() > 512 * 1024);
@@ -266,9 +271,8 @@ public class EventRecorderTest {
      */
     @Test
     public void testGetBatchOfEventsReachedDefaultLimitSize() throws Exception {
-        String json = event.toString();
         for (int i = 0; i < 20; i++) {
-            event.addAttribute("test_json_" + i, json);
+            event.addAttribute("test_json_" + i, jsonString);
         }
         for (int i = 0; i < 30; i++) {
             eventRecorder.recordEvent(event);
@@ -294,9 +298,8 @@ public class EventRecorderTest {
         AndroidPreferencesConfiguration config = mock(AndroidPreferencesConfiguration.class);
         when(mockContext.getConfiguration()).thenReturn(config);
         when(config.optLong(any(String.class), any(Long.class))).thenReturn(256 * 1024L);
-        String json = event.toString();
         for (int i = 0; i < 10; i++) {
-            event.addAttribute("test_json_" + i, json);
+            event.addAttribute("test_json_" + i, jsonString);
         }
         for (int i = 0; i < 20; i++) {
             eventRecorder.recordEvent(event);
@@ -394,9 +397,8 @@ public class EventRecorderTest {
     @Test
     public void testProcessEventNearReachMaxSubmissions() throws Exception {
         setRequestPath(COLLECT_SUCCESS);
-        String json = event.toString();
         for (int i = 0; i < 40; i++) {
-            event.addAttribute("test_json_" + i, json);
+            event.addAttribute("test_json_" + i, jsonString);
         }
         for (int i = 0; i < 20; i++) {
             eventRecorder.recordEvent(event);
@@ -418,9 +420,8 @@ public class EventRecorderTest {
     @Test
     public void testProcessEventReachedMaxSubmissions() throws Exception {
         setRequestPath(COLLECT_SUCCESS);
-        String json = event.toString();
         for (int i = 0; i < 40; i++) {
-            event.addAttribute("test_json_" + i, json);
+            event.addAttribute("test_json_" + i, jsonString);
         }
         for (int i = 0; i < 40; i++) {
             eventRecorder.recordEvent(event);
@@ -447,9 +448,8 @@ public class EventRecorderTest {
         when(config.optLong(any(String.class), any(Long.class))).thenReturn(128 * 1024L);
         when(config.optInt(any(String.class), any(Integer.class))).thenReturn(4);
 
-        String json = event.toString();
         for (int i = 0; i < 10; i++) {
-            event.addAttribute("test_json_" + i, json);
+            event.addAttribute("test_json_" + i, jsonString);
         }
         for (int i = 0; i < 40; i++) {
             eventRecorder.recordEvent(event);
@@ -457,8 +457,8 @@ public class EventRecorderTest {
         assertEquals(40, dbUtil.getTotalNumber());
         int eventNumber = (int) ReflectUtil.invokeMethod(eventRecorder, "processEvents");
         assertEquals(40, eventNumber);
-        verify(log, times(3)).info("deleted event number: 11");
-        verify(log).info("deleted event number: 7");
+        verify(log, times(3)).info("deleted event number: 12");
+        verify(log).info("deleted event number: 4");
         verify(log, never()).info("reached maxSubmissions: 3");
         assertEquals(0, dbUtil.getTotalNumber());
     }
@@ -489,9 +489,8 @@ public class EventRecorderTest {
     @Test
     public void testProcessEventForMultiSubmissionsInLatency() throws Exception {
         setRequestPath(COLLECT_SUCCESS_LATENCY2000);
-        String json = event.toString();
         for (int i = 0; i < 40; i++) {
-            event.addAttribute("test_json_" + i, json);
+            event.addAttribute("test_json_" + i, jsonString);
         }
         for (int i = 0; i < 20; i++) {
             eventRecorder.recordEvent(event);
@@ -530,9 +529,8 @@ public class EventRecorderTest {
     @Test
     public void testSubmitPartOfEventForMultiRequest() throws Exception {
         setRequestPath(COLLECT_SUCCESS_LATENCY200);
-        String json = event.toString();
         for (int i = 0; i < 40; i++) {
-            event.addAttribute("test_json_" + i, json);
+            event.addAttribute("test_json_" + i, jsonString);
         }
         for (int i = 0; i < 40; i++) {
             eventRecorder.recordEvent(event);
@@ -554,9 +552,8 @@ public class EventRecorderTest {
     @Test
     public void testSubmitAllEventForMultiRequest() throws Exception {
         setRequestPath(COLLECT_SUCCESS_LATENCY200);
-        String json = event.toString();
         for (int i = 0; i < 40; i++) {
-            event.addAttribute("test_json_" + i, json);
+            event.addAttribute("test_json_" + i, jsonString);
         }
         for (int i = 0; i < 40; i++) {
             eventRecorder.recordEvent(event);
@@ -582,9 +579,8 @@ public class EventRecorderTest {
     @Test
     public void testTimerThreeTimesSubmitAllEventForMultiRequest() throws Exception {
         setRequestPath(COLLECT_SUCCESS_LATENCY200);
-        String json = event.toString();
         for (int i = 0; i < 40; i++) {
-            event.addAttribute("test_json_" + i, json);
+            event.addAttribute("test_json_" + i, jsonString);
         }
         for (int i = 0; i < 40; i++) {
             eventRecorder.recordEvent(event);
@@ -611,9 +607,8 @@ public class EventRecorderTest {
     @Test
     public void testSubmitAllEventForReachTheQueueLimit() throws Exception {
         setRequestPath(COLLECT_SUCCESS_LATENCY200);
-        String json = event.toString();
         for (int i = 0; i < 40; i++) {
-            event.addAttribute("test_json_" + i, json);
+            event.addAttribute("test_json_" + i, jsonString);
         }
         for (int i = 0; i < 120; i++) {
             eventRecorder.recordEvent(event);

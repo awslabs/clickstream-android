@@ -107,6 +107,7 @@ final class AutoSessionTracker implements Application.ActivityLifecycleCallbacks
     void applicationEnteredForeground() {
         LOG.debug("Application entered the foreground.");
         sessionClient.startSession();
+        sessionClient.handleFirstOpen();
     }
 
     /**
