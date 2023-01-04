@@ -64,6 +64,7 @@ public final class AutoSessionTrackerUnitTest {
 
         // Then: Make sure that startSession was invoked on the session client.
         verify(sessionClient).startSession();
+        verify(sessionClient).handleFirstOpen();
     }
 
     /**

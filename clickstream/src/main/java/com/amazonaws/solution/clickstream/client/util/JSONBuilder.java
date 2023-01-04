@@ -36,7 +36,6 @@ public class JSONBuilder implements JSONSerializable {
      */
     public JSONBuilder(Object component) {
         if (null != component) {
-            this.withAttribute("class", component.getClass().getName());
             this.withAttribute("hashCode", Integer.toHexString(component.hashCode()));
         }
     }

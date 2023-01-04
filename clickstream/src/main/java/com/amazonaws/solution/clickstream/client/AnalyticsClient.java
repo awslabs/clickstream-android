@@ -55,14 +55,18 @@ public class AnalyticsClient {
      * @throws IllegalArgumentException throws when fail to check the attribute name.
      */
     public void addGlobalAttribute(String name, Object value) {
-        Event.EventError error = Event.checkAttribute(globalAttributes.size(), name, value);
-        if (error != null) {
-            if (!globalAttributes.containsKey(error.getErrorType())) {
-                globalAttributes.put(error.getErrorType(), error.getErrorMessage());
+        if (value != null) {
+            Event.EventError error = Event.checkAttribute(globalAttributes.size(), name, value);
+            if (error != null) {
+                if (!globalAttributes.containsKey(error.getErrorType())) {
+                    globalAttributes.put(error.getErrorType(), error.getErrorMessage());
+                }
+                return;
             }
-            return;
+            globalAttributes.put(name, value);
+        } else {
+            globalAttributes.remove(name);
         }
-        globalAttributes.put(name, value);
     }
 
     /**
@@ -85,14 +89,18 @@ public class AnalyticsClient {
      * @param value user attribute value.
      */
     public void addUserAttribute(String name, Object value) {
-        Event.EventError error = Event.checkUserAttribute(userAttributes.size(), name, value);
-        if (error != null) {
-            if (!userAttributes.containsKey(error.getErrorType())) {
-                userAttributes.put(error.getErrorType(), error.getErrorMessage());
+        if (value != null) {
+            Event.EventError error = Event.checkUserAttribute(userAttributes.size(), name, value);
+            if (error != null) {
+                if (!userAttributes.containsKey(error.getErrorType())) {
+                    userAttributes.put(error.getErrorType(), error.getErrorMessage());
+                }
+                return;
             }
-            return;
+            userAttributes.put(name, value);
+        } else {
+            userAttributes.remove(name);
         }
-        userAttributes.put(name, value);
     }
 
     /**

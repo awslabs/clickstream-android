@@ -79,6 +79,15 @@ public class AndroidDeviceDetails {
     }
 
     /**
+     * Get the device brand.
+     *
+     * @return The brand of device.
+     */
+    public String brand() {
+        return Build.BRAND;
+    }
+
+    /**
      * Get the name of model.
      *
      * @return The name of model.

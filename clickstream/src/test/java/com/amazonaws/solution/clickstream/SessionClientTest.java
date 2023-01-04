@@ -23,6 +23,7 @@ import com.amazonaws.logging.Log;
 import com.amazonaws.solution.clickstream.client.AnalyticsClient;
 import com.amazonaws.solution.clickstream.client.ClickstreamContext;
 import com.amazonaws.solution.clickstream.client.ClickstreamManager;
+import com.amazonaws.solution.clickstream.client.Event;
 import com.amazonaws.solution.clickstream.client.Session;
 import com.amazonaws.solution.clickstream.client.SessionClient;
 import com.amazonaws.solution.clickstream.client.db.ClickstreamDBUtil;
@@ -141,6 +142,44 @@ public class SessionClientTest {
         assertNotNull(attributes.getString("_session_start_timestamp"));
         assertNotNull(attributes.getString("_session_duration"));
         assertNotNull(attributes.getString("_session_stop_timestamp"));
+        cursor.close();
+    }
+
+    /**
+     * test handleFirstOpen method.
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testHandleFirstOpen() throws Exception {
+        client.handleFirstOpen();
+        assertEquals(1, dbUtil.getTotalNumber());
+        Cursor cursor = dbUtil.queryAllEvents();
+        cursor.moveToFirst();
+        String eventString = cursor.getString(2);
+        JSONObject jsonObject = new JSONObject(eventString);
+        String eventType = jsonObject.getString("event_type");
+        assertEquals(Event.PresetEvent.FIRST_OPEN, eventType);
+        cursor.close();
+    }
+
+    /**
+     * test execute handleFirstOpen method multi times.
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testHandleFirstOpenMultiTimes() throws Exception {
+        client.handleFirstOpen();
+        client.handleFirstOpen();
+        client.handleFirstOpen();
+        assertEquals(1, dbUtil.getTotalNumber());
+        Cursor cursor = dbUtil.queryAllEvents();
+        cursor.moveToFirst();
+        String eventString = cursor.getString(2);
+        JSONObject jsonObject = new JSONObject(eventString);
+        String eventType = jsonObject.getString("event_type");
+        assertEquals(Event.PresetEvent.FIRST_OPEN, eventType);
         cursor.close();
     }
 
