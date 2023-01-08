@@ -45,6 +45,16 @@ lint:
     - env
     - '[[ "$CI_COMMIT_MESSAGE" =~ ^(feat|fix|chore|docs|tests|ci) ]] || (echo "no commit type is specified in merge request title" && exit 1)'
 
+gentoken:
+  stage: .pre
+  script:
+    - echo "gitLabPrivateToken=$PRIVATE_TOKEN" >> key.properties
+    - echo "projectUrl=$PROJECT_URL" >> key.properties
+  artifacts:
+    paths:
+      - key.properties
+    expire_in: 10 mins
+
 # Make Project
 build:
   stage: build
@@ -102,9 +112,16 @@ test-coverage:
   script:
     # convert report from jacoco to cobertura, using relative project path
     - python /opt/cover2cover.py clickstream/build/reports/jacoco/jacoco.xml clickstream/src/main/java/ > clickstream/build/cobertura.xml
-  needs: ["build"]
+  needs: [ "build" ]
   artifacts:
     reports:
       coverage_report:
         coverage_format: cobertura
         path: clickstream/build/cobertura.xml
+
+publish-sdk:
+  stage: deploy
+  needs: [ "build","gentoken" ]
+  script:
+    - ./gradlew publish -p clickstream
+    - echo publish success
