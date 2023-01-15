@@ -21,34 +21,39 @@ import android.os.Bundle;
 
 import com.amazonaws.logging.Log;
 import com.amazonaws.logging.LogFactory;
+import com.amazonaws.solution.clickstream.client.AutoRecordEventClient;
+import com.amazonaws.solution.clickstream.client.ClickstreamManager;
 import com.amazonaws.solution.clickstream.client.SessionClient;
 
 /**
  * Tracks when the host application enters or leaves foreground.
  * The constructor registers to receive activity lifecycle events.
  **/
-final class AutoSessionTracker implements Application.ActivityLifecycleCallbacks {
-    private static final Log LOG = LogFactory.getLog(AutoSessionTracker.class);
+final class ActivityLifecycleManager implements Application.ActivityLifecycleCallbacks {
+    private static final Log LOG = LogFactory.getLog(ActivityLifecycleManager.class);
+
     private final SessionClient sessionClient;
+    private final AutoRecordEventClient autoRecordEventClient;
     private boolean inForeground;
     private int foregroundActivityCount;
 
     /**
      * Constructor. Registers to receive activity lifecycle events.
      *
-     * @param sessionClient Clickstream session client
+     * @param clickstreamManager Clickstream manager
      */
-    AutoSessionTracker(final SessionClient sessionClient) {
-        this.sessionClient = sessionClient;
+    ActivityLifecycleManager(final ClickstreamManager clickstreamManager) {
+        this.sessionClient = clickstreamManager.getSessionClient();
+        this.autoRecordEventClient = clickstreamManager.getAutoRecordEventClient();
         inForeground = false;
         foregroundActivityCount = 0;
     }
 
-    void startSessionTracking(final Application application) {
+    void startLifecycleTracking(final Application application) {
         application.registerActivityLifecycleCallbacks(this);
     }
 
-    void stopSessionTracking(final Application application) {
+    void stopLifecycleTracking(final Application application) {
         application.unregisterActivityLifecycleCallbacks(this);
     }
 
@@ -67,8 +72,10 @@ final class AutoSessionTracker implements Application.ActivityLifecycleCallbacks
         // An activity came to foreground. Application potentially entered foreground as well
         // if there were no other activities in the foreground.
         LOG.debug("Activity resumed: " + activity.getLocalClassName());
+        autoRecordEventClient.recordActivityStart(activity);
         checkIfApplicationEnteredForeground();
         foregroundActivityCount++;
+        autoRecordEventClient.recordViewScreen(activity);
     }
 
     @Override
@@ -88,6 +95,8 @@ final class AutoSessionTracker implements Application.ActivityLifecycleCallbacks
         LOG.debug("Activity stopped: " + activity.getLocalClassName());
         foregroundActivityCount--;
         checkIfApplicationEnteredBackground();
+        autoRecordEventClient.recordUserEngagement(activity);
+        autoRecordEventClient.removeActivityStart(activity);
     }
 
     @Override

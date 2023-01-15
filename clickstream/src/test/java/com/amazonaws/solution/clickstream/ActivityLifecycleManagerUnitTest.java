@@ -19,6 +19,8 @@ import android.app.Activity;
 import android.app.Application;
 import android.os.Bundle;
 
+import com.amazonaws.solution.clickstream.client.AutoRecordEventClient;
+import com.amazonaws.solution.clickstream.client.ClickstreamManager;
 import com.amazonaws.solution.clickstream.client.SessionClient;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,13 +32,16 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
- * Tests the {@link com.amazonaws.solution.clickstream.AutoSessionTracker}.
+ * Tests the {@link ActivityLifecycleManager}.
  */
 @RunWith(RobolectricTestRunner.class)
-public final class AutoSessionTrackerUnitTest {
+public final class ActivityLifecycleManagerUnitTest {
     private SessionClient sessionClient;
+    private AutoRecordEventClient autoRecordEventClient;
+    private ClickstreamManager clickstreamManager;
     private Application.ActivityLifecycleCallbacks callbacks;
 
     /**
@@ -45,7 +50,11 @@ public final class AutoSessionTrackerUnitTest {
     @Before
     public void setup() {
         this.sessionClient = mock(SessionClient.class);
-        this.callbacks = new com.amazonaws.solution.clickstream.AutoSessionTracker(sessionClient);
+        this.clickstreamManager = mock(ClickstreamManager.class);
+        this.autoRecordEventClient = mock(AutoRecordEventClient.class);
+        when(clickstreamManager.getSessionClient()).thenReturn(sessionClient);
+        when(clickstreamManager.getAutoRecordEventClient()).thenReturn(autoRecordEventClient);
+        this.callbacks = new ActivityLifecycleManager(clickstreamManager);
     }
 
     /**
@@ -192,5 +201,35 @@ public final class AutoSessionTrackerUnitTest {
 
         // Then: Make sure that the session is not interrupted by the activity transition.
         verify(sessionClient, never()).stopSession();
+    }
+
+    /**
+     * test user engagement event.
+     */
+    @Test
+    public void testUserEngagement() {
+        Activity activity = mock(Activity.class);
+        Bundle bundle = mock(Bundle.class);
+        callbacks.onActivityCreated(activity, bundle);
+        callbacks.onActivityStarted(activity);
+        callbacks.onActivityResumed(activity);
+        callbacks.onActivityPaused(activity);
+        callbacks.onActivityStopped(activity);
+        verify(autoRecordEventClient).recordActivityStart(activity);
+        verify(autoRecordEventClient).recordUserEngagement(activity);
+        verify(autoRecordEventClient).removeActivityStart(activity);
+    }
+
+    /**
+     * test screen view event.
+     */
+    @Test
+    public void testScreenView() {
+        Activity activity = mock(Activity.class);
+        Bundle bundle = mock(Bundle.class);
+        callbacks.onActivityCreated(activity, bundle);
+        callbacks.onActivityStarted(activity);
+        callbacks.onActivityResumed(activity);
+        verify(autoRecordEventClient).recordViewScreen(activity);
     }
 }

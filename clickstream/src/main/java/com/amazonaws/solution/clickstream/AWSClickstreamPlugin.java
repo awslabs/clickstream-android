@@ -47,7 +47,7 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
     private final Application application;
     private AnalyticsClient analyticsClient;
     private AutoEventSubmitter autoEventSubmitter;
-    private AutoSessionTracker autoSessionTracker;
+    private ActivityLifecycleManager activityLifecycleManager;
 
     /**
      * Constructs a new {@link AWSClickstreamPlugin}.
@@ -73,13 +73,13 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
     @Override
     public void disable() {
         autoEventSubmitter.stop();
-        autoSessionTracker.stopSessionTracking(application);
+        activityLifecycleManager.stopLifecycleTracking(application);
     }
 
     @Override
     public void enable() {
         autoEventSubmitter.start();
-        autoSessionTracker.startSessionTracking(application);
+        activityLifecycleManager.startLifecycleTracking(application);
     }
 
     @Override
@@ -190,8 +190,8 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
         autoEventSubmitter = new AutoEventSubmitter(clickstreamPluginConfiguration.getSendEventsInterval());
         autoEventSubmitter.start();
 
-        autoSessionTracker = new AutoSessionTracker(clickstreamManager.getSessionClient());
-        autoSessionTracker.startSessionTracking(application);
+        activityLifecycleManager = new ActivityLifecycleManager(clickstreamManager);
+        activityLifecycleManager.startLifecycleTracking(application);
     }
 
     @Override
