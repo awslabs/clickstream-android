@@ -93,7 +93,10 @@ public final class ClickstreamEvent implements AnalyticsEventBehavior {
         private String name;
         private AnalyticsProperties.Builder propertiesBuilder;
 
-        private Builder() {
+        /**
+         * the builder for add event attribute.
+         */
+        public Builder() {
             this.propertiesBuilder = AnalyticsProperties.builder();
         }
 

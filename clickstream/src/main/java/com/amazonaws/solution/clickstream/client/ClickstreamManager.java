@@ -38,6 +38,7 @@ public class ClickstreamManager {
     private final ClickstreamContext clickstreamContext;
     private final AnalyticsClient analyticsClient;
     private final SessionClient sessionClient;
+    private final AutoRecordEventClient autoRecordEventClient;
 
     /**
      * Constructor.
@@ -53,6 +54,7 @@ public class ClickstreamManager {
             this.analyticsClient = new AnalyticsClient(this.clickstreamContext);
             this.clickstreamContext.setAnalyticsClient(this.analyticsClient);
             this.sessionClient = new SessionClient(this.clickstreamContext);
+            this.autoRecordEventClient = new AutoRecordEventClient(this.clickstreamContext);
             this.clickstreamContext.setSessionClient(this.sessionClient);
             LOG.debug(String.format(Locale.US,
                 "Clickstream SDK(%s) initialization successfully completed", BuildConfig.VERSION_NAME));
@@ -84,10 +86,20 @@ public class ClickstreamManager {
 
     /**
      * The {@link SessionClient} is the primary class used to create, store session from your application.
+     *
      * @return a {@link SessionClient}
      */
     public SessionClient getSessionClient() {
         return sessionClient;
+    }
+
+    /**
+     * The {@link AutoRecordEventClient} is aim to auto record lifecycle relates event.
+     *
+     * @return a {@link AutoRecordEventClient}
+     */
+    public AutoRecordEventClient getAutoRecordEventClient() {
+        return autoRecordEventClient;
     }
 }
 

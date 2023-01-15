@@ -248,6 +248,16 @@ public final class Event {
          */
         public static final String FIRST_OPEN = "_first_open";
 
+        /**
+         * The user engagement event when the app is in the foreground at least one second.
+         */
+        public static final String USER_ENGAGEMENT = "_user_engagement";
+
+        /**
+         * The screen view event send when activity resume lifecycle method called.
+         */
+        public static final String SCREEN_VIEW = "_screen_view";
+
         private PresetEvent() {
         }
     }
