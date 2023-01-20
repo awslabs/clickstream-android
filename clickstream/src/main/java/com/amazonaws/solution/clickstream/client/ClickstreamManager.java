@@ -56,6 +56,9 @@ public class ClickstreamManager {
             this.sessionClient = new SessionClient(this.clickstreamContext);
             this.autoRecordEventClient = new AutoRecordEventClient(this.clickstreamContext);
             this.clickstreamContext.setSessionClient(this.sessionClient);
+            if (config.isTrackAppExceptionEvents()) {
+                enableTrackAppException();
+            }
             LOG.debug(String.format(Locale.US,
                 "Clickstream SDK(%s) initialization successfully completed", BuildConfig.VERSION_NAME));
         } catch (final RuntimeException runtimeException) {
@@ -63,6 +66,11 @@ public class ClickstreamManager {
                 "Cannot initialize Uba SDK %s", runtimeException.getMessage()));
             throw new AmazonClientException(runtimeException.getLocalizedMessage());
         }
+    }
+
+    private void enableTrackAppException() {
+        ClickstreamExceptionHandler handler = ClickstreamExceptionHandler.init();
+        handler.setClickstreamContext(this.clickstreamContext);
     }
 
     /**

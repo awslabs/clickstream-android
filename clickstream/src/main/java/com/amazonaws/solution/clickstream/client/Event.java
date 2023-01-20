@@ -258,6 +258,21 @@ public final class Event {
          */
         public static final String SCREEN_VIEW = "_screen_view";
 
+        /**
+         * App version update event.
+         */
+        public static final String APP_UPDATE = "_app_update";
+
+        /**
+         * OS version update event.
+         */
+        public static final String OS_UPDATE = "_os_update";
+
+        /**
+         * app exception event when crash.
+         */
+        public static final String APP_EXCEPTION = "_app_exception";
+
         private PresetEvent() {
         }
     }

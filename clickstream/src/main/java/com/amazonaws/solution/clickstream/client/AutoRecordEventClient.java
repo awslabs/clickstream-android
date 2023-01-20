@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 
 import com.amazonaws.logging.Log;
 import com.amazonaws.logging.LogFactory;
+import com.amazonaws.solution.clickstream.client.util.StringUtil;
 
 import java.util.HashMap;
 import java.util.Objects;
@@ -52,6 +53,8 @@ public class AutoRecordEventClient {
             throw new IllegalArgumentException("A valid AnalyticsClient must be provided!");
         }
         this.clickstreamContext = clickstreamContext;
+        checkAppVersionUpdate();
+        checkOSVersionUpdate();
     }
 
     /**
@@ -117,6 +120,44 @@ public class AutoRecordEventClient {
     public void removeActivityStart(Activity activity) {
         if (activity != null) {
             activityStartTimeMap.remove(activity.hashCode());
+        }
+    }
+
+    /**
+     * check and record _app_update event.
+     */
+    private void checkAppVersionUpdate() {
+        String previousAppVersion = clickstreamContext.getSystem().getPreferences().getString("appVersion", "");
+        if (!StringUtil.isNullOrEmpty(previousAppVersion)) {
+            String currentVersion = clickstreamContext.getSystem().getAppDetails().versionName();
+            if (!currentVersion.equals(previousAppVersion)) {
+                final AnalyticsEvent event =
+                    this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.APP_UPDATE);
+                event.addAttribute("previous_app_version", previousAppVersion);
+                this.clickstreamContext.getAnalyticsClient().recordEvent(event);
+            }
+        } else {
+            clickstreamContext.getSystem().getPreferences()
+                .putString("appVersion", clickstreamContext.getSystem().getAppDetails().versionName());
+        }
+    }
+
+    /**
+     * check and record _os_update event.
+     */
+    private void checkOSVersionUpdate() {
+        String previousOSVersion = clickstreamContext.getSystem().getPreferences().getString("osVersion", "");
+        if (!StringUtil.isNullOrEmpty(previousOSVersion)) {
+            String currentOSVersion = clickstreamContext.getSystem().getDeviceDetails().platformVersion();
+            if (!currentOSVersion.equals(previousOSVersion)) {
+                final AnalyticsEvent event =
+                    this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.OS_UPDATE);
+                event.addAttribute("previous_os_version", previousOSVersion);
+                this.clickstreamContext.getAnalyticsClient().recordEvent(event);
+            }
+        } else {
+            clickstreamContext.getSystem().getPreferences()
+                .putString("osVersion", clickstreamContext.getSystem().getDeviceDetails().platformVersion());
         }
     }
 }

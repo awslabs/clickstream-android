@@ -171,6 +171,11 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
                 configurationBuilder.withTrackAppLifecycleEvents(pluginConfiguration
                     .getBoolean(ConfigurationKey.TRACK_APP_LIFECYCLE_EVENTS.getConfigurationKey()));
             }
+
+            if (pluginConfiguration.has(ConfigurationKey.TRACK_APP_EXCEPTION_EVENTS.getConfigurationKey())) {
+                configurationBuilder.withTrackAppExceptionEvents(pluginConfiguration
+                    .getBoolean(ConfigurationKey.TRACK_APP_EXCEPTION_EVENTS.getConfigurationKey()));
+            }
         } catch (JSONException exception) {
             throw new AnalyticsException(
                 "Unable to read appId or endpoint from the amplify configuration json.", exception,
@@ -238,7 +243,12 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
         /**
          * Whether to track app lifecycle events automatically.
          */
-        TRACK_APP_LIFECYCLE_EVENTS("isTrackAppLifecycleEvents");
+        TRACK_APP_LIFECYCLE_EVENTS("isTrackAppLifecycleEvents"),
+
+        /**
+         * Whether to track app exception events automatically.
+         */
+        TRACK_APP_EXCEPTION_EVENTS("isTrackAppExceptionEvents");
 
         /**
          * The key this property is listed under in the config JSON.

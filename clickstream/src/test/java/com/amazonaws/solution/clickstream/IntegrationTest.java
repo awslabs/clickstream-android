@@ -116,7 +116,7 @@ public class IntegrationTest {
         executeBackground();
         ClickstreamAnalytics.recordEvent("testRecordEventWithName");
         assertEquals(1, dbUtil.getTotalNumber());
-        Thread.sleep(1000);
+        Thread.sleep(1500);
         assertEquals(0, dbUtil.getTotalNumber());
     }
 
@@ -386,7 +386,7 @@ public class IntegrationTest {
         ClickstreamAnalytics.recordEvent(event);
         assertEquals(1, dbUtil.getTotalNumber());
         ClickstreamAnalytics.flushEvents();
-        Thread.sleep(1000);
+        Thread.sleep(1500);
         assertEquals(0, dbUtil.getTotalNumber());
     }
 

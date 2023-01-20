@@ -28,11 +28,13 @@ public final class AWSClickstreamPluginConfiguration {
     private final long sendEventsInterval;
     private final long sendEventsSize;
     private final boolean isTrackAppLifecycleEvents;
+    private final boolean isTrackAppExceptionEvents;
     private final boolean isCompressEvents;
 
     private AWSClickstreamPluginConfiguration(Builder builder) {
         this.appId = builder.appId;
         this.isTrackAppLifecycleEvents = builder.isTrackAppLifecycleEvents;
+        this.isTrackAppExceptionEvents = builder.isTrackAppExceptionEvents;
         this.sendEventsInterval = builder.sendEventsInterval;
         this.endpoint = builder.endpoint;
         this.sendEventsSize = builder.sendEventsSize;
@@ -64,6 +66,15 @@ public final class AWSClickstreamPluginConfiguration {
      */
     boolean isTrackAppLifecycleEvents() {
         return isTrackAppLifecycleEvents;
+    }
+
+    /**
+     * Is auto exception tracking enabled.
+     *
+     * @return Is auto exception tracking enabled.
+     */
+    boolean isTrackAppExceptionEvents() {
+        return isTrackAppExceptionEvents;
     }
 
     /**
@@ -113,6 +124,7 @@ public final class AWSClickstreamPluginConfiguration {
         private long sendEventsInterval = DEFAULT_SEND_EVENTS_INTERVAL;
         private boolean isCompressEvents = true;
         private boolean isTrackAppLifecycleEvents = true;
+        private boolean isTrackAppExceptionEvents = false;
 
         Builder withAppId(final String appId) {
             this.appId = appId;
@@ -141,6 +153,11 @@ public final class AWSClickstreamPluginConfiguration {
 
         Builder withTrackAppLifecycleEvents(final boolean trackAppLifecycleEvents) {
             this.isTrackAppLifecycleEvents = trackAppLifecycleEvents;
+            return this;
+        }
+
+        Builder withTrackAppExceptionEvents(final boolean trackAppExceptionEvents) {
+            this.isTrackAppExceptionEvents = trackAppExceptionEvents;
             return this;
         }
 

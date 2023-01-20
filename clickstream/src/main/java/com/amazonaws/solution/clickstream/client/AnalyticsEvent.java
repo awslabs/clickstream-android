@@ -266,6 +266,28 @@ public class AnalyticsEvent implements JSONSerializable {
     }
 
     /**
+     * add internal attribute for not check attribute error, for example not check attribute value length
+     * can allow exception stack completely record.
+     *
+     * @param name  The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    protected void addInternalAttribute(final String name, final Object value) {
+        if (null == name) {
+            return;
+        }
+        if (null != value) {
+            try {
+                attributes.putOpt(name, value);
+            } catch (JSONException exception) {
+                LOG.error("error parsing json, error message:" + exception.getMessage());
+            }
+        } else {
+            attributes.remove(name);
+        }
+    }
+
+    /**
      * Adds an user attribute to this {@link AnalyticsEvent} with the specified key.
      * Only 100 user attributes are allowed to be added to an Event. If 100
      * attribute already exist on this Event, the call will be ignored.
@@ -446,7 +468,7 @@ public class AnalyticsEvent implements JSONSerializable {
         // Android takes androidID
         builder.withAttribute("device_id", getAndroidId());
         builder.withAttribute("platform", this.deviceDetails.platform());
-        builder.withAttribute("platform_version", this.deviceDetails.platformVersion());
+        builder.withAttribute("os_version", this.deviceDetails.platformVersion());
         builder.withAttribute("make", this.deviceDetails.manufacturer());
         builder.withAttribute("brand", this.deviceDetails.brand());
         builder.withAttribute("model", this.deviceDetails.model());
@@ -493,7 +515,7 @@ public class AnalyticsEvent implements JSONSerializable {
         // ****************************************************
         // Application Details Attributes -- Prefix with 'app_'
         // ****************************************************
-        builder.withAttribute("app_version_name", this.appDetails.versionName());
+        builder.withAttribute("app_version", this.appDetails.versionName());
         //builder.withAttribute("app_version_code", this.appDetails.versionCode());
         builder.withAttribute("app_package_name", this.appDetails.packageName());
         builder.withAttribute("app_title", this.appDetails.getAppTitle());
