@@ -69,6 +69,7 @@ public class InitClientTest {
         Assert.assertEquals(clickstreamContext.getClickstreamConfiguration().getSendEventsInterval(), 15000);
         Assert.assertTrue(clickstreamContext.getClickstreamConfiguration().isCompressEvents());
         Assert.assertFalse(clickstreamContext.getClickstreamConfiguration().isTrackAppLifecycleEvents());
+        Assert.assertFalse(clickstreamContext.getClickstreamConfiguration().isTrackAppExceptionEvents());
 
         Assert.assertEquals(clickstreamContext.getSDKInfo().getName(), "aws-solution-clickstream-sdk");
         Assert.assertEquals(clickstreamContext.getSDKInfo().getVersion(), BuildConfig.VERSION_NAME);

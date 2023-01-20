@@ -43,7 +43,8 @@ final class ClickstreamManagerFactory {
                 .withSendEventsSize(clickstreamPluginConfiguration.getSendEventsSize())
                 .withSendEventsInterval(clickstreamPluginConfiguration.getSendEventsInterval())
                 .withCompressEvents(clickstreamPluginConfiguration.isCompressEvents())
-                .withTrackAppLifecycleEvents(clickstreamPluginConfiguration.isTrackAppLifecycleEvents());
+                .withTrackAppLifecycleEvents(clickstreamPluginConfiguration.isTrackAppLifecycleEvents())
+                .withTrackAppExceptionEvents(clickstreamPluginConfiguration.isTrackAppExceptionEvents());
 
         return new ClickstreamManager(clickstreamConfiguration);
     }

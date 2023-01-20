@@ -31,6 +31,7 @@ public class ClickstreamConfiguration {
     private long sendEventsInterval;
     private boolean isCompressEvents;
     private boolean isTrackAppLifecycleEvents;
+    private boolean isTrackAppExceptionEvents;
 
     private ClientConfiguration clientConfiguration;
 
@@ -204,6 +205,15 @@ public class ClickstreamConfiguration {
     }
 
     /**
+     * Is track app exception events.
+     *
+     * @return Is track app exception events.
+     */
+    public boolean isTrackAppExceptionEvents() {
+        return this.isTrackAppExceptionEvents;
+    }
+
+    /**
      * Is track app lifecycle events.
      *
      * @param isTrackAppLifecycleEvents Is track app lifecycle events.
@@ -211,6 +221,17 @@ public class ClickstreamConfiguration {
      */
     public ClickstreamConfiguration withTrackAppLifecycleEvents(final boolean isTrackAppLifecycleEvents) {
         this.isTrackAppLifecycleEvents = isTrackAppLifecycleEvents;
+        return this;
+    }
+
+    /**
+     * Is track app exception events.
+     *
+     * @param isTrackAppExceptionEvents Is track app exception events.
+     * @return the current ClickstreamConfiguration instance.
+     */
+    public ClickstreamConfiguration withTrackAppExceptionEvents(final boolean isTrackAppExceptionEvents) {
+        this.isTrackAppExceptionEvents = isTrackAppExceptionEvents;
         return this;
     }
 }

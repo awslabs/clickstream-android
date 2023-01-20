@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amazonaws.solution.clickstream;
+package com.amazonaws.solution.clickstream.event;
 
 import com.amazonaws.solution.clickstream.client.Event;
 import org.junit.Test;
