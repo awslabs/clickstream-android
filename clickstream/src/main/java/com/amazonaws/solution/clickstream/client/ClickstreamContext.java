@@ -59,7 +59,7 @@ public class ClickstreamContext implements Serializable {
     /**
      * The unique ID.
      */
-    private String uniqueId;
+    private final String uniqueId;
 
     /**
      * The constructor with parameters.

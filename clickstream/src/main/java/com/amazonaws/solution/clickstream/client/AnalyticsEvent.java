@@ -39,6 +39,7 @@ public class AnalyticsEvent implements JSONSerializable {
     private static final Log LOG = LogFactory.getLog(AnalyticsEvent.class);
     private static final int INDENTATION = 4;
     private String androidId;
+    private String appId;
     private final String eventId;
     private final String eventType;
     private String sdkName;
@@ -64,8 +65,7 @@ public class AnalyticsEvent implements JSONSerializable {
      * @param uniqueId         The uniqueId of the new event.
      */
     AnalyticsEvent(final String eventType, final Map<String, Object> globalAttributes,
-                   final Map<String, Object> userAttributes,
-                   final long timestamp, final String uniqueId) {
+                   final Map<String, Object> userAttributes, final long timestamp, final String uniqueId) {
         this(UUID.randomUUID().toString(), eventType, globalAttributes, userAttributes, timestamp, uniqueId);
     }
 
@@ -171,6 +171,24 @@ public class AnalyticsEvent implements JSONSerializable {
      */
     public void setAndroidId(String androidId) {
         this.androidId = androidId;
+    }
+
+    /**
+     * Get the App ID.
+     *
+     * @return The App ID.
+     */
+    public String getAppId() {
+        return appId;
+    }
+
+    /**
+     * Setter for appId.
+     *
+     * @param appId The appId.
+     */
+    public void setAppId(String appId) {
+        this.appId = appId;
     }
 
     /**
@@ -458,6 +476,7 @@ public class AnalyticsEvent implements JSONSerializable {
         builder.withAttribute("unique_id", getUniqueId());
         builder.withAttribute("event_type", getEventType()); // event_name AKA event_type, NOT NULL when type = track
         builder.withAttribute("event_id", getEventId());
+        builder.withAttribute("app_id", getAppId());
         // Unix time is the number of seconds since January 1st, 1970.
         // https://nickb.dev/blog/designing-a-rest-api-unix-time-vs-iso-8601/
         builder.withAttribute("timestamp", getEventTimestamp());

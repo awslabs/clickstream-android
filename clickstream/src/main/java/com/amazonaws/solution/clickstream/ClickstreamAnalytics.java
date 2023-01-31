@@ -21,6 +21,9 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 
+import com.amazonaws.solution.clickstream.client.AnalyticsClient;
+import com.amazonaws.solution.clickstream.client.ClickstreamConfiguration;
+
 /**
  * This is the top-level customer-facing interface to The ClickstreamAnalytics.
  */
@@ -100,5 +103,18 @@ public final class ClickstreamAnalytics {
      */
     public static void setUserId(String userId) {
         Amplify.Analytics.identifyUser(userId, new ClickstreamUserAttribute.Builder().build());
+    }
+
+    /**
+     * get clickstream configuration
+     * please config it after initialize.
+     *
+     * @return ClickstreamConfiguration configurationF
+     */
+    public static ClickstreamConfiguration getClickStreamConfiguration() {
+        AnalyticsClient client =
+            ((AWSClickstreamPlugin) Amplify.Analytics.getPlugin("awsClickstreamPlugin")).getEscapeHatch();
+        assert client != null;
+        return client.getClickstreamConfiguration();
     }
 }

@@ -78,7 +78,6 @@ public class AutoRecordEventClientTest {
         callbacks = new ActivityLifecycleManager(clickstreamManager);
     }
 
-
     /**
      * test record user engagement event after view screen more than 1 second.
      *

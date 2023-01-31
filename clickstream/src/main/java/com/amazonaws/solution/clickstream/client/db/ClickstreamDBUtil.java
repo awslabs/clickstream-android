@@ -80,6 +80,19 @@ public class ClickstreamDBUtil {
     }
 
     /**
+     * Queries all events from oldest. Does not include JSON.
+     *
+     * @param limit The limit of result set.
+     * @return A Cursor pointing to records in the database.
+     */
+    public Cursor queryOldestEvents(final int limit) {
+        return clickstreamDBBase.query(clickstreamDBBase.getContentUri(),
+            new String[] {EventTable.COLUMN_ID, EventTable.COLUMN_SIZE},
+            null, null, null,
+            Integer.toString(limit));
+    }
+
+    /**
      * Deletes the event with the given eventId.
      *
      * @param eventId The eventId of the event to be deleted.

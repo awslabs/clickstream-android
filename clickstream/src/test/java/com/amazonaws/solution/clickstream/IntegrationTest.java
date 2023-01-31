@@ -61,7 +61,9 @@ import static org.mockito.Mockito.when;
 @RunWith(RobolectricTestRunner.class)
 public class IntegrationTest {
     private static final String COLLECT_SUCCESS = "/collect/success";
+    private static final String COLLECT_SUCCESS1 = "/collect/success1";
     private static final String COLLECT_FAIL = "/collect/fail";
+    private static final String COLLECT_HOST = "http://localhost:8082";
     private static Runner runner;
     private static Handler handler;
     private AWSClickstreamPlugin plugin;
@@ -77,6 +79,7 @@ public class IntegrationTest {
         //config and start server
         final HttpServer server = httpServer(8082);
         server.request(by(uri(COLLECT_SUCCESS))).response(status(200), text("success"));
+        server.request(by(uri(COLLECT_SUCCESS1))).response(status(200), text("success"));
         server.request(by(uri(COLLECT_FAIL))).response(status(403), text("fail"));
         runner = runner(server);
         runner.start();
@@ -151,7 +154,7 @@ public class IntegrationTest {
         Assert.assertEquals(792, attribute.getInt("ProcessDuration"));
         Assert.assertEquals(120.3, attribute.getDouble("UserAge"), 0.01);
 
-        Thread.sleep(1000);
+        Thread.sleep(1500);
         assertEquals(0, dbUtil.getTotalNumber());
         cursor.close();
     }
@@ -436,6 +439,44 @@ public class IntegrationTest {
     }
 
     /**
+     * test custom clickstream config in runtime.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testCustomConfig() throws Exception {
+        ClickstreamAnalytics.getClickStreamConfiguration()
+            .withAppId("23982")
+            .withEndpoint(assembleEndpointUrl(COLLECT_SUCCESS1))
+            .withSendEventsInterval(15000)
+            .withTrackAppExceptionEvents(false)
+            .withLogEvents(true)
+            .withCompressEvents(true);
+
+        assertEquals("23982", this.analyticsClient.getClickstreamConfiguration().getAppId());
+        assertEquals(assembleEndpointUrl(COLLECT_SUCCESS1),
+            this.analyticsClient.getClickstreamConfiguration().getEndpoint());
+        assertEquals(15000, this.analyticsClient.getClickstreamConfiguration().getSendEventsInterval());
+        Assert.assertFalse(this.analyticsClient.getClickstreamConfiguration().isTrackAppExceptionEvents());
+        Assert.assertTrue(this.analyticsClient.getClickstreamConfiguration().isCompressEvents());
+        Assert.assertTrue(this.analyticsClient.getClickstreamConfiguration().isLogEvents());
+
+        ClickstreamAnalytics.recordEvent("testRecordEvent");
+        assertEquals(1, dbUtil.getTotalNumber());
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            cursor.moveToFirst();
+            String eventString = cursor.getString(2);
+            JSONObject jsonObject = new JSONObject(eventString);
+            String appId = jsonObject.getString("app_id");
+            assertEquals("23982", appId);
+        }
+
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1500);
+        assertEquals(0, dbUtil.getTotalNumber());
+    }
+
+    /**
      * test enable.
      *
      * @throws Exception exception
@@ -477,7 +518,11 @@ public class IntegrationTest {
         ClickstreamContext context = (ClickstreamContext) ReflectUtil.getFiled(eventRecorder, "clickstreamContext");
         ClickstreamConfiguration config =
             (ClickstreamConfiguration) ReflectUtil.getFiled(context, "clickstreamConfiguration");
-        ReflectUtil.modifyFiled(config, "endpoint", "http://localhost:8082" + IntegrationTest.COLLECT_FAIL);
+        ReflectUtil.modifyFiled(config, "endpoint", assembleEndpointUrl(COLLECT_FAIL));
+    }
+
+    private String assembleEndpointUrl(String path) {
+        return COLLECT_HOST + path;
     }
 
     /**

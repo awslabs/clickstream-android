@@ -20,13 +20,11 @@ package com.amazonaws.solution.clickstream;
  */
 public final class AWSClickstreamPluginConfiguration {
     private static final long DEFAULT_SEND_EVENTS_INTERVAL = 10000L;
-    private static final long DEFAULT_SEND_EVENTS_SIZE = 100;
 
     // Clickstream configuration options
     private final String appId;
     private final String endpoint;
     private final long sendEventsInterval;
-    private final long sendEventsSize;
     private final boolean isTrackAppLifecycleEvents;
     private final boolean isTrackAppExceptionEvents;
     private final boolean isCompressEvents;
@@ -37,7 +35,6 @@ public final class AWSClickstreamPluginConfiguration {
         this.isTrackAppExceptionEvents = builder.isTrackAppExceptionEvents;
         this.sendEventsInterval = builder.sendEventsInterval;
         this.endpoint = builder.endpoint;
-        this.sendEventsSize = builder.sendEventsSize;
         this.isCompressEvents = builder.isCompressEvents;
     }
 
@@ -87,15 +84,6 @@ public final class AWSClickstreamPluginConfiguration {
     }
 
     /**
-     * The size of events sent at once.
-     *
-     * @return send event size.
-     */
-    long getSendEventsSize() {
-        return sendEventsSize;
-    }
-
-    /**
      * Is compress events enabled.
      *
      * @return Is compress events enabled.
@@ -120,7 +108,6 @@ public final class AWSClickstreamPluginConfiguration {
     static final class Builder {
         private String appId;
         private String endpoint;
-        private long sendEventsSize = DEFAULT_SEND_EVENTS_SIZE;
         private long sendEventsInterval = DEFAULT_SEND_EVENTS_INTERVAL;
         private boolean isCompressEvents = true;
         private boolean isTrackAppLifecycleEvents = true;
@@ -133,11 +120,6 @@ public final class AWSClickstreamPluginConfiguration {
 
         Builder withEndpoint(final String endpoint) {
             this.endpoint = endpoint;
-            return this;
-        }
-
-        Builder sendEventsSize(final long sendEventsSize) {
-            this.sendEventsSize = sendEventsSize;
             return this;
         }
 
