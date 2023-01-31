@@ -128,6 +128,7 @@ public class AnalyticsClient {
         String uniqueId = this.context.getUniqueId();
         AnalyticsEvent event = new AnalyticsEvent(eventType, globalAttributes, userAttributes, timestamp, uniqueId);
         event.setAndroidId(context.getSystem().getAndroidId());
+        event.setAppId(context.getClickstreamConfiguration().getAppId());
         event.setSdkInfo(context.getSDKInfo());
         event.setAppDetails(context.getSystem().getAppDetails());
         event.setDeviceDetails(context.getSystem().getDeviceDetails());
@@ -169,5 +170,14 @@ public class AnalyticsClient {
      */
     public void setSession(Session session) {
         this.session = session;
+    }
+
+    /**
+     * get clickstream configuration for dynamic modify.
+     *
+     * @return ClickstreamConfiguration configuration.
+     */
+    public ClickstreamConfiguration getClickstreamConfiguration() {
+        return this.context.getClickstreamConfiguration();
     }
 }

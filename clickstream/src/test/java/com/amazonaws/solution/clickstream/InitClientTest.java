@@ -65,7 +65,6 @@ public class InitClientTest {
 
         Assert.assertEquals(clickstreamContext.getClickstreamConfiguration().getEndpoint(),
             "http://click-serve-HCJIDWGD3S9F-1166279006.ap-southeast-1.elb.amazonaws.com/collect");
-        Assert.assertEquals(clickstreamContext.getClickstreamConfiguration().getSendEventsSize(), 100);
         Assert.assertEquals(clickstreamContext.getClickstreamConfiguration().getSendEventsInterval(), 15000);
         Assert.assertTrue(clickstreamContext.getClickstreamConfiguration().isCompressEvents());
         Assert.assertFalse(clickstreamContext.getClickstreamConfiguration().isTrackAppLifecycleEvents());

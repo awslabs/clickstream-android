@@ -42,7 +42,9 @@ public class EventRecorder {
 
     private static final int DEFAULT_MAX_SUBMISSIONS_ALLOWED = 3;
     private static final int MAX_EVENT_OPERATIONS = 1000;
+    private static final int QUERY_OLDEST_EVENT_LIMIT = 5;
     private static final long DEFAULT_MAX_SUBMISSION_SIZE = 512 * 1024;
+    private static final long DEFAULT_MAX_DB_SIZE = 50 * 1024 * 1024;
     private static final Log LOG = LogFactory.getLog(EventRecorder.class);
 
     private static final int JSON_COLUMN_INDEX = EventTable.ColumnIndex.JSON.getValue();
@@ -83,7 +85,23 @@ public class EventRecorder {
      */
     public Uri recordEvent(@NonNull final AnalyticsEvent event) {
         final Uri uri = this.dbUtil.saveEvent(event);
-        if (uri == null) {
+        if (uri != null) {
+            if (clickstreamContext.getClickstreamConfiguration() != null &&
+                clickstreamContext.getClickstreamConfiguration().isLogEvents()) {
+                LOG.info("save event: " + event.getEventType() + " success, event json:");
+                LOG.info(event.toJSONObject().toString());
+            }
+
+            long maxPendingSize = clickstreamContext.getConfiguration().optLong(
+                "maxDbSize", DEFAULT_MAX_DB_SIZE);
+            while (this.dbUtil.getTotalSize() > maxPendingSize) {
+                try (Cursor cursor = this.dbUtil.queryOldestEvents(QUERY_OLDEST_EVENT_LIMIT)) {
+                    while (this.dbUtil.getTotalSize() > maxPendingSize && cursor.moveToNext()) {
+                        this.dbUtil.deleteEvent(cursor.getInt(EventTable.ColumnIndex.ID.getValue()));
+                    }
+                }
+            }
+        } else {
             LOG.error(String.format("Error to save event with EventType: %s", event.getEventType()));
         }
         return uri;

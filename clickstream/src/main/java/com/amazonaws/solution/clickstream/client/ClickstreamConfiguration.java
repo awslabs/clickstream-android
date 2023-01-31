@@ -17,8 +17,6 @@ package com.amazonaws.solution.clickstream.client;
 
 import android.content.Context;
 
-import com.amazonaws.ClientConfiguration;
-
 /**
  * Clickstream Configuration.
  */
@@ -27,48 +25,23 @@ public class ClickstreamConfiguration {
     private Context context;
     private String appId;
     private String endpoint;
-    private long sendEventsSize;
     private long sendEventsInterval;
     private boolean isCompressEvents;
     private boolean isTrackAppLifecycleEvents;
     private boolean isTrackAppExceptionEvents;
-
-    private ClientConfiguration clientConfiguration;
+    private boolean isLogEvents;
 
     /**
      * Create an {@link ClickstreamConfiguration} object with the specified parameters.
      *
      * @param context  the android context object.
-     * @param appId the Clickstream appId.
+     * @param appId    the Clickstream appId.
      * @param endpoint the Clickstream endpoint.
      */
     public ClickstreamConfiguration(final Context context, final String appId, final String endpoint) {
-        this.clientConfiguration = new ClientConfiguration();
         this.context = context;
         this.appId = appId;
         this.endpoint = endpoint;
-    }
-
-    /**
-     * Sets the client configuration this client will use when making request.
-     *
-     * @param clientConfig The {@link ClientConfiguration} of the service.
-     * @return the current ClickstreamConfiguration instance.
-     */
-    public ClickstreamConfiguration withClientConfiguration(ClientConfiguration clientConfig) {
-        this.clientConfiguration = new ClientConfiguration(clientConfig);
-        return this;
-    }
-
-    /**
-     * Gets the client configuration this client will use when making requests.
-     * If none was supplied to the constructor this will return the default
-     * client configuration.
-     *
-     * @return The ClientConfiguration used for making requests.
-     */
-    public ClientConfiguration getClientConfiguration() {
-        return this.clientConfiguration;
     }
 
     /**
@@ -81,17 +54,6 @@ public class ClickstreamConfiguration {
      */
     public Context getAppContext() {
         return this.context;
-    }
-
-    /**
-     * The Android Context. See https://developer.android.com/reference/android/content/Context.html.
-     *
-     * @param context The android context object.
-     * @return the current ClickstreamConfiguration instance.
-     */
-    public ClickstreamConfiguration withAppContext(final Context context) {
-        this.context = context;
-        return this;
     }
 
     /**
@@ -132,26 +94,6 @@ public class ClickstreamConfiguration {
      */
     public ClickstreamConfiguration withEndpoint(final String endpoint) {
         this.endpoint = endpoint;
-        return this;
-    }
-
-    /**
-     * The size of events sent at once.
-     *
-     * @return submit events size.
-     */
-    public long getSendEventsSize() {
-        return this.sendEventsSize;
-    }
-
-    /**
-     * The size of events sent at once.
-     *
-     * @param sendEventsSize Submit events size.
-     * @return the current ClickstreamConfiguration instance.
-     */
-    public ClickstreamConfiguration withSendEventsSize(final long sendEventsSize) {
-        this.sendEventsSize = sendEventsSize;
         return this;
     }
 
@@ -214,6 +156,15 @@ public class ClickstreamConfiguration {
     }
 
     /**
+     * Is log events.
+     *
+     * @return Is log events json when record event.
+     */
+    public boolean isLogEvents() {
+        return this.isLogEvents;
+    }
+
+    /**
      * Is track app lifecycle events.
      *
      * @param isTrackAppLifecycleEvents Is track app lifecycle events.
@@ -232,6 +183,17 @@ public class ClickstreamConfiguration {
      */
     public ClickstreamConfiguration withTrackAppExceptionEvents(final boolean isTrackAppExceptionEvents) {
         this.isTrackAppExceptionEvents = isTrackAppExceptionEvents;
+        return this;
+    }
+
+    /**
+     * Is log events json when record event, set true for debug mode.
+     *
+     * @param isLogEvents Is log events json.
+     * @return the current ClickstreamConfiguration instance.
+     */
+    public ClickstreamConfiguration withLogEvents(final boolean isLogEvents) {
+        this.isLogEvents = isLogEvents;
         return this;
     }
 }

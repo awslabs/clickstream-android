@@ -62,6 +62,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -153,6 +154,23 @@ public class EventRecorderTest {
         c.close();
     }
 
+    /**
+     * test record event reached max db size.
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testRecordEventForReachedMaxDbSize() throws Exception {
+        setRequestPath(COLLECT_SUCCESS);
+        for (int i = 0; i < 200; i++) {
+            event.addAttribute("test_json_" + i, jsonString);
+        }
+        for (int i = 0; i < 260; i++) {
+            eventRecorder.recordEvent(event);
+        }
+        assertTrue(dbUtil.getTotalSize() < 50 * 1024 * 1024L);
+        assertEquals(256, dbUtil.getTotalNumber());
+    }
 
     /**
      * test insert single event when exceed attribute number limit.
@@ -445,8 +463,9 @@ public class EventRecorderTest {
 
         AndroidPreferencesConfiguration config = mock(AndroidPreferencesConfiguration.class);
         ReflectUtil.modifyFiled(clickstreamContext, "configuration", config);
-        when(config.optLong(any(String.class), any(Long.class))).thenReturn(128 * 1024L);
-        when(config.optInt(any(String.class), any(Integer.class))).thenReturn(4);
+        when(config.optLong(eq("maxSubmissionSize"), any(Long.class))).thenReturn(128 * 1024L);
+        when(config.optLong(eq("maxDbSize"), any(Long.class))).thenReturn(50 * 1024 * 1024L);
+        when(config.optInt(eq("maxSubmissionAllowed"), any(Integer.class))).thenReturn(4);
 
         for (int i = 0; i < 10; i++) {
             event.addAttribute("test_json_" + i, jsonString);

@@ -17,9 +17,6 @@ package com.amazonaws.solution.clickstream;
 
 import android.content.Context;
 
-import com.amplifyframework.util.UserAgent;
-
-import com.amazonaws.ClientConfiguration;
 import com.amazonaws.solution.clickstream.client.ClickstreamConfiguration;
 import com.amazonaws.solution.clickstream.client.ClickstreamManager;
 
@@ -32,15 +29,10 @@ final class ClickstreamManagerFactory {
 
     static ClickstreamManager create(Context context,
                                      AWSClickstreamPluginConfiguration clickstreamPluginConfiguration) {
-        ClientConfiguration clientConfiguration = new ClientConfiguration();
-        clientConfiguration.setUserAgent(UserAgent.string());
-
         // Construct configuration using information from the configure method
         ClickstreamConfiguration clickstreamConfiguration =
             new ClickstreamConfiguration(context, clickstreamPluginConfiguration.getAppId(),
                 clickstreamPluginConfiguration.getEndpoint())
-                .withClientConfiguration(clientConfiguration)
-                .withSendEventsSize(clickstreamPluginConfiguration.getSendEventsSize())
                 .withSendEventsInterval(clickstreamPluginConfiguration.getSendEventsInterval())
                 .withCompressEvents(clickstreamPluginConfiguration.isCompressEvents())
                 .withTrackAppLifecycleEvents(clickstreamPluginConfiguration.isTrackAppLifecycleEvents())

@@ -152,11 +152,6 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
             configurationBuilder.withEndpoint(pluginConfiguration
                 .getString(ConfigurationKey.ENDPOINT.getConfigurationKey()));
 
-            if (pluginConfiguration.has(ConfigurationKey.SEND_EVENTS_SIZE.getConfigurationKey())) {
-                configurationBuilder.sendEventsSize(pluginConfiguration
-                    .getLong(ConfigurationKey.SEND_EVENTS_SIZE.getConfigurationKey()));
-            }
-
             if (pluginConfiguration.has(ConfigurationKey.SEND_EVENTS_INTERVAL.getConfigurationKey())) {
                 configurationBuilder.withSendEventsInterval(pluginConfiguration
                     .getLong(ConfigurationKey.SEND_EVENTS_INTERVAL.getConfigurationKey()));
@@ -224,11 +219,6 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
          * the Clickstream Endpoint.
          */
         ENDPOINT("endpoint"),
-
-        /**
-         * The max number of events sent at once.
-         */
-        SEND_EVENTS_SIZE("sendEventsSize"),
 
         /**
          * Time interval after which the events are automatically submitted to server.
