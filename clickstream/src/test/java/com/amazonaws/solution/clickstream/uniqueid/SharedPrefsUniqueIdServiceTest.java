@@ -22,15 +22,15 @@ import com.amazonaws.solution.clickstream.client.uniqueid.SharedPrefsUniqueIdSer
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -39,9 +39,9 @@ import static org.mockito.Mockito.when;
 @Config(manifest = Config.NONE)
 public class SharedPrefsUniqueIdServiceTest {
 
-    private final ClickstreamContext mockClickstreamContext = Mockito.mock(ClickstreamContext.class);
-    private final AndroidSystem mockSystem = Mockito.mock(AndroidSystem.class);
-    private final AndroidPreferences mockPreferences = Mockito.mock(AndroidPreferences.class);
+    private ClickstreamContext mockClickstreamContext;
+    private AndroidSystem mockSystem;
+    private AndroidPreferences mockPreferences;
 
     private SharedPrefsUniqueIdService serviceToTest = null;
 
@@ -50,6 +50,9 @@ public class SharedPrefsUniqueIdServiceTest {
      */
     @Before
     public void setup() {
+        mockClickstreamContext = mock(ClickstreamContext.class);
+        mockSystem = mock(AndroidSystem.class);
+        mockPreferences = mock(AndroidPreferences.class);
         when(mockClickstreamContext.getSystem()).thenReturn(mockSystem);
         when(mockSystem.getPreferences()).thenReturn(mockPreferences);
         serviceToTest = new SharedPrefsUniqueIdService();

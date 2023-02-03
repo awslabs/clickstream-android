@@ -17,6 +17,8 @@ package com.amazonaws.solution.clickstream.client;
 
 import android.content.Context;
 
+import okhttp3.Dns;
+
 /**
  * Clickstream Configuration.
  */
@@ -25,7 +27,9 @@ public class ClickstreamConfiguration {
     private Context context;
     private String appId;
     private String endpoint;
+    private Dns dns;
     private long sendEventsInterval;
+    private long callTimeOut;
     private boolean isCompressEvents;
     private boolean isTrackAppLifecycleEvents;
     private boolean isTrackAppExceptionEvents;
@@ -87,6 +91,15 @@ public class ClickstreamConfiguration {
     }
 
     /**
+     * For get the Clickstream Okhttp3 dns.
+     *
+     * @return the dns.
+     */
+    public Dns getDns() {
+        return this.dns;
+    }
+
+    /**
      * The endpoint for Clickstream.
      *
      * @param endpoint The endpoint.
@@ -94,6 +107,17 @@ public class ClickstreamConfiguration {
      */
     public ClickstreamConfiguration withEndpoint(final String endpoint) {
         this.endpoint = endpoint;
+        return this;
+    }
+
+    /**
+     * The Custom Okhttp3 dns for Clickstream.
+     *
+     * @param dns The custom dns.
+     * @return the current ClickstreamConfiguration instance.
+     */
+    public ClickstreamConfiguration withCustomDns(final Dns dns) {
+        this.dns = dns;
         return this;
     }
 
@@ -107,6 +131,15 @@ public class ClickstreamConfiguration {
     }
 
     /**
+     * The time out of entire http call.
+     *
+     * @return callTimeOut.
+     */
+    public Long getCallTimeOut() {
+        return this.callTimeOut;
+    }
+
+    /**
      * The interval of events sent at once.
      *
      * @param sendEventsInterval Submit events interval.
@@ -114,6 +147,17 @@ public class ClickstreamConfiguration {
      */
     public ClickstreamConfiguration withSendEventsInterval(final long sendEventsInterval) {
         this.sendEventsInterval = sendEventsInterval;
+        return this;
+    }
+
+    /**
+     * The http call time out.
+     *
+     * @param callTimeOut call time out.
+     * @return the current ClickstreamConfiguration instance.
+     */
+    public ClickstreamConfiguration withCallTimeOut(final long callTimeOut) {
+        this.callTimeOut = callTimeOut;
         return this;
     }
 

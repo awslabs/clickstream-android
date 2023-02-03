@@ -115,8 +115,12 @@ public final class NetRequest {
         okHttpClientBuilder.connectTimeout(HTTP_CONNECT_TIME_OUT, TimeUnit.SECONDS);
         okHttpClientBuilder.readTimeout(HTTP_READ_TIME_OUT, TimeUnit.SECONDS);
         okHttpClientBuilder.writeTimeout(HTTP_WRITE_TIME_OUT, TimeUnit.SECONDS);
+        okHttpClientBuilder.callTimeout(configuration.getCallTimeOut(), TimeUnit.SECONDS);
         okHttpClientBuilder.retryOnConnectionFailure(true);
         okHttpClientBuilder.addNetworkInterceptor(UserAgentInterceptor.using(UserAgent::string));
+        if (configuration.getDns() != null) {
+            okHttpClientBuilder.dns(configuration.getDns());
+        }
 
         OkHttpClient client = okHttpClientBuilder.build();
         LOG.debug(

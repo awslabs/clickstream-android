@@ -30,6 +30,7 @@ import com.amazonaws.solution.clickstream.client.ClickstreamContext;
 import com.amazonaws.solution.clickstream.client.Event;
 import com.amazonaws.solution.clickstream.client.EventRecorder;
 import com.amazonaws.solution.clickstream.client.db.ClickstreamDBUtil;
+import com.amazonaws.solution.clickstream.util.CustomOkhttpDns;
 import com.amazonaws.solution.clickstream.util.ReflectUtil;
 import com.github.dreamhead.moco.HttpServer;
 import com.github.dreamhead.moco.Runner;
@@ -451,11 +452,13 @@ public class IntegrationTest {
             .withSendEventsInterval(15000)
             .withTrackAppExceptionEvents(false)
             .withLogEvents(true)
+            .withCustomDns(CustomOkhttpDns.getInstance())
             .withCompressEvents(true);
 
         assertEquals("23982", this.analyticsClient.getClickstreamConfiguration().getAppId());
         assertEquals(assembleEndpointUrl(COLLECT_SUCCESS1),
             this.analyticsClient.getClickstreamConfiguration().getEndpoint());
+        assertEquals(CustomOkhttpDns.getInstance(), this.analyticsClient.getClickstreamConfiguration().getDns());
         assertEquals(15000, this.analyticsClient.getClickstreamConfiguration().getSendEventsInterval());
         Assert.assertFalse(this.analyticsClient.getClickstreamConfiguration().isTrackAppExceptionEvents());
         Assert.assertTrue(this.analyticsClient.getClickstreamConfiguration().isCompressEvents());
@@ -475,6 +478,110 @@ public class IntegrationTest {
         Thread.sleep(1500);
         assertEquals(0, dbUtil.getTotalNumber());
     }
+
+    /**
+     * test custom dns for success.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testCustomDnsSuccess() throws Exception {
+        CustomOkhttpDns dns = CustomOkhttpDns.getInstance();
+        dns.setDefaultIp("127.0.0.1");
+
+        ClickstreamAnalytics.getClickStreamConfiguration().withCustomDns(dns);
+
+        assertEquals(dns, this.analyticsClient.getClickstreamConfiguration().getDns());
+
+        ClickstreamAnalytics.recordEvent("testRecordEvent");
+        assertEquals(1, dbUtil.getTotalNumber());
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1500);
+        assertEquals(0, dbUtil.getTotalNumber());
+    }
+
+    /**
+     * test custom dns for fail.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testCustomDnsFail() throws Exception {
+        CustomOkhttpDns dns = CustomOkhttpDns.getInstance();
+        dns.setDefaultIp("192.168.1.10");
+        ClickstreamAnalytics.getClickStreamConfiguration().withCustomDns(dns);
+
+        assertEquals(dns, this.analyticsClient.getClickstreamConfiguration().getDns());
+
+        ClickstreamAnalytics.recordEvent("testRecordEvent");
+        assertEquals(1, dbUtil.getTotalNumber());
+        setHttpRequestTimeOut(1L);
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(2000);
+        assertEquals(1, dbUtil.getTotalNumber());
+
+        dns.setDefaultIp("127.0.0.1");
+        setHttpRequestTimeOut(15L);
+        ClickstreamAnalytics.flushEvents();
+        // wait for success
+        Thread.sleep(1000);
+        assertEquals(0, dbUtil.getTotalNumber());
+    }
+
+    /**
+     * test custom dns for resolution timeout fail.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testCustomDnsResolutionTimeoutFail() throws Exception {
+        CustomOkhttpDns dns = CustomOkhttpDns.getInstance();
+        dns.setDefaultIp("127.0.0.1");
+        dns.setIsResolutionTimeout(true);
+        setHttpRequestTimeOut(1L);
+
+        ClickstreamAnalytics.getClickStreamConfiguration().withCustomDns(dns);
+        assertEquals(dns, this.analyticsClient.getClickstreamConfiguration().getDns());
+
+        ClickstreamAnalytics.recordEvent("testRecordEvent");
+        assertEquals(1, dbUtil.getTotalNumber());
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1500);
+        assertEquals(1, dbUtil.getTotalNumber());
+
+        dns.setIsResolutionTimeout(false);
+        setHttpRequestTimeOut(15L);
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1000);
+        assertEquals(0, dbUtil.getTotalNumber());
+    }
+
+    /**
+     * test custom dns for unKnow host fail.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testCustomDnsForUnKnowHostFail() throws Exception {
+        CustomOkhttpDns dns = CustomOkhttpDns.getInstance();
+        dns.setDefaultIp("127.0.0.1");
+        dns.setIsResolutionTimeout(false);
+        dns.setIsUnKnowHost(true);
+        ClickstreamAnalytics.getClickStreamConfiguration().withCustomDns(dns);
+        assertEquals(dns, this.analyticsClient.getClickstreamConfiguration().getDns());
+
+        ClickstreamAnalytics.recordEvent("testRecordEvent");
+        assertEquals(1, dbUtil.getTotalNumber());
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1000);
+        assertEquals(1, dbUtil.getTotalNumber());
+
+        dns.setIsUnKnowHost(false);
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1000);
+        assertEquals(0, dbUtil.getTotalNumber());
+    }
+
 
     /**
      * test enable.
@@ -567,6 +674,10 @@ public class IntegrationTest {
         ReflectUtil.modifyFiled(submitter, "handler", mock(Handler.class));
     }
 
+    private void setHttpRequestTimeOut(long timeOutSecond) throws Exception {
+        ReflectUtil.modifyFiled(ClickstreamAnalytics.getClickStreamConfiguration(), "callTimeOut", timeOutSecond);
+    }
+
     /**
      * close db and stop handler executed thread.
      *
@@ -576,6 +687,7 @@ public class IntegrationTest {
     public void tearDown() throws Exception {
         dbUtil.closeDB();
         stopThreadSafely();
+        ClickstreamAnalytics.getClickStreamConfiguration().withCustomDns(null);
         Map<String, Object> globalAttribute =
             (Map<String, Object>) ReflectUtil.getFiled(analyticsClient, "globalAttributes");
         Map<String, Object> userAttributes =
