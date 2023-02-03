@@ -17,7 +17,6 @@ apply plugin: 'com.android.library'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 
 dependencies {
-    implementation dependency.androidx.appcompat
     implementation dependency.aws.mobileclient
     implementation dependency.amplifyframework.core
     implementation dependency.okhttp

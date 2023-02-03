@@ -20,11 +20,13 @@ package com.amazonaws.solution.clickstream;
  */
 public final class AWSClickstreamPluginConfiguration {
     private static final long DEFAULT_SEND_EVENTS_INTERVAL = 10000L;
+    private static final long DEFAULT_CALL_TIME_OUT = 15000L;
 
     // Clickstream configuration options
     private final String appId;
     private final String endpoint;
     private final long sendEventsInterval;
+    private final long callTimeOut;
     private final boolean isTrackAppLifecycleEvents;
     private final boolean isTrackAppExceptionEvents;
     private final boolean isCompressEvents;
@@ -33,6 +35,7 @@ public final class AWSClickstreamPluginConfiguration {
         this.appId = builder.appId;
         this.isTrackAppLifecycleEvents = builder.isTrackAppLifecycleEvents;
         this.isTrackAppExceptionEvents = builder.isTrackAppExceptionEvents;
+        this.callTimeOut = builder.callTimeOut;
         this.sendEventsInterval = builder.sendEventsInterval;
         this.endpoint = builder.endpoint;
         this.isCompressEvents = builder.isCompressEvents;
@@ -54,6 +57,15 @@ public final class AWSClickstreamPluginConfiguration {
      */
     long getSendEventsInterval() {
         return sendEventsInterval;
+    }
+
+    /**
+     * Accessor for http call time out.
+     *
+     * @return callTimeOut.
+     */
+    long getCallTimeOut() {
+        return callTimeOut;
     }
 
     /**
@@ -109,6 +121,7 @@ public final class AWSClickstreamPluginConfiguration {
         private String appId;
         private String endpoint;
         private long sendEventsInterval = DEFAULT_SEND_EVENTS_INTERVAL;
+        private final long callTimeOut = DEFAULT_CALL_TIME_OUT;
         private boolean isCompressEvents = true;
         private boolean isTrackAppLifecycleEvents = true;
         private boolean isTrackAppExceptionEvents = false;
