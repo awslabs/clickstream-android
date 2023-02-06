@@ -524,7 +524,7 @@ public class IntegrationTest {
         setHttpRequestTimeOut(15L);
         ClickstreamAnalytics.flushEvents();
         // wait for success
-        Thread.sleep(1000);
+        Thread.sleep(1500);
         assertEquals(0, dbUtil.getTotalNumber());
     }
 
