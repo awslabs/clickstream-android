@@ -32,22 +32,6 @@ open an terminal window,at the root project folder to execute:
 ```shell
 ./gradlew build -p clickstream
 ```
-## How to build in GitLab
-### Runner tags select
-Because We need to allow 64-bit machines to run Android's 32-bit tools, so we need to execute:
-```shell
-- apt-get --quiet install --yes wget tar unzip lib32stdc++6 lib32z1
-```
-This command needs to be executed in amd64 architecture machine,
-so we should config the runner both size and arch tag below at `.gitlab-ci.yml` to ensure the architecture is right to execute.
-```shell
-default:
-  image: openjdk:8-jdk
-  tags:
-    - size:2xlarge
-    - arch:amd64
-```
-
 
 ## Security
 
@@ -55,7 +39,4 @@ See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more inform
 
 ## License
 
-This project is licensed under the Apache-2.0 License.
-
 This library is licensed under the [Apache 2.0 License](./LICENSE).
-
