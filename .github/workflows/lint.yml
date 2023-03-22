@@ -29,16 +29,6 @@ jobs:
             chore
             revert
             release
-          # Configure which scopes are allowed.
-          scopes: |
-            deps-dev
-            deps
-            inference
-            dashboard
-            model
-            core
-            ui
-            docs
           # Configure that a scope must always be provided.
           requireScope: false
           # Configure additional validation for the subject based on a regex.
