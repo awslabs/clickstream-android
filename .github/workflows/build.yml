@@ -1,0 +1,36 @@
+name: Android SDK Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: set up JDK 8
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: gradle
+      - name: config key.properties
+        run: |
+          echo "nexusUsername=$NEXUS_USERNAME" >> key.properties
+          echo "nexusPassword=$NEXUS_PASSWORD" >> key.properties
+          echo "signing.keyId==$SIGNING_KEY_ID" >> key.properties
+          echo "signing.password=$SIGNING_PASSWORD" >> key.properties
+          echo "signing.inMemoryKey=$SIGNING_IN_MEMORY_KEY" >> key.properties
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Build with Gradle
+        run: ./gradlew build -p clickstream
+      - name: Upload aar
+        uses: actions/upload-artifact@v3
+        if: success() || failure()
+        with:
+          name: aar
+          path: clickstream/build/outputs/aar/
