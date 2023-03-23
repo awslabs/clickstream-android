@@ -14,6 +14,9 @@ jobs:
       - name: print commit title
         run: |
           echo "commit title is: ${{ github.event.push.commits[0].message }}"
+          echo ${{ github.event.push.commits[0].message }}
+          echo $github.event.push.commits[0].message
+          echo "${{toJSON(github.event)}}"
       - name: check commit title
         run: '[[ ${{ github.event.push.commits[0].message }} =~ ^(feat|fix|chore|docs|tests|ci) ]] || (echo "no commit type is specified in merge request title" && exit 1)'
 
