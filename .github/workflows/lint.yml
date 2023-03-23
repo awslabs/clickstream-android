@@ -1,0 +1,20 @@
+name: Commit Title Lint
+
+on:
+  push:
+    branches: [ "*" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: print commit title
+        run: |
+          echo "commit title is: $(git log -1 --pretty=format:"%s")"
+      - name: check commit title
+        run: '[[ $(git log -1 --pretty=format:"%s") =~ ^(feat|fix|chore|docs|tests|ci) ]] || (echo "no commit type is specified in merge request title" && exit 1)'
