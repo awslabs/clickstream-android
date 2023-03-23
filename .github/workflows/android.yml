@@ -16,10 +16,8 @@ jobs:
       - name: print commit title
         run: |
           echo "commit title is: $(git log -1 --pretty=format:"%s")"
-          echo "${{ github.event.pull_request.title }}"
-          echo "::set-output name=headCommitMsg::$(git show -s --format=%s)"
       - name: check commit title
-        run: '[[ ${{ github.event.pull_request.title }} =~ ^(feat|fix|chore|docs|tests|ci) ]] || (echo "no commit type is specified in merge request title" && exit 1)'
+        run: '[[ $(git log -1 --pretty=format:"%s") =~ ^(feat|fix|chore|docs|tests|ci) ]] || (echo "no commit type is specified in merge request title" && exit 1)'
 
   build:
     needs: lint
