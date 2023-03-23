@@ -13,14 +13,10 @@ jobs:
       - uses: actions/checkout@v3
       - name: print commit title
         run: |
-          echo "commit title is: ${{ github.event.push.commits[0].message }}"
-          echo "${{toJSON(github.event.push)}}"
-          echo "$COMMIT_MESSAGES"
-          echo "$MERGE_MESSAGE"
-          echo "$COMMIT_OR_PR_TITLE"
-          echo "${{toJSON(github.event)}}"
+          echo "commit title is: $(git log -1 --pretty=format:"%s")"
+          echo "${{toJSON(github.event.commits)}}"
       - name: check commit title
-        run: '[[ $COMMIT_MESSAGES }} =~ ^(feat|fix|chore|docs|tests|ci) ]] || (echo "no commit type is specified in merge request title" && exit 1)'
+        run: '[[ $(git log -1 --pretty=format:"%s") }} =~ ^(feat|fix|chore|docs|tests|ci) ]] || (echo "no commit type is specified in merge request title" && exit 1)'
 
   build:
     needs: lint
