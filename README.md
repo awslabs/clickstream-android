@@ -25,7 +25,7 @@ First of all you should install the latest version of [Android Studio](https://d
 
 #### Config your java version
 1. Open your Android Studio -> Preferences ->  Build, Execution, Deployment -> Build Tools -> Gradle window.
-2. make sure you `Gradle JDK` version is set to the 1.8, then click apply and ok.
+2. make sure your `Gradle JDK` version is set to the 1.8, then click apply and ok.
 
 ###  Build aar
 open an terminal window,at the root project folder to execute:
