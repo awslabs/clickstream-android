@@ -11,13 +11,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: print env
-        run: printenv
       - name: print commit title
         run: |
-          echo "commit title is: $(git log --format=%s -n 1 ${{ github.head_ref }})"
+          echo "commit title is: ${{ github.event.head_commit.message }}"
       - name: check commit title
-        run: '[[ $(git log --format=%s -n 1 ${{ github.head_ref }}) =~ ^(feat|fix|chore|docs|tests|ci) ]] || (echo "no commit type is specified in merge request title" && exit 1)'
+        run: '[[ ${{ github.event.head_commit.message }} =~ ^(feat|fix|chore|docs|tests|ci) ]] || (echo "no commit type is specified in merge request title" && exit 1)'
 
   build:
     needs: lint
