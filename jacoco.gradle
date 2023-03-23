@@ -1,0 +1,63 @@
+apply plugin: 'jacoco'
+
+jacoco {
+    toolVersion = "0.8.7"
+}
+
+afterEvaluate { project ->
+    setupAndroidReporting(project)
+}
+
+ext {
+    getFileFilter = { ->
+        def jacocoSkipClasses = null
+        if (project.hasProperty('jacocoSkipClasses')) {
+            jacocoSkipClasses = project.property('jacocoSkipClasses')
+        }
+        def fileFilter = ['**/R.class', '**/R$*.class',
+                          '**/BuildConfig.*', '**/Manifest*.*', '**/*$ViewInjector*.*']
+        if (jacocoSkipClasses != null) {
+            fileFilter.addAll(jacocoSkipClasses)
+        }
+        return fileFilter
+    }
+}
+
+def setupAndroidReporting(Project currentProject) {
+    tasks.withType(Test) {
+        jacoco.includeNoLocationClasses true
+        jacoco.excludes = ['jdk.internal.*']
+    }
+    task jacocoTestReport(
+        type: JacocoReport,
+        dependsOn: [
+            'testDebugUnitTest'
+        ]) {
+        reports {
+            csv.enabled false
+            xml {
+                enabled true
+                xml.destination file("${buildDir}/reports/jacoco/jacoco.xml")
+            }
+            html {
+                enabled true
+                html.destination file("${buildDir}/reports/jacoco")
+            }
+        }
+
+        final def coverageSourceDirs = [
+            "$projectDir/src/main/java"
+        ]
+        final def fileFilter = project.getFileFilter()
+        final def javaDebugTree = fileTree(
+            dir: "$buildDir/intermediates/javac/debug/classes",
+            excludes: fileFilter
+        )
+        sourceDirectories.from = files(coverageSourceDirs)
+        classDirectories.from = files([javaDebugTree])
+        executionData.from = fileTree(
+            dir: project.buildDir,
+            includes: ['jacoco/testDebugUnitTest.exec']
+        )
+    }
+}
