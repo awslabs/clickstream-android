@@ -14,11 +14,13 @@ jobs:
       - name: print commit title
         run: |
           echo "commit title is: ${{ github.event.push.commits[0].message }}"
-          echo ${{ github.event.push.commits[0].message }}
-          echo $github.event.push.commits[0].message
+          echo "${{toJSON(github.event.push)}}"
+          echo "$COMMIT_MESSAGES"
+          echo "$MERGE_MESSAGE"
+          echo "$COMMIT_OR_PR_TITLE"
           echo "${{toJSON(github.event)}}"
       - name: check commit title
-        run: '[[ ${{ github.event.push.commits[0].message }} =~ ^(feat|fix|chore|docs|tests|ci) ]] || (echo "no commit type is specified in merge request title" && exit 1)'
+        run: '[[ $COMMIT_MESSAGES }} =~ ^(feat|fix|chore|docs|tests|ci) ]] || (echo "no commit type is specified in merge request title" && exit 1)'
 
   build:
     needs: lint
