@@ -34,6 +34,7 @@ public class ClickstreamConfiguration {
     private boolean isTrackAppLifecycleEvents;
     private boolean isTrackAppExceptionEvents;
     private boolean isLogEvents;
+    private String authCookie;
 
     /**
      * Create an {@link ClickstreamConfiguration} object with the specified parameters.
@@ -91,15 +92,6 @@ public class ClickstreamConfiguration {
     }
 
     /**
-     * For get the Clickstream Okhttp3 dns.
-     *
-     * @return the dns.
-     */
-    public Dns getDns() {
-        return this.dns;
-    }
-
-    /**
      * The endpoint for Clickstream.
      *
      * @param endpoint The endpoint.
@@ -108,6 +100,15 @@ public class ClickstreamConfiguration {
     public ClickstreamConfiguration withEndpoint(final String endpoint) {
         this.endpoint = endpoint;
         return this;
+    }
+
+    /**
+     * For get the Clickstream Okhttp3 dns.
+     *
+     * @return the dns.
+     */
+    public Dns getDns() {
+        return this.dns;
     }
 
     /**
@@ -131,15 +132,6 @@ public class ClickstreamConfiguration {
     }
 
     /**
-     * The time out of entire http call.
-     *
-     * @return callTimeOut.
-     */
-    public Long getCallTimeOut() {
-        return this.callTimeOut;
-    }
-
-    /**
      * The interval of events sent at once.
      *
      * @param sendEventsInterval Submit events interval.
@@ -148,6 +140,15 @@ public class ClickstreamConfiguration {
     public ClickstreamConfiguration withSendEventsInterval(final long sendEventsInterval) {
         this.sendEventsInterval = sendEventsInterval;
         return this;
+    }
+
+    /**
+     * The time out of entire http call.
+     *
+     * @return callTimeOut.
+     */
+    public Long getCallTimeOut() {
+        return this.callTimeOut;
     }
 
     /**
@@ -191,24 +192,6 @@ public class ClickstreamConfiguration {
     }
 
     /**
-     * Is track app exception events.
-     *
-     * @return Is track app exception events.
-     */
-    public boolean isTrackAppExceptionEvents() {
-        return this.isTrackAppExceptionEvents;
-    }
-
-    /**
-     * Is log events.
-     *
-     * @return Is log events json when record event.
-     */
-    public boolean isLogEvents() {
-        return this.isLogEvents;
-    }
-
-    /**
      * Is track app lifecycle events.
      *
      * @param isTrackAppLifecycleEvents Is track app lifecycle events.
@@ -217,6 +200,15 @@ public class ClickstreamConfiguration {
     public ClickstreamConfiguration withTrackAppLifecycleEvents(final boolean isTrackAppLifecycleEvents) {
         this.isTrackAppLifecycleEvents = isTrackAppLifecycleEvents;
         return this;
+    }
+
+    /**
+     * Is track app exception events.
+     *
+     * @return Is track app exception events.
+     */
+    public boolean isTrackAppExceptionEvents() {
+        return this.isTrackAppExceptionEvents;
     }
 
     /**
@@ -231,6 +223,15 @@ public class ClickstreamConfiguration {
     }
 
     /**
+     * Is log events.
+     *
+     * @return Is log events json when record event.
+     */
+    public boolean isLogEvents() {
+        return this.isLogEvents;
+    }
+
+    /**
      * Is log events json when record event, set true for debug mode.
      *
      * @param isLogEvents Is log events json.
@@ -238,6 +239,26 @@ public class ClickstreamConfiguration {
      */
     public ClickstreamConfiguration withLogEvents(final boolean isLogEvents) {
         this.isLogEvents = isLogEvents;
+        return this;
+    }
+
+    /**
+     * Get The Clickstream authCookie.
+     *
+     * @return the authCookie.
+     */
+    public String getAuthCookie() {
+        return this.authCookie;
+    }
+
+    /**
+     * Set the auth cookie for Clickstream.
+     *
+     * @param authCookie The authCookie.
+     * @return the current ClickstreamConfiguration instance.
+     */
+    public ClickstreamConfiguration withAuthCookie(final String authCookie) {
+        this.authCookie = authCookie;
         return this;
     }
 }

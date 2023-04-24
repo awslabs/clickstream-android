@@ -46,7 +46,10 @@ import software.aws.solution.clickstream.util.ReflectUtil;
 
 import java.util.Map;
 
+import static com.github.dreamhead.moco.Moco.and;
 import static com.github.dreamhead.moco.Moco.by;
+import static com.github.dreamhead.moco.Moco.eq;
+import static com.github.dreamhead.moco.Moco.header;
 import static com.github.dreamhead.moco.Moco.httpServer;
 import static com.github.dreamhead.moco.Moco.status;
 import static com.github.dreamhead.moco.Moco.text;
@@ -63,6 +66,7 @@ import static org.mockito.Mockito.when;
 public class IntegrationTest {
     private static final String COLLECT_SUCCESS = "/collect/success";
     private static final String COLLECT_SUCCESS1 = "/collect/success1";
+    private static final String COLLECT_FOR_AUTH = "/collect/auth";
     private static final String COLLECT_FAIL = "/collect/fail";
     private static final String COLLECT_HOST = "http://localhost:8082";
     private static Runner runner;
@@ -81,6 +85,8 @@ public class IntegrationTest {
         final HttpServer server = httpServer(8082);
         server.request(by(uri(COLLECT_SUCCESS))).response(status(200), text("success"));
         server.request(by(uri(COLLECT_SUCCESS1))).response(status(200), text("success"));
+        server.request(and(by(uri(COLLECT_FOR_AUTH)), eq(header("cookie"), "testCookie")))
+            .response(status(200), text("success"));
         server.request(by(uri(COLLECT_FAIL))).response(status(403), text("fail"));
         runner = runner(server);
         runner.start();
@@ -582,6 +588,52 @@ public class IntegrationTest {
         assertEquals(0, dbUtil.getTotalNumber());
     }
 
+    /**
+     * test set auth cookie success.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testSetAuthCookieSuccess() throws Exception {
+        String authCookie = "testCookie";
+        ClickstreamAnalytics.getClickStreamConfiguration()
+            .withAuthCookie(authCookie)
+            .withEndpoint(assembleEndpointUrl(COLLECT_FOR_AUTH));
+
+        assertEquals(authCookie, this.analyticsClient.getClickstreamConfiguration().getAuthCookie());
+
+        ClickstreamAnalytics.recordEvent("testRecordEventForAuth");
+        assertEquals(1, dbUtil.getTotalNumber());
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1000);
+        assertEquals(0, dbUtil.getTotalNumber());
+    }
+
+    /**
+     * test set auth cookie fail.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testSetAuthCookieFail() throws Exception {
+        String authCookie = "testCookieFail";
+        ClickstreamAnalytics.getClickStreamConfiguration()
+            .withAuthCookie(authCookie)
+            .withEndpoint(assembleEndpointUrl(COLLECT_FOR_AUTH));
+
+        assertEquals(authCookie, this.analyticsClient.getClickstreamConfiguration().getAuthCookie());
+
+        ClickstreamAnalytics.recordEvent("testRecordEventFailForAuth");
+        assertEquals(1, dbUtil.getTotalNumber());
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1000);
+        assertEquals(1, dbUtil.getTotalNumber());
+
+        ClickstreamAnalytics.getClickStreamConfiguration().withAuthCookie("testCookie");
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1000);
+        assertEquals(0, dbUtil.getTotalNumber());
+    }
 
     /**
      * test enable.
