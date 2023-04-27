@@ -69,8 +69,7 @@ public final class NetRequest {
                 LOG.debug("submitEvents success. \n" + response);
                 return true;
             } else {
-                LOG.warn(
-                    String.format(Locale.US, "submitEvents onResponse fail %d-%s", response.code(), response.body()));
+                LOG.error("submitEvents fail. \n" + response);
             }
         } catch (final Exception exception) {
             LOG.error("submitEvents error: " + exception.getMessage());
@@ -109,7 +108,11 @@ public final class NetRequest {
             .addQueryParameter("appId", appId)
             .addQueryParameter("compression", compression)
             .build();
-        request = request.newBuilder().url(url).post(body).build();
+        Request.Builder builder = request.newBuilder().url(url).post(body);
+        if (!StringUtil.isNullOrEmpty(configuration.getAuthCookie())) {
+            builder.addHeader("cookie", configuration.getAuthCookie());
+        }
+        request = builder.build();
 
         final OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient.Builder();
         okHttpClientBuilder.connectTimeout(HTTP_CONNECT_TIME_OUT, TimeUnit.SECONDS);
