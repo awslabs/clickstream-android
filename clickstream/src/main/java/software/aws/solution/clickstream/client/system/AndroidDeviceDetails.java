@@ -27,13 +27,6 @@ public class AndroidDeviceDetails {
     private final String carrier;
 
     /**
-     * The construct function with no parameter.
-     */
-    public AndroidDeviceDetails() {
-        this.carrier = null;
-    }
-
-    /**
      * The construct function with parameters.
      *
      * @param carrier The name of carrier.

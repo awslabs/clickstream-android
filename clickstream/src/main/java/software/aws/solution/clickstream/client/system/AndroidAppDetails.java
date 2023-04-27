@@ -31,15 +31,7 @@ public class AndroidAppDetails {
     private static final Log LOG = LogFactory.getLog(AndroidAppDetails.class);
     private String appTitle;
     private String packageName;
-    private String versionCode;
     private String versionName;
-
-    /**
-     * The default construct function of AndroidAppDetails.
-     */
-    public AndroidAppDetails() {
-
-    }
 
     /**
      * The construct function with parameters of AndroidAppDetails.
@@ -58,34 +50,14 @@ public class AndroidAppDetails {
 
             appTitle = (String) packageManager.getApplicationLabel(appInfo);
             packageName = packageInfo.packageName;
-            versionCode = String.valueOf(packageInfo.versionCode);
             versionName = packageInfo.versionName;
         } catch (NameNotFoundException nameNotFoundException) {
             LOG.warn("Unable to get details for package " +
                 applicationContext.getPackageName());
             appTitle = "Unknown";
             packageName = "Unknown";
-            versionCode = "Unknown";
             versionName = "Unknown";
         }
-    }
-
-    /**
-     * The construct function with parameters of AndroidAppDetails.
-     *
-     * @param packageName The package name.
-     * @param versionCode The version code.
-     * @param versionName The version name.
-     * @param appTitle    The app title.
-     */
-    public AndroidAppDetails(String packageName,
-                             String versionCode,
-                             String versionName,
-                             String appTitle) {
-        this.packageName = packageName;
-        this.versionCode = versionCode;
-        this.versionName = versionName;
-        this.appTitle = appTitle;
     }
 
     /**
@@ -104,15 +76,6 @@ public class AndroidAppDetails {
      */
     public String versionName() {
         return versionName;
-    }
-
-    /**
-     * Get the code of version.
-     *
-     * @return The code of version.
-     */
-    public String versionCode() {
-        return versionCode;
     }
 
     /**

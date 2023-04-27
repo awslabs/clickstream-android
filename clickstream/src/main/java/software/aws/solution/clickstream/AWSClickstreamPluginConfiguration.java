@@ -21,6 +21,7 @@ package software.aws.solution.clickstream;
 public final class AWSClickstreamPluginConfiguration {
     private static final long DEFAULT_SEND_EVENTS_INTERVAL = 10000L;
     private static final long DEFAULT_CALL_TIME_OUT = 15000L;
+    private static final long DEFAULT_SESSION_TIME_OUT = 1800000L;
 
     // Clickstream configuration options
     private final String appId;
@@ -30,6 +31,7 @@ public final class AWSClickstreamPluginConfiguration {
     private final boolean isTrackAppLifecycleEvents;
     private final boolean isTrackAppExceptionEvents;
     private final boolean isCompressEvents;
+    private final long sessionTimeOut;
 
     private AWSClickstreamPluginConfiguration(Builder builder) {
         this.appId = builder.appId;
@@ -39,6 +41,7 @@ public final class AWSClickstreamPluginConfiguration {
         this.sendEventsInterval = builder.sendEventsInterval;
         this.endpoint = builder.endpoint;
         this.isCompressEvents = builder.isCompressEvents;
+        this.sessionTimeOut = builder.sessionTimeOut;
     }
 
     /**
@@ -105,6 +108,15 @@ public final class AWSClickstreamPluginConfiguration {
     }
 
     /**
+     * Accessor for session time out.
+     *
+     * @return sessionTimeOut
+     */
+    long getSessionTimeOut() {
+        return sessionTimeOut;
+    }
+
+    /**
      * Return a builder that can be used to construct a new instance of
      * {@link AWSClickstreamPluginConfiguration}.
      *
@@ -125,6 +137,8 @@ public final class AWSClickstreamPluginConfiguration {
         private boolean isCompressEvents = true;
         private boolean isTrackAppLifecycleEvents = true;
         private boolean isTrackAppExceptionEvents = false;
+
+        private long sessionTimeOut = DEFAULT_SESSION_TIME_OUT;
 
         Builder withAppId(final String appId) {
             this.appId = appId;
@@ -153,6 +167,11 @@ public final class AWSClickstreamPluginConfiguration {
 
         Builder withTrackAppExceptionEvents(final boolean trackAppExceptionEvents) {
             this.isTrackAppExceptionEvents = trackAppExceptionEvents;
+            return this;
+        }
+
+        Builder withSessionTimeOut(final long sessionTimeOut) {
+            this.sessionTimeOut = sessionTimeOut;
             return this;
         }
 

@@ -25,8 +25,6 @@ import com.amplifyframework.analytics.AnalyticsProperties;
 import com.amplifyframework.analytics.AnalyticsStringProperty;
 import com.amplifyframework.analytics.UserProfile;
 
-import java.util.Objects;
-
 /**
  * Clickstream UserProfile with userAttributes and userId.
  */
@@ -34,7 +32,6 @@ public class ClickstreamUserAttribute extends UserProfile {
     private static final int MAX_NAME_LENGTH = 50;
     private static final int MAX_VALUE_LENGTH = 256;
     private final AnalyticsProperties userAttributes;
-    private final String userId;
 
     /**
      * Constructor for init the userAttribute and userId.
@@ -44,7 +41,6 @@ public class ClickstreamUserAttribute extends UserProfile {
     protected ClickstreamUserAttribute(@NonNull Builder builder) {
         super(builder);
         this.userAttributes = builder.builder.build();
-        this.userId = builder.userId;
     }
 
     /**
@@ -54,15 +50,6 @@ public class ClickstreamUserAttribute extends UserProfile {
      */
     public AnalyticsProperties getUserAttributes() {
         return userAttributes;
-    }
-
-    /**
-     * getter for userId.
-     *
-     * @return userId
-     */
-    public String getUserId() {
-        return userId;
     }
 
     /**
@@ -80,21 +67,6 @@ public class ClickstreamUserAttribute extends UserProfile {
      */
     public static final class Builder extends UserProfile.Builder<Builder, ClickstreamUserAttribute> {
         private final AnalyticsProperties.Builder builder = AnalyticsProperties.builder();
-
-        private String userId;
-
-        /**
-         * Sets the userId of the builder instance.
-         *
-         * @param userId user id.
-         * @return Current builder instance, for method chaining.
-         */
-        @NonNull
-        public Builder userId(@NonNull @Size(min = 1L, max = MAX_NAME_LENGTH) final String userId) {
-            Objects.requireNonNull(userId);
-            this.userId = userId;
-            return this;
-        }
 
         /**
          * Adds a {@link AnalyticsStringProperty} to the {@link AnalyticsProperties} under
@@ -150,6 +122,21 @@ public class ClickstreamUserAttribute extends UserProfile {
         @NonNull
         public Builder add(@NonNull @Size(min = 1L, max = MAX_NAME_LENGTH) String key, @NonNull Integer value) {
             builder.add(key, value);
+            return this;
+        }
+
+        /**
+         * Adds an {@link AnalyticsLongProperty} to the {@link AnalyticsProperties} under
+         * construction.
+         *
+         * @param key   A name for the property
+         * @param value An Long to store in the property
+         * @return Current Builder instance, for fluent method chaining
+         */
+        @NonNull
+        public ClickstreamUserAttribute.Builder add(@NonNull @Size(min = 1L, max = MAX_NAME_LENGTH) String key,
+                                                    @NonNull Long value) {
+            builder.add(key, AnalyticsLongProperty.from(value));
             return this;
         }
 

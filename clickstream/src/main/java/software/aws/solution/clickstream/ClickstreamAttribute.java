@@ -127,6 +127,21 @@ public class ClickstreamAttribute {
         }
 
         /**
+         * Adds an {@link AnalyticsLongProperty} to the {@link AnalyticsProperties} under
+         * construction.
+         *
+         * @param key   A name for the property
+         * @param value An Long to store in the property
+         * @return Current Builder instance, for fluent method chaining
+         */
+        @NonNull
+        public Builder add(@NonNull @Size(min = 1L, max = Event.Limit.MAX_LENGTH_OF_NAME) String key,
+                           @NonNull Long value) {
+            builder.add(key, AnalyticsLongProperty.from(value));
+            return this;
+        }
+
+        /**
          * Builds an instance of {@link ClickstreamAttribute}, using the provided values.
          *
          * @return An {@link ClickstreamAttribute}

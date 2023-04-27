@@ -15,6 +15,8 @@
 
 package software.aws.solution.clickstream.uniqueid;
 
+import androidx.test.core.app.ApplicationProvider;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,7 +25,7 @@ import org.robolectric.annotation.Config;
 import software.aws.solution.clickstream.client.ClickstreamContext;
 import software.aws.solution.clickstream.client.system.AndroidPreferences;
 import software.aws.solution.clickstream.client.system.AndroidSystem;
-import software.aws.solution.clickstream.client.uniqueid.SharedPrefsUniqueIdService;
+import software.aws.solution.clickstream.client.uniqueid.SharedPrefsDeviceIdService;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -37,16 +39,16 @@ import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(manifest = Config.NONE)
-public class SharedPrefsUniqueIdServiceTest {
+public class SharedPrefsDeviceIdServiceTest {
 
     private ClickstreamContext mockClickstreamContext;
     private AndroidSystem mockSystem;
     private AndroidPreferences mockPreferences;
 
-    private SharedPrefsUniqueIdService serviceToTest = null;
+    private SharedPrefsDeviceIdService serviceToTest = null;
 
     /**
-     * setup the mockSystem,mockPreferences and SharedPrefsUniqueIdService.
+     * setup the mockSystem,mockPreferences and SharedPrefsDeviceIdService.
      */
     @Before
     public void setup() {
@@ -54,17 +56,18 @@ public class SharedPrefsUniqueIdServiceTest {
         mockSystem = mock(AndroidSystem.class);
         mockPreferences = mock(AndroidPreferences.class);
         when(mockClickstreamContext.getSystem()).thenReturn(mockSystem);
+        when(mockClickstreamContext.getApplicationContext()).thenReturn(ApplicationProvider.getApplicationContext());
         when(mockSystem.getPreferences()).thenReturn(mockPreferences);
-        serviceToTest = new SharedPrefsUniqueIdService();
+        serviceToTest = new SharedPrefsDeviceIdService();
     }
 
     /**
      * test getUniqueId when sp is null then return empty id.
      */
     @Test
-    public void getUniqueIdWhenSpIsNull() {
+    public void getDeviceIdWhenSpIsNull() {
         when(mockSystem.getPreferences()).thenReturn(null);
-        String uniqueId = serviceToTest.getUniqueId(mockClickstreamContext);
+        String uniqueId = serviceToTest.getDeviceId(mockClickstreamContext);
         assertEquals(uniqueId, "");
     }
 
@@ -72,10 +75,10 @@ public class SharedPrefsUniqueIdServiceTest {
      * test getUniqueId when id does not exist then create and store id.
      */
     @Test
-    public void getUniqueIdWhenIdDoesNotExist() {
-        String expectedUniqueIdKey = "UniqueId";
+    public void getDeviceIdWhenIdDoesNotExist() {
+        String expectedUniqueIdKey = "DeviceId";
         when(mockPreferences.getString(eq(expectedUniqueIdKey), anyString())).thenReturn(null);
-        String uniqueId = serviceToTest.getUniqueId(mockClickstreamContext);
+        String uniqueId = serviceToTest.getDeviceId(mockClickstreamContext);
         assertNotNull(uniqueId);
         verify(mockPreferences, times(1)).putString(eq(expectedUniqueIdKey), any(String.class));
     }

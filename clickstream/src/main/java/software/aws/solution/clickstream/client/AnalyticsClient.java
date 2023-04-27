@@ -20,6 +20,10 @@ import androidx.annotation.NonNull;
 
 import com.amazonaws.logging.Log;
 import com.amazonaws.logging.LogFactory;
+import org.json.JSONException;
+import org.json.JSONObject;
+import software.aws.solution.clickstream.client.util.PreferencesUtil;
+import software.aws.solution.clickstream.client.util.StringUtil;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,7 +36,9 @@ public class AnalyticsClient {
     private static final int MAX_EVENT_TYPE_LENGTH = 50;
     private final ClickstreamContext context;
     private final Map<String, Object> globalAttributes = new ConcurrentHashMap<>();
-    private final Map<String, Object> userAttributes = new ConcurrentHashMap<>();
+    private JSONObject userAttributes;
+    private String userId;
+    private String userUniqueId;
     private final EventRecorder eventRecorder;
     private Session session;
 
@@ -44,6 +50,9 @@ public class AnalyticsClient {
     public AnalyticsClient(@NonNull final ClickstreamContext context) {
         this.context = context;
         eventRecorder = EventRecorder.newInstance(context);
+        userId = PreferencesUtil.getCurrentUserId(context.getSystem().getPreferences());
+        userUniqueId = PreferencesUtil.getCurrentUserUniqueId(context.getSystem().getPreferences());
+        userAttributes = PreferencesUtil.getUserAttribute(context.getSystem().getPreferences());
     }
 
     /**
@@ -90,17 +99,60 @@ public class AnalyticsClient {
      */
     public void addUserAttribute(String name, Object value) {
         if (value != null) {
-            Event.EventError error = Event.checkUserAttribute(userAttributes.size(), name, value);
+            Event.EventError error = Event.checkUserAttribute(userAttributes.length(), name, value);
             if (error != null) {
-                if (!userAttributes.containsKey(error.getErrorType())) {
-                    userAttributes.put(error.getErrorType(), error.getErrorMessage());
+                if (!globalAttributes.containsKey(error.getErrorType())) {
+                    globalAttributes.put(error.getErrorType(), error.getErrorMessage());
                 }
                 return;
             }
-            userAttributes.put(name, value);
+            try {
+                long timeStamp = System.currentTimeMillis();
+                JSONObject attribute = new JSONObject();
+                attribute.put("value", value);
+                attribute.put("set_timestamp", timeStamp);
+                userAttributes.put(name, attribute);
+            } catch (JSONException exception) {
+                LOG.error("format user attribute, error message:" + exception.getMessage());
+            }
         } else {
             userAttributes.remove(name);
         }
+    }
+
+    /**
+     * update userId.
+     *
+     * @param userId new userId
+     */
+    public void updateUserId(String userId) {
+        if (!this.userId.equals(userId)) {
+            this.userId = userId;
+            PreferencesUtil.setCurrentUserId(context.getSystem().getPreferences(), userId);
+            if (!StringUtil.isNullOrEmpty(userId)) {
+                userAttributes = new JSONObject();
+                JSONObject userInfo = PreferencesUtil.getNewUserInfo(context.getSystem().getPreferences(), userId);
+                try {
+                    userUniqueId = userInfo.getString("user_unique_id");
+                    long userFirstTouchTimestamp = userInfo.getLong("user_first_touch_timestamp");
+                    addUserAttribute(Event.ReservedAttribute.USER_FIRST_TOUCH_TIMESTAMP, userFirstTouchTimestamp);
+                } catch (JSONException exception) {
+                    LOG.error("get user cache info, error message:" + exception.getMessage());
+                }
+            }
+            String newUserId = userId;
+            if ("".equals(newUserId)) {
+                newUserId = null;
+            }
+            addUserAttribute(Event.ReservedAttribute.USER_ID, newUserId);
+        }
+    }
+
+    /**
+     * update user attribute after user attribute changed.
+     */
+    public void updateUserAttribute() {
+        PreferencesUtil.updateUserAttribute(context.getSystem().getPreferences(), userAttributes);
     }
 
     /**
@@ -115,8 +167,8 @@ public class AnalyticsClient {
      */
     public AnalyticsEvent createEvent(String eventType) {
         if (eventType.length() > MAX_EVENT_TYPE_LENGTH) {
-            LOG.error("The event name is too long, the max event type length is "
-                + MAX_EVENT_TYPE_LENGTH + " characters. event name:" + eventType);
+            LOG.error("The event name is too long, the max event type length is " + MAX_EVENT_TYPE_LENGTH +
+                " characters. event name:" + eventType);
             throw new IllegalArgumentException("The event name passed into create event was too long");
         }
         if (!Event.isValidName(eventType)) {
@@ -125,9 +177,8 @@ public class AnalyticsClient {
             throw new IllegalArgumentException("The event name was not valid");
         }
         long timestamp = System.currentTimeMillis();
-        String uniqueId = this.context.getUniqueId();
-        AnalyticsEvent event = new AnalyticsEvent(eventType, globalAttributes, userAttributes, timestamp, uniqueId);
-        event.setAndroidId(context.getSystem().getAndroidId());
+        AnalyticsEvent event = new AnalyticsEvent(eventType, globalAttributes, userAttributes, timestamp, userUniqueId);
+        event.setDeviceId(this.context.getDeviceId());
         event.setAppId(context.getClickstreamConfiguration().getAppId());
         event.setSdkInfo(context.getSDKInfo());
         event.setAppDetails(context.getSystem().getAppDetails());

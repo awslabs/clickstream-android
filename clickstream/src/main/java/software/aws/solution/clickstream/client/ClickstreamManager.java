@@ -63,7 +63,7 @@ public class ClickstreamManager {
                 "Clickstream SDK(%s) initialization successfully completed", BuildConfig.VERSION_NAME));
         } catch (final RuntimeException runtimeException) {
             LOG.error(String.format(Locale.US,
-                "Cannot initialize Uba SDK %s", runtimeException.getMessage()));
+                "Cannot initialize Clickstream SDK %s", runtimeException.getMessage()));
             throw new AmazonClientException(runtimeException.getLocalizedMessage());
         }
     }

@@ -20,10 +20,8 @@ import androidx.annotation.NonNull;
 
 import com.amazonaws.logging.Log;
 import com.amazonaws.logging.LogFactory;
+import software.aws.solution.clickstream.client.util.PreferencesUtil;
 import software.aws.solution.clickstream.client.util.StringUtil;
-
-import java.util.HashMap;
-import java.util.Objects;
 
 /**
  * Client for manage and send auto record event.
@@ -40,7 +38,15 @@ public class AutoRecordEventClient {
      */
     private final ClickstreamContext clickstreamContext;
 
-    private final HashMap<Integer, Long> activityStartTimeMap = new HashMap<>();
+    /**
+     * whether app is first open from install.
+     */
+    private boolean isFirstOpen;
+
+    /**
+     * current screen is entrances.
+     */
+    private boolean isEntrances;
 
     /**
      * CONSTRUCTOR.
@@ -53,6 +59,7 @@ public class AutoRecordEventClient {
             throw new IllegalArgumentException("A valid AnalyticsClient must be provided!");
         }
         this.clickstreamContext = clickstreamContext;
+        this.isFirstOpen = clickstreamContext.getSystem().getPreferences().getBoolean("isFirstOpen", true);
         checkAppVersionUpdate();
         checkOSVersionUpdate();
     }
@@ -73,54 +80,32 @@ public class AutoRecordEventClient {
         event.addAttribute("screen_id", ScreenRefererTool.getCurrentScreenId());
         event.addAttribute("previous_screen_name", ScreenRefererTool.getPreviousScreenName());
         event.addAttribute("previous_screen_id", ScreenRefererTool.getPreviousScreenId());
+        event.addAttribute("entrances", isEntrances ? 1 : 0);
         this.clickstreamContext.getAnalyticsClient().recordEvent(event);
+        isEntrances = false;
         LOG.debug("record an _screen_view event, screenId:" + screenId + "lastScreenId:" +
             ScreenRefererTool.getPreviousScreenId());
     }
 
     /**
      * record user engagement event.
-     *
-     * @param activity the activity for engagement event.
      */
-    public void recordUserEngagement(Activity activity) {
-        if (activity != null && activityStartTimeMap.containsKey(activity.hashCode())) {
-            int engagementTime = (int) (System.currentTimeMillis() -
-                Objects.requireNonNull(activityStartTimeMap.get(activity.hashCode())));
-            if (engagementTime > MIN_ENGAGEMENT_TIME) {
-                final AnalyticsEvent event =
-                    this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.USER_ENGAGEMENT);
-                event.addAttribute("engagement_time_msec", engagementTime);
-                event.addAttribute("screen_name", activity.getClass().getSimpleName());
-                event.addAttribute("screen_id", activity.getClass().getCanonicalName());
-                this.clickstreamContext.getAnalyticsClient().recordEvent(event);
-            } else {
-                LOG.warn("activity: " + activity.getClass().getSimpleName() + ", foreground time:" + engagementTime +
-                    "ms, and will not record an _user_engagement event");
-            }
+    public void recordUserEngagement() {
+        long engagementTime = System.currentTimeMillis() -
+            PreferencesUtil.getEngageStartTimestamp(this.clickstreamContext.getSystem().getPreferences());
+        if (engagementTime > MIN_ENGAGEMENT_TIME) {
+            final AnalyticsEvent event =
+                this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.USER_ENGAGEMENT);
+            event.addAttribute("engagement_time_msec", engagementTime);
+            this.clickstreamContext.getAnalyticsClient().recordEvent(event);
         }
     }
 
     /**
-     * record activity start time stamp.
-     *
-     * @param activity the resumed activity.
+     * update engage timestamp.
      */
-    public void recordActivityStart(Activity activity) {
-        if (activity != null) {
-            activityStartTimeMap.put(activity.hashCode(), System.currentTimeMillis());
-        }
-    }
-
-    /**
-     * remove activity start time stamp.
-     *
-     * @param activity the stopped activity.
-     */
-    public void removeActivityStart(Activity activity) {
-        if (activity != null) {
-            activityStartTimeMap.remove(activity.hashCode());
-        }
+    public void updateEngageTimestamp() {
+        PreferencesUtil.saveEngageStartTimestamp(this.clickstreamContext.getSystem().getPreferences());
     }
 
     /**
@@ -159,6 +144,26 @@ public class AutoRecordEventClient {
             clickstreamContext.getSystem().getPreferences()
                 .putString("osVersion", clickstreamContext.getSystem().getDeviceDetails().platformVersion());
         }
+    }
+
+    /**
+     * handle the first open event.
+     */
+    public void handleFirstOpen() {
+        if (isFirstOpen) {
+            final AnalyticsEvent event =
+                this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.FIRST_OPEN);
+            this.clickstreamContext.getAnalyticsClient().recordEvent(event);
+            clickstreamContext.getSystem().getPreferences().putBoolean("isFirstOpen", false);
+            isFirstOpen = false;
+        }
+    }
+
+    /**
+     * setter for isEntrances.
+     */
+    public void setIsEntrances() {
+        isEntrances = true;
     }
 }
 

@@ -15,8 +15,6 @@
 
 package software.aws.solution.clickstream.client;
 
-import androidx.annotation.NonNull;
-
 /**
  * Entity for SDKInfo.
  */
@@ -26,7 +24,8 @@ public class SDKInfo {
 
     /**
      * The constructor of SDKInfo.
-     * @param name The name of SDKInfo.
+     *
+     * @param name    The name of SDKInfo.
      * @param version The version of SDKInfo.
      */
     public SDKInfo(final String name, final String version) {
@@ -36,6 +35,7 @@ public class SDKInfo {
 
     /**
      * Get the name of SDK.
+     *
      * @return The name of SDK.
      */
     public String getName() {
@@ -44,20 +44,11 @@ public class SDKInfo {
 
     /**
      * Get the version of SDK.
+     *
      * @return The version of SDK.
      */
     public String getVersion() {
         return version;
-    }
-
-    /**
-     * Convert SDK name and version to string.
-     * @return The string of name and version of SDK.
-     */
-    @NonNull
-    @Override
-    public String toString() {
-        return name + "-" + version;
     }
 }
 

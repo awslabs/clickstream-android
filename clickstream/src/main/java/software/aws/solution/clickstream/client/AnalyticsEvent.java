@@ -38,14 +38,14 @@ import java.util.UUID;
 public class AnalyticsEvent implements JSONSerializable {
     private static final Log LOG = LogFactory.getLog(AnalyticsEvent.class);
     private static final int INDENTATION = 4;
-    private String androidId;
+    private String deviceId;
     private String appId;
     private final String eventId;
     private final String eventType;
     private String sdkName;
     private String sdkVersion;
     private final JSONObject attributes = new JSONObject();
-    private final JSONObject userAttributes = new JSONObject();
+    private final JSONObject userAttributes;
     private final Long timestamp;
     private final String uniqueId;
     private Session session;
@@ -65,12 +65,12 @@ public class AnalyticsEvent implements JSONSerializable {
      * @param uniqueId         The uniqueId of the new event.
      */
     AnalyticsEvent(final String eventType, final Map<String, Object> globalAttributes,
-                   final Map<String, Object> userAttributes, final long timestamp, final String uniqueId) {
+                   final JSONObject userAttributes, final long timestamp, final String uniqueId) {
         this(UUID.randomUUID().toString(), eventType, globalAttributes, userAttributes, timestamp, uniqueId);
     }
 
     private AnalyticsEvent(final String eventId, final String eventType, final Map<String, Object> globalAttributes,
-                           final Map<String, Object> userAttributes, final long timestamp, final String uniqueId) {
+                           final JSONObject userAttributes, final long timestamp, final String uniqueId) {
         this.eventId = eventId;
         this.timestamp = timestamp;
         this.uniqueId = uniqueId;
@@ -80,11 +80,7 @@ public class AnalyticsEvent implements JSONSerializable {
                 this.addGlobalAttribute(kvp.getKey(), kvp.getValue());
             }
         }
-        if (null != userAttributes) {
-            for (final Map.Entry<String, Object> kvp : userAttributes.entrySet()) {
-                this.addUserAttribute(kvp.getKey(), kvp.getValue());
-            }
-        }
+        this.userAttributes = userAttributes;
     }
 
     /**
@@ -95,19 +91,6 @@ public class AnalyticsEvent implements JSONSerializable {
     public void setSdkInfo(SDKInfo sdkInfo) {
         this.sdkName = sdkInfo.getName();
         this.sdkVersion = sdkInfo.getVersion();
-    }
-
-    /**
-     * Setter for attributes.
-     *
-     * @param attributes The map of the attributes.
-     */
-    public void setAttributes(Map<String, String> attributes) {
-        if (null != attributes) {
-            for (final Map.Entry<String, String> kvp : attributes.entrySet()) {
-                this.addAttribute(kvp.getKey(), kvp.getValue());
-            }
-        }
     }
 
     /**
@@ -160,17 +143,17 @@ public class AnalyticsEvent implements JSONSerializable {
      *
      * @return The Android ID.
      */
-    public String getAndroidId() {
-        return androidId;
+    public String getDeviceId() {
+        return deviceId;
     }
 
     /**
      * Setter for Android ID.
      *
-     * @param androidId The Android ID.
+     * @param deviceId The Android ID.
      */
-    public void setAndroidId(String androidId) {
-        this.androidId = androidId;
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
     }
 
     /**
@@ -291,9 +274,6 @@ public class AnalyticsEvent implements JSONSerializable {
      * @param value The value of the attribute.
      */
     protected void addInternalAttribute(final String name, final Object value) {
-        if (null == name) {
-            return;
-        }
         if (null != value) {
             try {
                 attributes.putOpt(name, value);
@@ -302,29 +282,6 @@ public class AnalyticsEvent implements JSONSerializable {
             }
         } else {
             attributes.remove(name);
-        }
-    }
-
-    /**
-     * Adds an user attribute to this {@link AnalyticsEvent} with the specified key.
-     * Only 100 user attributes are allowed to be added to an Event. If 100
-     * attribute already exist on this Event, the call will be ignored.
-     *
-     * @param name  The name of the user attribute.
-     * @param value The value of the user attribute.
-     */
-    public void addUserAttribute(final String name, final Object value) {
-        if (null == name) {
-            return;
-        }
-        if (null != value) {
-            try {
-                userAttributes.putOpt(name, value);
-            } catch (JSONException exception) {
-                LOG.error("error parsing json, error message:" + exception.getMessage());
-            }
-        } else {
-            userAttributes.remove(name);
         }
     }
 
@@ -485,7 +442,7 @@ public class AnalyticsEvent implements JSONSerializable {
         // ****************************************************
         // The user's device ID, iOS take the user's IDFV or UUID,
         // Android takes androidID
-        builder.withAttribute("device_id", getAndroidId());
+        builder.withAttribute("device_id", getDeviceId());
         builder.withAttribute("platform", this.deviceDetails.platform());
         builder.withAttribute("os_version", this.deviceDetails.platformVersion());
         builder.withAttribute("make", this.deviceDetails.manufacturer());
@@ -518,8 +475,8 @@ public class AnalyticsEvent implements JSONSerializable {
             try {
                 attributes.put("_session_id", session.getSessionID());
                 attributes.put("_session_start_timestamp", session.getStartTime());
-                attributes.put("_session_stop_timestamp", session.getStopTime());
                 attributes.put("_session_duration", session.getSessionDuration().longValue());
+                attributes.put("_session_number", session.getSessionIndex());
             } catch (final JSONException jsonException) {
                 LOG.error("Error serializing session information " + jsonException.getMessage());
             }
