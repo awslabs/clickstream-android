@@ -20,6 +20,7 @@ dependencies {
     implementation dependency.aws.mobileclient
     implementation dependency.amplifyframework.core
     implementation dependency.okhttp
+    implementation dependency.androidx.lifecycle
 
     testImplementation dependency.junit
     testImplementation dependency.mockito

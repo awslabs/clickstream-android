@@ -17,9 +17,8 @@ package software.aws.solution.clickstream.client;
 
 import android.content.Context;
 
-import software.aws.solution.clickstream.client.config.AndroidPreferencesConfiguration;
 import software.aws.solution.clickstream.client.system.AndroidSystem;
-import software.aws.solution.clickstream.client.uniqueid.SharedPrefsUniqueIdService;
+import software.aws.solution.clickstream.client.uniqueid.SharedPrefsDeviceIdService;
 
 import java.io.Serializable;
 
@@ -32,10 +31,6 @@ public class ClickstreamContext implements Serializable {
      * The configuration of Clickstream.
      */
     private final ClickstreamConfiguration clickstreamConfiguration;
-    /**
-     * The configuration of Android preference.
-     */
-    private final AndroidPreferencesConfiguration configuration;
     /**
      * The info of SDK.
      */
@@ -57,9 +52,9 @@ public class ClickstreamContext implements Serializable {
      */
     private final AndroidSystem system;
     /**
-     * The unique ID.
+     * The device unique ID.
      */
-    private final String uniqueId;
+    private final String deviceId;
 
     /**
      * The constructor with parameters.
@@ -75,8 +70,7 @@ public class ClickstreamContext implements Serializable {
         this.clickstreamConfiguration = clickstreamConfiguration;
         this.applicationContext = applicationContext;
         this.system = new AndroidSystem(applicationContext);
-        this.uniqueId = new SharedPrefsUniqueIdService().getUniqueId(this);
-        this.configuration = AndroidPreferencesConfiguration.newInstance(this);
+        this.deviceId = new SharedPrefsDeviceIdService().getDeviceId(this);
     }
 
     /**
@@ -125,15 +119,6 @@ public class ClickstreamContext implements Serializable {
     }
 
     /**
-     * Get the configuration of Android preference.
-     *
-     * @return The configuration of Android preference.
-     */
-    public AndroidPreferencesConfiguration getConfiguration() {
-        return configuration;
-    }
-
-    /**
      * Get the info of SDK.
      *
      * @return The info of SDK.
@@ -165,8 +150,8 @@ public class ClickstreamContext implements Serializable {
      *
      * @return The unique ID.
      */
-    public String getUniqueId() {
-        return uniqueId;
+    public String getDeviceId() {
+        return deviceId;
     }
 
 }

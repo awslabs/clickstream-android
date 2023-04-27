@@ -39,7 +39,6 @@ import software.aws.solution.clickstream.client.ClickstreamConfiguration;
 import software.aws.solution.clickstream.client.ClickstreamContext;
 import software.aws.solution.clickstream.client.ClickstreamManager;
 import software.aws.solution.clickstream.client.EventRecorder;
-import software.aws.solution.clickstream.client.config.AndroidPreferencesConfiguration;
 import software.aws.solution.clickstream.client.db.ClickstreamDBUtil;
 import software.aws.solution.clickstream.util.ReflectUtil;
 
@@ -61,13 +60,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(manifest = Config.NONE)
@@ -229,9 +224,6 @@ public class EventRecorderTest {
             nameBuilder.append(str);
         }
         String name = nameBuilder.toString();
-        for (int i = 0; i < 100; i++) {
-            event.addUserAttribute(name + i, name + name + i);
-        }
         for (int i = 0; i < 500; i++) {
             event.addAttribute(name + i, jsonString + i);
         }
@@ -305,33 +297,6 @@ public class EventRecorderTest {
     }
 
     /**
-     * test getBatchOfEvents when not reach custom limited size.
-     *
-     * @throws Exception exception.
-     */
-    @Test
-    public void testGetBatchOfEventsNotReachCustomLimitedSize() throws Exception {
-        ClickstreamContext mockContext = mock(ClickstreamContext.class);
-        ReflectUtil.modifyFiled(eventRecorder, "clickstreamContext", mockContext);
-        AndroidPreferencesConfiguration config = mock(AndroidPreferencesConfiguration.class);
-        when(mockContext.getConfiguration()).thenReturn(config);
-        when(config.optLong(any(String.class), any(Long.class))).thenReturn(256 * 1024L);
-        for (int i = 0; i < 10; i++) {
-            event.addAttribute("test_json_" + i, jsonString);
-        }
-        for (int i = 0; i < 20; i++) {
-            eventRecorder.recordEvent(event);
-        }
-        Cursor cursor = dbUtil.queryAllEvents();
-        String[] result = getBatchOfEvents(cursor);
-        assertEquals(2, result.length);
-        int length = new JSONArray(result[0]).length();
-        assertEquals(length, 20);
-        assertEquals(String.valueOf(length), result[1]);
-        cursor.close();
-    }
-
-    /**
      * test process None event.
      *
      * @throws Exception exception.
@@ -344,7 +309,6 @@ public class EventRecorderTest {
         verify(log).info("No events available to submit.");
         assertEquals(0, totalEventNumber);
     }
-
 
     /**
      * test process event when success.
@@ -450,36 +414,6 @@ public class EventRecorderTest {
         verify(log, times(3)).info("deleted event number: 12");
         verify(log).info("reached maxSubmissions: 3");
         assertEquals(4, dbUtil.getTotalNumber());
-    }
-
-    /**
-     * test processEvent() for custom maxSubmissions for reached default and not reached custom.
-     *
-     * @throws Exception exception.
-     */
-    @Test
-    public void testProcessEventForCustomMaxSubmissions() throws Exception {
-        setRequestPath(COLLECT_SUCCESS);
-
-        AndroidPreferencesConfiguration config = mock(AndroidPreferencesConfiguration.class);
-        ReflectUtil.modifyFiled(clickstreamContext, "configuration", config);
-        when(config.optLong(eq("maxSubmissionSize"), any(Long.class))).thenReturn(128 * 1024L);
-        when(config.optLong(eq("maxDbSize"), any(Long.class))).thenReturn(50 * 1024 * 1024L);
-        when(config.optInt(eq("maxSubmissionAllowed"), any(Integer.class))).thenReturn(4);
-
-        for (int i = 0; i < 10; i++) {
-            event.addAttribute("test_json_" + i, jsonString);
-        }
-        for (int i = 0; i < 40; i++) {
-            eventRecorder.recordEvent(event);
-        }
-        assertEquals(40, dbUtil.getTotalNumber());
-        int eventNumber = (int) ReflectUtil.invokeMethod(eventRecorder, "processEvents");
-        assertEquals(40, eventNumber);
-        verify(log, times(3)).info("deleted event number: 12");
-        verify(log).info("deleted event number: 4");
-        verify(log, never()).info("reached maxSubmissions: 3");
-        assertEquals(0, dbUtil.getTotalNumber());
     }
 
     /**

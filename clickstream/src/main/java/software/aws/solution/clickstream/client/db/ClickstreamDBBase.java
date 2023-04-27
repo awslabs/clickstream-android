@@ -84,12 +84,13 @@ public class ClickstreamDBBase {
      */
     public Uri insert(final Uri uri, final ContentValues values) {
         final int uriType = uriMatcher.match(uri);
-        final SQLiteDatabase db = databaseHelper.getWritableDatabase();
         long id;
-        if (uriType == EVENTS) {
-            id = db.insertOrThrow(EventTable.TABLE_EVENT, null, values);
-        } else {
-            throw new IllegalArgumentException("Unknown URI: " + uri);
+        try (SQLiteDatabase db = databaseHelper.getWritableDatabase()) {
+            if (uriType == EVENTS) {
+                id = db.insertOrThrow(EventTable.TABLE_EVENT, null, values);
+            } else {
+                throw new IllegalArgumentException("Unknown URI: " + uri);
+            }
         }
         return Uri.parse(BASE_PATH + "/" + id);
     }
@@ -169,28 +170,29 @@ public class ClickstreamDBBase {
      */
     public int delete(final Uri uri, final String selection, final String[] selectionArgs) {
         final int uriType = uriMatcher.match(uri);
-        final SQLiteDatabase db = databaseHelper.getWritableDatabase();
         int rowsDeleted;
-        switch (uriType) {
-            case EVENTS:
-                rowsDeleted = db.delete(EventTable.TABLE_EVENT, selection, selectionArgs);
-                break;
-            case EVENT_ID:
-                final String id = uri.getLastPathSegment();
-                if (TextUtils.isEmpty(selection)) {
-                    rowsDeleted = db.delete(EventTable.TABLE_EVENT, EventTable.COLUMN_ID + "=" + id, null);
-                } else {
-                    rowsDeleted =
-                        db.delete(EventTable.TABLE_EVENT, EventTable.COLUMN_ID + "=" + id + " and " + selection,
-                            selectionArgs);
-                }
-                break;
-            case EVENT_LAST_ID:
-                final String lastId = uri.getLastPathSegment();
-                rowsDeleted = db.delete(EventTable.TABLE_EVENT, EventTable.COLUMN_ID + "<=" + lastId, null);
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown URI: " + uri);
+        try (SQLiteDatabase db = databaseHelper.getWritableDatabase()) {
+            switch (uriType) {
+                case EVENTS:
+                    rowsDeleted = db.delete(EventTable.TABLE_EVENT, selection, selectionArgs);
+                    break;
+                case EVENT_ID:
+                    final String id = uri.getLastPathSegment();
+                    if (TextUtils.isEmpty(selection)) {
+                        rowsDeleted = db.delete(EventTable.TABLE_EVENT, EventTable.COLUMN_ID + "=" + id, null);
+                    } else {
+                        rowsDeleted =
+                            db.delete(EventTable.TABLE_EVENT, EventTable.COLUMN_ID + "=" + id + " and " + selection,
+                                selectionArgs);
+                    }
+                    break;
+                case EVENT_LAST_ID:
+                    final String lastId = uri.getLastPathSegment();
+                    rowsDeleted = db.delete(EventTable.TABLE_EVENT, EventTable.COLUMN_ID + "<=" + lastId, null);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown URI: " + uri);
+            }
         }
         return rowsDeleted;
     }

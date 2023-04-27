@@ -226,6 +226,15 @@ public final class Event {
          */
         public static final String USER_ID = "_user_id";
 
+        /**
+         * user id for identity the unused case when invoke identifyUser() method.
+         */
+        public static final String USER_ID_UNSET = "_clickstream_user_id_unset";
+        /**
+         * user first touch timestamp.
+         */
+        public static final String USER_FIRST_TOUCH_TIMESTAMP = "_user_first_touch_timestamp";
+
         private ReservedAttribute() {
         }
     }
@@ -272,6 +281,11 @@ public final class Event {
          * app exception event when crash.
          */
         public static final String APP_EXCEPTION = "_app_exception";
+
+        /**
+         * profile set event for user attribute changes.
+         */
+        public static final String PROFILE_SET = "_profile_set";
 
         private PresetEvent() {
         }

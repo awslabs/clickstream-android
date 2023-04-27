@@ -137,7 +137,7 @@ public class ClickstreamAttribute {
         @NonNull
         public Builder add(@NonNull @Size(min = 1L, max = Event.Limit.MAX_LENGTH_OF_NAME) String key,
                            @NonNull Long value) {
-            builder.add(key,AnalyticsLongProperty.from(value));
+            builder.add(key, AnalyticsLongProperty.from(value));
             return this;
         }
 

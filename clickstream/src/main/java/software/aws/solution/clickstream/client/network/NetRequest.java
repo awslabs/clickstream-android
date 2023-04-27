@@ -57,13 +57,14 @@ public final class NetRequest {
      *
      * @param eventJson     event json string
      * @param configuration the ClickstreamConfiguration.
+     * @param bundleSequenceId the bundle sequence id.
      * @return submit result.
      */
-    public static boolean uploadEvents(String eventJson, ClickstreamConfiguration configuration) {
+    public static boolean uploadEvents(String eventJson, ClickstreamConfiguration configuration, int bundleSequenceId) {
         if (StringUtil.isNullOrEmpty(eventJson)) {
             return false;
         }
-        try (Response response = request(eventJson, configuration);
+        try (Response response = request(eventJson, configuration, bundleSequenceId);
              ResponseBody ignored = response.body()) {
             if (response.isSuccessful()) {
                 LOG.debug("submitEvents success. \n" + response);
@@ -85,7 +86,8 @@ public final class NetRequest {
      * @return the sync okhttp Response
      * @throws IOException throw IOException.
      */
-    private static Response request(@NonNull String eventJson, @NonNull ClickstreamConfiguration configuration)
+    private static Response request(@NonNull String eventJson, @NonNull ClickstreamConfiguration configuration,
+                                    int bundleSequenceId)
         throws IOException {
         String appId = configuration.getAppId();
         String endpoint = configuration.getEndpoint();
@@ -106,6 +108,7 @@ public final class NetRequest {
         HttpUrl url = request.url().newBuilder()
             .addQueryParameter("platform", "ANDROID")
             .addQueryParameter("appId", appId)
+            .addQueryParameter("event_bundle_sequence_id", String.valueOf(bundleSequenceId))
             .addQueryParameter("compression", compression)
             .build();
         Request.Builder builder = request.newBuilder().url(url).post(body);

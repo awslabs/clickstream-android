@@ -17,21 +17,12 @@ package software.aws.solution.clickstream.client;
 
 import androidx.annotation.NonNull;
 
-import com.amazonaws.logging.Log;
-import com.amazonaws.logging.LogFactory;
+import software.aws.solution.clickstream.client.util.PreferencesUtil;
 
 /**
- * Client for managing starting and stopping sessions which records session
- * events automatically as the session is stopped or started.
- * <p>
- * It is recommended to start the session when the application comes to the foreground
- * and stop the session when it goes to the background.
+ * Client for managing start and pause session.
  */
 public class SessionClient {
-    /**
-     * Logger instance for SessionClient.
-     */
-    private static final Log LOG = LogFactory.getLog(SessionClient.class);
 
     /**
      * The context object wraps all the essential information from the app
@@ -40,21 +31,12 @@ public class SessionClient {
     private final ClickstreamContext clickstreamContext;
 
     /**
-     * This session object tracks whether or not it has been paused by checking the
-     * status of it's stop time. A session's stop time is only set when the session
-     * has been paused, and is set to -1 if it is currently running. Can be
-     * serialized and restored for persistence. This refers to the current session
-     * object.
+     * session object.
      */
     private Session session;
 
     /**
-     * whether app is first open from install.
-     */
-    private boolean isFirstOpen;
-
-    /**
-     * CONSTRUCTOR.
+     * constructor for session client.
      *
      * @param clickstreamContext The {@link ClickstreamContext}.
      * @throws IllegalArgumentException When the clickstreamContext.getAnalyticsClient is null.
@@ -64,90 +46,33 @@ public class SessionClient {
             throw new IllegalArgumentException("A valid AnalyticsClient must be provided!");
         }
         this.clickstreamContext = clickstreamContext;
-        this.isFirstOpen = clickstreamContext.getSystem().getPreferences().getBoolean("isFirstOpen", true);
     }
 
     /**
-     * Start a session which records a SESSION_START_EVENT_TYPE event and
-     * saves that sessionId to the AnalyticsClient to be used for recording future
-     * events. This triggers an update of the endpointProfile. It is recommended to
-     * start the session when the application comes to the foreground.
-     */
-    public synchronized void startSession() {
-        executeStop();
-        executeStart();
-    }
-
-    /**
-     * Stops a session which records a SESSION_STOP_EVENT_TYPE
-     * event and flushes the events in local storage for submission.
-     * It is recommended to stop the session when the application
-     * goes to the background.
-     */
-    public synchronized void stopSession() {
-        executeStop();
-    }
-
-    /**
-     * Overridden toString method for testing.
+     * When the app starts for the first time. Or the app was launched to the foreground
+     * and the time between the last exit exceeded `session_time_out` period,
+     * then the session start event will be recorded.
      *
-     * @return diagnostic string.
+     * @return is new session.
      */
-    @NonNull
-    @Override
-    public String toString() {
-        return "[SessionClient]\n" + "- session: " +
-            ((this.session == null) ? "<null>" : this.session.getSessionID()) +
-            ((this.session != null && this.session.isPaused()) ? ": paused" : "");
-    }
-
-    /**
-     * Start a new Session. Set the Session ID and start time and record
-     * an event of type SESSION_START_EVENT_TYPE.
-     */
-    protected void executeStart() {
-        session = Session.newInstance(clickstreamContext);
+    public synchronized boolean initialSession() {
+        session = Session.getInstance(clickstreamContext);
         this.clickstreamContext.getAnalyticsClient().setSession(session);
-        final AnalyticsEvent event =
-            this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.SESSION_START);
-        this.clickstreamContext.getAnalyticsClient().recordEvent(event);
-    }
-
-    /**
-     * Stop the current Session. First, pause the session if it's not paused
-     * already. Record the stop time and record an event of type
-     * SESSION_STOP_EVENT_TYPE. Additionally, stopping a session
-     * clears the campaign attributes.
-     */
-    protected void executeStop() {
-        // No session to stop
-        if (session == null) {
-            LOG.info("Session Stop Failed: No session exists.");
-            return;
-        }
-
-        // pause the session if it's not already
-        session.pause();
-
-        final AnalyticsEvent event =
-            this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.SESSION_STOP);
-        this.clickstreamContext.getAnalyticsClient().recordEvent(event);
-
-        // Kill Session Object
-        session = null;
-    }
-
-    /**
-     * handle the first open event.
-     */
-    public void handleFirstOpen() {
-        if (isFirstOpen) {
+        if (session.isNewSession()) {
             final AnalyticsEvent event =
-                this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.FIRST_OPEN);
+                this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.SESSION_START);
             this.clickstreamContext.getAnalyticsClient().recordEvent(event);
-            clickstreamContext.getSystem().getPreferences().putBoolean("isFirstOpen", false);
-            isFirstOpen = false;
         }
+        return session.isNewSession();
     }
+
+    /**
+     * store a session when the application goes to the background.
+     */
+    public void storeSession() {
+        session.pause();
+        PreferencesUtil.saveSession(clickstreamContext.getSystem().getPreferences(), session);
+    }
+
 }
 
