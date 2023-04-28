@@ -234,16 +234,6 @@ public final class PreferencesUtil {
     }
 
     /**
-     * save engagement start timestamp.
-     *
-     * @param preferences AndroidPreferences
-     */
-    public static void saveEngageStartTimestamp(final AndroidPreferences preferences) {
-        long engagementStartTimestamp = System.currentTimeMillis();
-        preferences.putLong(ENGAGEMENT_START_TIMESTAMP, engagementStartTimestamp);
-    }
-
-    /**
      * get engagement start timestamp.
      *
      * @param preferences AndroidPreferences

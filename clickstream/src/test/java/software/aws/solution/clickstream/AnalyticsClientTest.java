@@ -29,6 +29,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import software.aws.solution.clickstream.client.AnalyticsClient;
 import software.aws.solution.clickstream.client.ClickstreamManager;
+import software.aws.solution.clickstream.client.Event;
 import software.aws.solution.clickstream.util.ReflectUtil;
 
 import java.util.Map;
@@ -318,7 +319,8 @@ public class AnalyticsClientTest {
         Assert.assertTrue(((JSONObject) userAttributesFromStorage.get("isNew")).getBoolean("value"));
         Assert.assertEquals(85.5, ((JSONObject) userAttributesFromStorage.get("score")).getDouble("value"), 0.01);
         long userFirstTouchTimestamp =
-            ((JSONObject) userAttributesFromStorage.get("_user_first_touch_timestamp")).getLong("value");
+            ((JSONObject) userAttributesFromStorage.get(Event.ReservedAttribute.USER_FIRST_TOUCH_TIMESTAMP)).getLong(
+                "value");
         Assert.assertTrue(userFirstTouchTimestamp - System.currentTimeMillis() < 500);
     }
 
@@ -335,7 +337,7 @@ public class AnalyticsClientTest {
         Assert.assertNotNull(userUniqueId);
 
         userAttributes = (JSONObject) ReflectUtil.getFiled(analyticsClient, "userAttributes");
-        Assert.assertTrue(userAttributes.has("_user_first_touch_timestamp"));
+        Assert.assertTrue(userAttributes.has(Event.ReservedAttribute.USER_FIRST_TOUCH_TIMESTAMP));
     }
 
     /**

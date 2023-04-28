@@ -235,6 +235,40 @@ public final class Event {
          */
         public static final String USER_FIRST_TOUCH_TIMESTAMP = "_user_first_touch_timestamp";
 
+        /**
+         * screen name.
+         */
+        public static final String SCREEN_NAME = "_screen_name";
+        /**
+         * screen id.
+         */
+        public static final String SCREEN_ID = "_screen_id";
+        /**
+         * previous screen name.
+         */
+        public static final String PREVIOUS_SCREEN_NAME = "_previous_screen_name";
+        /**
+         * previous screen id.
+         */
+        public static final String PREVIOUS_SCREEN_ID = "_previous_screen_id";
+        /**
+         * entrances.
+         */
+        public static final String ENTRANCES = "_entrances";
+        /**
+         * previous app version.
+         */
+        public static final String PREVIOUS_APP_VERSION = "_previous_app_version";
+        /**
+         * previous os version.
+         */
+        public static final String PREVIOUS_OS_VERSION = "_previous_os_version";
+
+        /**
+         * engagement time msec.
+         */
+        public static final String ENGAGEMENT_TIMESTAMP = "_engagement_time_msec";
+
         private ReservedAttribute() {
         }
     }

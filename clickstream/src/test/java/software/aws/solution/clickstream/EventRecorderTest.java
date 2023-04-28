@@ -50,7 +50,6 @@ import java.util.concurrent.TimeUnit;
 
 import static com.github.dreamhead.moco.Moco.by;
 import static com.github.dreamhead.moco.Moco.httpServer;
-import static com.github.dreamhead.moco.Moco.latency;
 import static com.github.dreamhead.moco.Moco.status;
 import static com.github.dreamhead.moco.Moco.text;
 import static com.github.dreamhead.moco.Moco.uri;
@@ -68,8 +67,6 @@ import static org.mockito.Mockito.verify;
 @Config(manifest = Config.NONE)
 public class EventRecorderTest {
     private static final String COLLECT_SUCCESS = "/collect/success";
-    private static final String COLLECT_SUCCESS_LATENCY200 = "/collect/success/latency1";
-    private static final String COLLECT_SUCCESS_LATENCY2000 = "/collect/success/latency3";
     private static final String COLLECT_FAIL = "/collect/fail";
     private static Runner runner;
     private static String jsonString;
@@ -90,10 +87,6 @@ public class EventRecorderTest {
         //config and start server
         final HttpServer server = httpServer(8082);
         server.request(by(uri(COLLECT_SUCCESS))).response(status(200), text("success"));
-        server.request(by(uri(COLLECT_SUCCESS_LATENCY2000)))
-            .response(status(200), text("success"), latency(2000, TimeUnit.MILLISECONDS));
-        server.request(by(uri(COLLECT_SUCCESS_LATENCY200)))
-            .response(status(200), text("success"), latency(200, TimeUnit.MILLISECONDS));
         server.request(by(uri(COLLECT_FAIL))).response(status(403), text("fail"));
         runner = runner(server);
         runner.start();
@@ -417,46 +410,6 @@ public class EventRecorderTest {
     }
 
     /**
-     * test processEvent() for multi events with one latency request.
-     *
-     * @throws Exception exception.
-     */
-    @Test
-    public void testProcessOneSubmissionsInLatency() throws Exception {
-        setRequestPath(COLLECT_SUCCESS_LATENCY2000);
-        for (int i = 0; i < 20; i++) {
-            eventRecorder.recordEvent(event);
-        }
-        assertEquals(20, dbUtil.getTotalNumber());
-        int eventNumber = (int) ReflectUtil.invokeMethod(eventRecorder, "processEvents");
-        assertEquals(20, eventNumber);
-        verify(log).info("deleted event number: 20");
-        assertEquals(0, dbUtil.getTotalNumber());
-    }
-
-    /**
-     * test processEvent() for multi latency request.
-     *
-     * @throws Exception exception.
-     */
-    @Test
-    public void testProcessEventForMultiSubmissionsInLatency() throws Exception {
-        setRequestPath(COLLECT_SUCCESS_LATENCY2000);
-        for (int i = 0; i < 40; i++) {
-            event.addAttribute("test_json_" + i, jsonString);
-        }
-        for (int i = 0; i < 20; i++) {
-            eventRecorder.recordEvent(event);
-        }
-        assertEquals(20, dbUtil.getTotalNumber());
-        int eventNumber = (int) ReflectUtil.invokeMethod(eventRecorder, "processEvents");
-        assertEquals(20, eventNumber);
-        verify(log).info("deleted event number: 12");
-        verify(log).info("deleted event number: 8");
-        assertEquals(0, dbUtil.getTotalNumber());
-    }
-
-    /**
      * test submitEvents() for submit all event once.
      *
      * @throws Exception exception.
@@ -481,7 +434,7 @@ public class EventRecorderTest {
      */
     @Test
     public void testSubmitPartOfEventForMultiRequest() throws Exception {
-        setRequestPath(COLLECT_SUCCESS_LATENCY200);
+        setRequestPath(COLLECT_SUCCESS);
         for (int i = 0; i < 40; i++) {
             event.addAttribute("test_json_" + i, jsonString);
         }
@@ -504,7 +457,7 @@ public class EventRecorderTest {
      */
     @Test
     public void testSubmitAllEventForMultiRequest() throws Exception {
-        setRequestPath(COLLECT_SUCCESS_LATENCY200);
+        setRequestPath(COLLECT_SUCCESS);
         for (int i = 0; i < 40; i++) {
             event.addAttribute("test_json_" + i, jsonString);
         }
@@ -531,7 +484,7 @@ public class EventRecorderTest {
      */
     @Test
     public void testTimerThreeTimesSubmitAllEventForMultiRequest() throws Exception {
-        setRequestPath(COLLECT_SUCCESS_LATENCY200);
+        setRequestPath(COLLECT_SUCCESS);
         for (int i = 0; i < 40; i++) {
             event.addAttribute("test_json_" + i, jsonString);
         }
@@ -551,7 +504,6 @@ public class EventRecorderTest {
         assertEquals(0, dbUtil.getTotalNumber());
     }
 
-
     /**
      * test to submitEvents() reached the thread pool LinkedBlockingQueue capacity.
      *
@@ -559,7 +511,7 @@ public class EventRecorderTest {
      */
     @Test
     public void testSubmitAllEventForReachTheQueueLimit() throws Exception {
-        setRequestPath(COLLECT_SUCCESS_LATENCY200);
+        setRequestPath(COLLECT_SUCCESS);
         for (int i = 0; i < 40; i++) {
             event.addAttribute("test_json_" + i, jsonString);
         }

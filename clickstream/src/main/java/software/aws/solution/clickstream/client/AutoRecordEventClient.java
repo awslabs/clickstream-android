@@ -20,7 +20,6 @@ import androidx.annotation.NonNull;
 
 import com.amazonaws.logging.Log;
 import com.amazonaws.logging.LogFactory;
-import software.aws.solution.clickstream.client.util.PreferencesUtil;
 import software.aws.solution.clickstream.client.util.StringUtil;
 
 /**
@@ -47,6 +46,8 @@ public class AutoRecordEventClient {
      * current screen is entrances.
      */
     private boolean isEntrances;
+
+    private long startEngageTimestamp;
 
     /**
      * CONSTRUCTOR.
@@ -76,11 +77,13 @@ public class AutoRecordEventClient {
         ScreenRefererTool.setCurrentScreenName(screenName);
         final AnalyticsEvent event =
             this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.SCREEN_VIEW);
-        event.addAttribute("screen_name", ScreenRefererTool.getCurrentScreenName());
-        event.addAttribute("screen_id", ScreenRefererTool.getCurrentScreenId());
-        event.addAttribute("previous_screen_name", ScreenRefererTool.getPreviousScreenName());
-        event.addAttribute("previous_screen_id", ScreenRefererTool.getPreviousScreenId());
-        event.addAttribute("entrances", isEntrances ? 1 : 0);
+        event.addAttribute(Event.ReservedAttribute.SCREEN_NAME, ScreenRefererTool.getCurrentScreenName());
+        event.addAttribute(Event.ReservedAttribute.SCREEN_ID, ScreenRefererTool.getCurrentScreenId());
+        event.addAttribute(Event.ReservedAttribute.PREVIOUS_SCREEN_NAME, ScreenRefererTool.getPreviousScreenName());
+        event.addAttribute(Event.ReservedAttribute.PREVIOUS_SCREEN_ID, ScreenRefererTool.getPreviousScreenId());
+        event.addAttribute(Event.ReservedAttribute.ENTRANCES, isEntrances ? 1 : 0);
+        event.addAttribute(Event.ReservedAttribute.ENGAGEMENT_TIMESTAMP,
+            System.currentTimeMillis() - startEngageTimestamp);
         this.clickstreamContext.getAnalyticsClient().recordEvent(event);
         isEntrances = false;
         LOG.debug("record an _screen_view event, screenId:" + screenId + "lastScreenId:" +
@@ -91,12 +94,11 @@ public class AutoRecordEventClient {
      * record user engagement event.
      */
     public void recordUserEngagement() {
-        long engagementTime = System.currentTimeMillis() -
-            PreferencesUtil.getEngageStartTimestamp(this.clickstreamContext.getSystem().getPreferences());
+        long engagementTime = System.currentTimeMillis() - startEngageTimestamp;
         if (engagementTime > MIN_ENGAGEMENT_TIME) {
             final AnalyticsEvent event =
                 this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.USER_ENGAGEMENT);
-            event.addAttribute("engagement_time_msec", engagementTime);
+            event.addAttribute(Event.ReservedAttribute.ENGAGEMENT_TIMESTAMP, engagementTime);
             this.clickstreamContext.getAnalyticsClient().recordEvent(event);
         }
     }
@@ -105,7 +107,7 @@ public class AutoRecordEventClient {
      * update engage timestamp.
      */
     public void updateEngageTimestamp() {
-        PreferencesUtil.saveEngageStartTimestamp(this.clickstreamContext.getSystem().getPreferences());
+        startEngageTimestamp = System.currentTimeMillis();
     }
 
     /**
@@ -118,7 +120,7 @@ public class AutoRecordEventClient {
             if (!currentVersion.equals(previousAppVersion)) {
                 final AnalyticsEvent event =
                     this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.APP_UPDATE);
-                event.addAttribute("previous_app_version", previousAppVersion);
+                event.addAttribute(Event.ReservedAttribute.PREVIOUS_APP_VERSION, previousAppVersion);
                 this.clickstreamContext.getAnalyticsClient().recordEvent(event);
             }
         } else {
@@ -137,7 +139,7 @@ public class AutoRecordEventClient {
             if (!currentOSVersion.equals(previousOSVersion)) {
                 final AnalyticsEvent event =
                     this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.OS_UPDATE);
-                event.addAttribute("previous_os_version", previousOSVersion);
+                event.addAttribute(Event.ReservedAttribute.PREVIOUS_OS_VERSION, previousOSVersion);
                 this.clickstreamContext.getAnalyticsClient().recordEvent(event);
             }
         } else {
