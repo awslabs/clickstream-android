@@ -1,5 +1,5 @@
 /*
- * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -20,12 +20,14 @@ dependencies {
     implementation dependency.aws.mobileclient
     implementation dependency.amplifyframework.core
     implementation dependency.okhttp
-    implementation dependency.androidx.lifecycle
+    implementation dependency.androidx.lifecycle_common
+    implementation dependency.androidx.lifecycle_process
 
     testImplementation dependency.junit
     testImplementation dependency.mockito
     testImplementation dependency.robolectric
     testImplementation dependency.androidx.test
+    testImplementation dependency.androidx.lifecycle_testing
     testImplementation dependency.moco
     testImplementation project(path: ':clickstream')
 }

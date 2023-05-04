@@ -1,5 +1,5 @@
 /*
- * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -47,13 +47,16 @@ ext {
     targetSdkVersion = 30
     awsSdkVersion = '2.51.0'
     amplifySdkVersion = '1.37.2'
+    lifecycleVersion = "2.6.1"
     dependency = [
         android: [
             desugartools: 'com.android.tools:desugar_jdk_libs:1.0.9',
         ],
         androidx: [
             test: 'androidx.test:core:1.5.0',
-            lifecycle: 'androidx.lifecycle:lifecycle-extensions:2.2.0'
+            lifecycle_common: "androidx.lifecycle:lifecycle-common-java8:$lifecycleVersion",
+            lifecycle_process: "androidx.lifecycle:lifecycle-process:$lifecycleVersion",
+            lifecycle_testing: "androidx.lifecycle:lifecycle-runtime-testing:$lifecycleVersion"
         ],
         amplifyframework: [
             core: "com.amplifyframework:core:$amplifySdkVersion"
