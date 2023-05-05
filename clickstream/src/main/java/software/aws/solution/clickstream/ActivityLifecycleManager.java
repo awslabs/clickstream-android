@@ -18,9 +18,10 @@ package software.aws.solution.clickstream;
 import android.app.Activity;
 import android.app.Application;
 import android.os.Bundle;
+import androidx.annotation.NonNull;
 import androidx.lifecycle.Lifecycle;
-import androidx.lifecycle.LifecycleObserver;
-import androidx.lifecycle.OnLifecycleEvent;
+import androidx.lifecycle.LifecycleEventObserver;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.amazonaws.logging.Log;
 import com.amazonaws.logging.LogFactory;
@@ -32,7 +33,7 @@ import software.aws.solution.clickstream.client.SessionClient;
  * Tracks when the host application enters or leaves foreground.
  * The constructor registers to receive activity lifecycle events.
  **/
-final class ActivityLifecycleManager implements Application.ActivityLifecycleCallbacks, LifecycleObserver {
+final class ActivityLifecycleManager implements Application.ActivityLifecycleCallbacks, LifecycleEventObserver {
     private static final Log LOG = LogFactory.getLog(ActivityLifecycleManager.class);
 
     private final SessionClient sessionClient;
@@ -134,21 +135,20 @@ final class ActivityLifecycleManager implements Application.ActivityLifecycleCal
         }
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    public void onAppBackgrounded() {
-        LOG.debug("Application entered the background.");
-        sessionClient.storeSession();
-        autoRecordEventClient.recordUserEngagement();
-    }
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    public void onAppForegrounded() {
-        LOG.debug("Application entered the foreground.");
-        autoRecordEventClient.updateEngageTimestamp();
-        autoRecordEventClient.handleFirstOpen();
-        boolean isNewSession = sessionClient.initialSession();
-        if (isNewSession) {
-            autoRecordEventClient.setIsEntrances();
+    @Override
+    public void onStateChanged(@NonNull LifecycleOwner lifecycleOwner, @NonNull Lifecycle.Event event) {
+        if (event == Lifecycle.Event.ON_STOP) {
+            LOG.debug("Application entered the background.");
+            sessionClient.storeSession();
+            autoRecordEventClient.recordUserEngagement();
+        } else if (event == Lifecycle.Event.ON_START) {
+            LOG.debug("Application entered the foreground.");
+            autoRecordEventClient.updateEngageTimestamp();
+            autoRecordEventClient.handleFirstOpen();
+            boolean isNewSession = sessionClient.initialSession();
+            if (isNewSession) {
+                autoRecordEventClient.setIsEntrances();
+            }
         }
     }
 }
