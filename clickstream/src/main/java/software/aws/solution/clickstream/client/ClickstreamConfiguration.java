@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ public class ClickstreamConfiguration {
     private boolean isTrackAppExceptionEvents;
     private boolean isLogEvents;
     private String authCookie;
+    private long sessionTimeoutDuration;
 
     /**
      * Create an {@link ClickstreamConfiguration} object with the specified parameters.
@@ -259,6 +260,26 @@ public class ClickstreamConfiguration {
      */
     public ClickstreamConfiguration withAuthCookie(final String authCookie) {
         this.authCookie = authCookie;
+        return this;
+    }
+
+    /**
+     * The interval of events session timeout duration.
+     *
+     * @return session timeout duration.
+     */
+    public long getSessionTimeoutDuration() {
+        return this.sessionTimeoutDuration;
+    }
+
+    /**
+     * The interval of events session timeout duration.
+     *
+     * @param sessionTimeoutDuration the duration of session timeout.
+     * @return the current ClickstreamConfiguration instance.
+     */
+    public ClickstreamConfiguration withSessionTimeoutDuration(final long sessionTimeoutDuration) {
+        this.sessionTimeoutDuration = sessionTimeoutDuration;
         return this;
     }
 }

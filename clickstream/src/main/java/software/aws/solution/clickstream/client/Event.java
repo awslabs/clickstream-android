@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -226,6 +226,49 @@ public final class Event {
          */
         public static final String USER_ID = "_user_id";
 
+        /**
+         * user id for identity the unused case when invoke identifyUser() method.
+         */
+        public static final String USER_ID_UNSET = "_clickstream_user_id_unset";
+        /**
+         * user first touch timestamp.
+         */
+        public static final String USER_FIRST_TOUCH_TIMESTAMP = "_user_first_touch_timestamp";
+
+        /**
+         * screen name.
+         */
+        public static final String SCREEN_NAME = "_screen_name";
+        /**
+         * screen id.
+         */
+        public static final String SCREEN_ID = "_screen_id";
+        /**
+         * previous screen name.
+         */
+        public static final String PREVIOUS_SCREEN_NAME = "_previous_screen_name";
+        /**
+         * previous screen id.
+         */
+        public static final String PREVIOUS_SCREEN_ID = "_previous_screen_id";
+        /**
+         * entrances.
+         */
+        public static final String ENTRANCES = "_entrances";
+        /**
+         * previous app version.
+         */
+        public static final String PREVIOUS_APP_VERSION = "_previous_app_version";
+        /**
+         * previous os version.
+         */
+        public static final String PREVIOUS_OS_VERSION = "_previous_os_version";
+
+        /**
+         * engagement time msec.
+         */
+        public static final String ENGAGEMENT_TIMESTAMP = "_engagement_time_msec";
+
         private ReservedAttribute() {
         }
     }
@@ -272,6 +315,11 @@ public final class Event {
          * app exception event when crash.
          */
         public static final String APP_EXCEPTION = "_app_exception";
+
+        /**
+         * profile set event for user attribute changes.
+         */
+        public static final String PROFILE_SET = "_profile_set";
 
         private PresetEvent() {
         }

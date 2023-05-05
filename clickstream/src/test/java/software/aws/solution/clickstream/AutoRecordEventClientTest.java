@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -21,6 +21,9 @@ import android.content.Context;
 import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.LifecycleRegistry;
 import androidx.test.core.app.ApplicationProvider;
 
 import org.json.JSONObject;
@@ -47,6 +50,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static software.aws.solution.clickstream.client.Event.ReservedAttribute;
 
 /**
  * Test the AutoRecordEventClient.
@@ -58,6 +62,7 @@ public class AutoRecordEventClientTest {
     private Application.ActivityLifecycleCallbacks callbacks;
     private ClickstreamContext clickstreamContext;
     private AutoRecordEventClient client;
+    private LifecycleRegistry lifecycle;
 
     /**
      * prepare AutoRecordEventClient and context.
@@ -76,6 +81,10 @@ public class AutoRecordEventClientTest {
         client = clickstreamManager.getAutoRecordEventClient();
         clickstreamContext = clickstreamManager.getClickstreamContext();
         callbacks = new ActivityLifecycleManager(clickstreamManager);
+
+        ActivityLifecycleManager lifecycleManager = new ActivityLifecycleManager(clickstreamManager);
+        lifecycle = new LifecycleRegistry(mock(LifecycleOwner.class));
+        lifecycleManager.startLifecycleTracking(ApplicationProvider.getApplicationContext(), lifecycle);
     }
 
     /**
@@ -85,14 +94,9 @@ public class AutoRecordEventClientTest {
      */
     @Test
     public void testUserEngagementSuccess() throws Exception {
-        Activity activity = mock(Activity.class);
-        Bundle bundle = mock(Bundle.class);
-        callbacks.onActivityCreated(activity, bundle);
-        callbacks.onActivityStarted(activity);
-        callbacks.onActivityResumed(activity);
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
         Thread.sleep(1500);
-        callbacks.onActivityPaused(activity);
-        callbacks.onActivityStopped(activity);
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_STOP);
         try (Cursor cursor = dbUtil.queryAllEvents()) {
             List<String> eventList = new ArrayList<>();
             while (cursor.moveToNext()) {
@@ -102,14 +106,15 @@ public class AutoRecordEventClientTest {
                 eventList.add(eventName);
                 if (eventName.equals(Event.PresetEvent.USER_ENGAGEMENT)) {
                     JSONObject attributes = jsonObject.getJSONObject("attributes");
-                    assertTrue(attributes.has("engagement_time_msec"));
-                    assertTrue(attributes.getInt("engagement_time_msec") > 1000);
+                    assertTrue(attributes.has(ReservedAttribute.ENGAGEMENT_TIMESTAMP));
+                    assertTrue(attributes.getLong(ReservedAttribute.ENGAGEMENT_TIMESTAMP) > 1000);
                 }
             }
-            assertTrue(eventList.contains(Event.PresetEvent.USER_ENGAGEMENT));
+            assertEquals(Event.PresetEvent.FIRST_OPEN, eventList.get(0));
+            assertEquals(Event.PresetEvent.SESSION_START, eventList.get(1));
+            assertEquals(Event.PresetEvent.USER_ENGAGEMENT, eventList.get(2));
         }
     }
-
 
     /**
      * test record user engagement event after view screen less than 1 second.
@@ -118,13 +123,8 @@ public class AutoRecordEventClientTest {
      */
     @Test
     public void testUserEngagementFail() throws Exception {
-        Activity activity = mock(Activity.class);
-        Bundle bundle = mock(Bundle.class);
-        callbacks.onActivityCreated(activity, bundle);
-        callbacks.onActivityStarted(activity);
-        callbacks.onActivityResumed(activity);
-        callbacks.onActivityPaused(activity);
-        callbacks.onActivityStopped(activity);
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_STOP);
         try (Cursor cursor = dbUtil.queryAllEvents();) {
             List<String> eventList = new ArrayList<>();
             while (cursor.moveToNext()) {
@@ -143,6 +143,7 @@ public class AutoRecordEventClientTest {
      */
     @Test
     public void testViewOneScreenEvent() throws Exception {
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
         Activity activity = mock(Activity.class);
         Bundle bundle = mock(Bundle.class);
         callbacks.onActivityCreated(activity, bundle);
@@ -157,10 +158,11 @@ public class AutoRecordEventClientTest {
                 eventList.add(eventName);
                 if (eventName.equals(Event.PresetEvent.SCREEN_VIEW)) {
                     JSONObject attributes = jsonObject.getJSONObject("attributes");
-                    assertNotNull(attributes.getString("screen_name"));
-                    assertNotNull(attributes.getString("screen_id"));
-                    Assert.assertFalse(attributes.has("previous_screen_name"));
-                    Assert.assertFalse(attributes.has("previous_screen_id"));
+                    assertNotNull(attributes.getString(ReservedAttribute.SCREEN_NAME));
+                    assertNotNull(attributes.getString(ReservedAttribute.SCREEN_ID));
+                    Assert.assertFalse(attributes.has(ReservedAttribute.PREVIOUS_SCREEN_NAME));
+                    Assert.assertFalse(attributes.has(ReservedAttribute.PREVIOUS_SCREEN_ID));
+                    Assert.assertEquals(1, attributes.getInt(ReservedAttribute.ENTRANCES));
                 }
             }
             assertTrue(eventList.contains(Event.PresetEvent.SCREEN_VIEW));
@@ -175,6 +177,7 @@ public class AutoRecordEventClientTest {
      */
     @Test
     public void testViewTwoScreenEvent() throws Exception {
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
         Activity activity1 = mock(Activity.class);
         Activity activity2 = mock(Activity.class);
         Bundle bundle = mock(Bundle.class);
@@ -194,14 +197,18 @@ public class AutoRecordEventClientTest {
             String eventName = jsonObject.getString("event_type");
             assertEquals(Event.PresetEvent.SCREEN_VIEW, eventName);
             JSONObject attributes = jsonObject.getJSONObject("attributes");
-            assertNotNull(attributes.getString("screen_name"));
-            assertNotNull(attributes.getString("screen_id"));
-            assertNotNull(attributes.getString("previous_screen_name"));
-            assertNotNull(attributes.getString("previous_screen_id"));
-            assertEquals(activity2.getClass().getSimpleName(), attributes.getString("screen_name"));
-            assertEquals(activity2.getClass().getCanonicalName(), attributes.getString("screen_id"));
-            assertEquals(activity1.getClass().getSimpleName(), attributes.getString("previous_screen_name"));
-            assertEquals(activity1.getClass().getCanonicalName(), attributes.getString("previous_screen_id"));
+            assertNotNull(attributes.getString(ReservedAttribute.SCREEN_NAME));
+            assertNotNull(attributes.getString(ReservedAttribute.SCREEN_ID));
+            assertNotNull(attributes.getString(ReservedAttribute.PREVIOUS_SCREEN_NAME));
+            assertNotNull(attributes.getString(ReservedAttribute.PREVIOUS_SCREEN_ID));
+            assertEquals(activity2.getClass().getSimpleName(), attributes.getString(ReservedAttribute.SCREEN_NAME));
+            assertEquals(activity2.getClass().getCanonicalName(), attributes.getString(ReservedAttribute.SCREEN_ID));
+            assertEquals(activity1.getClass().getSimpleName(),
+                attributes.getString(ReservedAttribute.PREVIOUS_SCREEN_NAME));
+            assertEquals(activity1.getClass().getCanonicalName(),
+                attributes.getString(ReservedAttribute.PREVIOUS_SCREEN_ID));
+
+            assertEquals(0, attributes.getInt(ReservedAttribute.ENTRANCES));
         }
     }
 
@@ -213,6 +220,7 @@ public class AutoRecordEventClientTest {
     @Test
     public void testAppVersionForNotUpdate() throws Exception {
         ReflectUtil.modifyFiled(clickstreamContext.getSystem().getAppDetails(), "versionName", "1.0");
+        ReflectUtil.invokeMethod(client, "checkAppVersionUpdate");
         ReflectUtil.invokeMethod(client, "checkAppVersionUpdate");
 
         String previousAppVersion = clickstreamContext.getSystem().getPreferences().getString("appVersion", "");
@@ -255,7 +263,7 @@ public class AutoRecordEventClientTest {
                 eventList.add(eventName);
                 if (eventName.equals(Event.PresetEvent.APP_UPDATE)) {
                     JSONObject attributes = jsonObject.getJSONObject("attributes");
-                    assertEquals("1.0", attributes.getString("previous_app_version"));
+                    assertEquals("1.0", attributes.getString(ReservedAttribute.PREVIOUS_APP_VERSION));
                     assertEquals("2.0", jsonObject.getString("app_version"));
                 }
             }
@@ -308,12 +316,59 @@ public class AutoRecordEventClientTest {
 
                 if (eventName.equals(Event.PresetEvent.OS_UPDATE)) {
                     JSONObject attributes = jsonObject.getJSONObject("attributes");
-                    assertEquals("9", attributes.getString("previous_os_version"));
+                    assertEquals("9", attributes.getString(ReservedAttribute.PREVIOUS_OS_VERSION));
                     assertEquals("10", jsonObject.getString("os_version"));
                 }
             }
             assertTrue(eventList.contains(Event.PresetEvent.OS_UPDATE));
         }
+    }
+
+    /**
+     * test handleFirstOpen method.
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testHandleFirstOpen() throws Exception {
+        client.handleFirstOpen();
+        assertEquals(1, dbUtil.getTotalNumber());
+        Cursor cursor = dbUtil.queryAllEvents();
+        cursor.moveToFirst();
+        String eventString = cursor.getString(2);
+        JSONObject jsonObject = new JSONObject(eventString);
+        String eventType = jsonObject.getString("event_type");
+        assertEquals(Event.PresetEvent.FIRST_OPEN, eventType);
+        cursor.close();
+    }
+
+    /**
+     * test execute handleFirstOpen method multi times.
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testHandleFirstOpenMultiTimes() throws Exception {
+        client.handleFirstOpen();
+        client.handleFirstOpen();
+        client.handleFirstOpen();
+        assertEquals(1, dbUtil.getTotalNumber());
+        Cursor cursor = dbUtil.queryAllEvents();
+        cursor.moveToFirst();
+        String eventString = cursor.getString(2);
+        JSONObject jsonObject = new JSONObject(eventString);
+        String eventType = jsonObject.getString("event_type");
+        assertEquals(Event.PresetEvent.FIRST_OPEN, eventType);
+        cursor.close();
+    }
+
+    /**
+     * test init autoRecordEventClient with null analyticsClient.
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testInitAutoRecordEventClientWithNullAnalyticsClient() {
+        ClickstreamContext context = mock(ClickstreamContext.class);
+        new AutoRecordEventClient(context);
     }
 
     /**

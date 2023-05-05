@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import com.amplifyframework.core.Amplify;
 
 import software.aws.solution.clickstream.client.AnalyticsClient;
 import software.aws.solution.clickstream.client.ClickstreamConfiguration;
+import software.aws.solution.clickstream.client.Event;
 
 /**
  * This is the top-level customer-facing interface to The ClickstreamAnalytics.
@@ -88,12 +89,12 @@ public final class ClickstreamAnalytics {
     }
 
     /**
-     * add user.
+     * add user attributes.
      *
      * @param userProfile user
      */
     public static void addUserAttributes(ClickstreamUserAttribute userProfile) {
-        Amplify.Analytics.identifyUser(userProfile.getUserId(), userProfile);
+        Amplify.Analytics.identifyUser(Event.ReservedAttribute.USER_ID_UNSET, userProfile);
     }
 
     /**
@@ -102,7 +103,11 @@ public final class ClickstreamAnalytics {
      * @param userId user
      */
     public static void setUserId(String userId) {
-        Amplify.Analytics.identifyUser(userId, new ClickstreamUserAttribute.Builder().build());
+        String newUserId = userId;
+        if (newUserId == null) {
+            newUserId = "";
+        }
+        Amplify.Analytics.identifyUser(newUserId, new ClickstreamUserAttribute.Builder().build());
     }
 
     /**

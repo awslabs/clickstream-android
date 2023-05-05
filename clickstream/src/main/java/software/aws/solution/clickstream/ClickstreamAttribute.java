@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -123,6 +123,21 @@ public class ClickstreamAttribute {
         public Builder add(@NonNull @Size(min = 1L, max = Event.Limit.MAX_LENGTH_OF_NAME) String key,
                            @NonNull Integer value) {
             builder.add(key, value);
+            return this;
+        }
+
+        /**
+         * Adds an {@link AnalyticsLongProperty} to the {@link AnalyticsProperties} under
+         * construction.
+         *
+         * @param key   A name for the property
+         * @param value An Long to store in the property
+         * @return Current Builder instance, for fluent method chaining
+         */
+        @NonNull
+        public Builder add(@NonNull @Size(min = 1L, max = Event.Limit.MAX_LENGTH_OF_NAME) String key,
+                           @NonNull Long value) {
+            builder.add(key, AnalyticsLongProperty.from(value));
             return this;
         }
 

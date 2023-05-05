@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -19,9 +19,9 @@ import android.content.Context;
 import android.database.Cursor;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.amazonaws.logging.Log;
 import org.json.JSONObject;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,18 +29,12 @@ import org.robolectric.RobolectricTestRunner;
 import software.aws.solution.clickstream.client.AnalyticsClient;
 import software.aws.solution.clickstream.client.ClickstreamContext;
 import software.aws.solution.clickstream.client.ClickstreamManager;
-import software.aws.solution.clickstream.client.Event;
 import software.aws.solution.clickstream.client.Session;
 import software.aws.solution.clickstream.client.SessionClient;
 import software.aws.solution.clickstream.client.db.ClickstreamDBUtil;
 import software.aws.solution.clickstream.util.ReflectUtil;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 
 /**
  * Tests the {@link software.aws.solution.clickstream.client.SessionClient}.
@@ -50,6 +44,7 @@ public class SessionClientTest {
     private SessionClient client;
     private AnalyticsClient analyticsClient;
     private ClickstreamDBUtil dbUtil;
+    private ClickstreamContext clickstreamContext;
 
     /**
      * setup the params.
@@ -66,10 +61,9 @@ public class SessionClientTest {
         AWSClickstreamPluginConfiguration clickstreamPluginConfiguration = configurationBuilder.build();
         ClickstreamManager clickstreamManager =
             ClickstreamManagerFactory.create(context, clickstreamPluginConfiguration);
-        ClickstreamContext clickstreamContext = clickstreamManager.getClickstreamContext();
+        clickstreamContext = clickstreamManager.getClickstreamContext();
         analyticsClient = clickstreamManager.getAnalyticsClient();
         client = new SessionClient(clickstreamContext);
-
     }
 
     /**
@@ -79,108 +73,116 @@ public class SessionClientTest {
      */
     @Test
     public void testExecuteStart() throws Exception {
-        client.startSession();
+        client.initialSession();
         Session session = (Session) ReflectUtil.getFiled(client, "session");
-        assertNotNull(session);
+        Assert.assertNotNull(session);
         Session clientSession = (Session) ReflectUtil.getFiled(analyticsClient, "session");
-        assertNotNull(clientSession);
-        assertEquals(1, dbUtil.getTotalNumber());
+        Assert.assertNotNull(clientSession);
+        Assert.assertEquals(1, dbUtil.getTotalNumber());
+        Cursor cursor = dbUtil.queryAllEvents();
+        cursor.moveToFirst();
+        String eventString = cursor.getString(2);
+        JSONObject jsonObject = new JSONObject(eventString);
+        Assert.assertEquals("_session_start", jsonObject.getString("event_type"));
+        JSONObject attributes = jsonObject.getJSONObject("attributes");
+        Assert.assertNotNull(attributes.getString("_session_id"));
+        Assert.assertNotNull(attributes.getString("_session_start_timestamp"));
+        Assert.assertNotNull(attributes.getString("_session_duration"));
+        cursor.close();
+    }
+
+    /**
+     * test SessionClient execute startSession then execute storeSession() method.
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testExecuteStartAndStore() throws Exception {
+        client.initialSession();
+        Session session = (Session) ReflectUtil.getFiled(client, "session");
+        Assert.assertTrue(session.isNewSession());
+
+        client.storeSession();
+        Session storedSession = (Session) ReflectUtil.getFiled(client, "session");
+        Assert.assertFalse(storedSession.isNewSession());
+
+        Assert.assertEquals(1, dbUtil.getTotalNumber());
         Cursor cursor = dbUtil.queryAllEvents();
         cursor.moveToFirst();
         String eventString = cursor.getString(2);
         JSONObject jsonObject = new JSONObject(eventString);
         JSONObject attributes = jsonObject.getJSONObject("attributes");
-        assertNotNull(attributes.getString("_session_id"));
-        assertNotNull(attributes.getString("_session_start_timestamp"));
-        assertNotNull(attributes.getString("_session_duration"));
-        assertFalse(attributes.has("_session_stop_timestamp"));
+        Assert.assertNotNull(attributes.getString("_session_id"));
+        Assert.assertNotNull(attributes.getString("_session_start_timestamp"));
+        Assert.assertNotNull(attributes.getString("_session_duration"));
         cursor.close();
     }
 
+
     /**
-     * test SessionClient execute stopSession() method.
+     * test SessionClient execute twice startSession method without session timeout.
      *
      * @throws Exception exception.
      */
     @Test
-    public void testExecuteStop() throws Exception {
-        Log log = mock(Log.class);
-        ReflectUtil.modifyFiled(client, "LOG", log);
-        client.stopSession();
+    public void testExecuteStartTwiceWithoutSessionTimeout() throws Exception {
+        client.initialSession();
         Session session = (Session) ReflectUtil.getFiled(client, "session");
-        assertNull(session);
-        verify(log).info("Session Stop Failed: No session exists.");
+        Assert.assertTrue(session.isNewSession());
+        Assert.assertEquals(1, session.getSessionIndex());
+
+        client.storeSession();
+        Session storedSession = (Session) ReflectUtil.getFiled(client, "session");
+        Assert.assertFalse(storedSession.isNewSession());
+
+        client.initialSession();
+        Session newSession = (Session) ReflectUtil.getFiled(client, "session");
+
+        Assert.assertFalse(newSession.isNewSession());
+        Assert.assertEquals(session.getSessionID(), newSession.getSessionID());
+        Assert.assertEquals(session.getStartTime(), newSession.getStartTime());
+        Assert.assertEquals(1, newSession.getSessionIndex());
+
+        Assert.assertEquals(1, dbUtil.getTotalNumber());
     }
 
+
     /**
-     * test SessionClient execute startSession then execute stopSession() method.
+     * test SessionClient execute twice startSession method with session timeout.
      *
      * @throws Exception exception.
      */
     @Test
-    public void testExecuteStartAndStop() throws Exception {
-        client.startSession();
-        client.stopSession();
+    public void testExecuteStartTwiceWithSessionTimeout() throws Exception {
+        client.initialSession();
         Session session = (Session) ReflectUtil.getFiled(client, "session");
-        assertNull(session);
-        assertEquals(2, dbUtil.getTotalNumber());
-        Cursor cursor = dbUtil.queryAllEvents();
-        cursor.moveToFirst();
-        String eventString = cursor.getString(2);
-        JSONObject jsonObject = new JSONObject(eventString);
-        JSONObject attributes = jsonObject.getJSONObject("attributes");
-        assertNotNull(attributes.getString("_session_id"));
-        assertNotNull(attributes.getString("_session_start_timestamp"));
-        assertNotNull(attributes.getString("_session_duration"));
-        assertFalse(attributes.has("_session_stop_timestamp"));
+        Assert.assertTrue(session.isNewSession());
+        Assert.assertEquals(1, session.getSessionIndex());
 
-        cursor.moveToNext();
-        eventString = cursor.getString(2);
-        jsonObject = new JSONObject(eventString);
-        attributes = jsonObject.getJSONObject("attributes");
-        assertNotNull(attributes.getString("_session_id"));
-        assertNotNull(attributes.getString("_session_start_timestamp"));
-        assertNotNull(attributes.getString("_session_duration"));
-        assertNotNull(attributes.getString("_session_stop_timestamp"));
-        cursor.close();
+        client.storeSession();
+        Session storedSession = (Session) ReflectUtil.getFiled(client, "session");
+        Assert.assertFalse(storedSession.isNewSession());
+
+        clickstreamContext.getClickstreamConfiguration().withSessionTimeoutDuration(0);
+        client.initialSession();
+        Session newSession = (Session) ReflectUtil.getFiled(client, "session");
+
+        Assert.assertTrue(newSession.isNewSession());
+        Assert.assertNotEquals(session.getSessionID(), newSession.getSessionID());
+        Assert.assertNotEquals(session.getStartTime(), newSession.getStartTime());
+        Assert.assertEquals(2, newSession.getSessionIndex());
+
+        Assert.assertEquals(2, dbUtil.getTotalNumber());
     }
 
-    /**
-     * test handleFirstOpen method.
-     *
-     * @throws Exception exception.
-     */
-    @Test
-    public void testHandleFirstOpen() throws Exception {
-        client.handleFirstOpen();
-        assertEquals(1, dbUtil.getTotalNumber());
-        Cursor cursor = dbUtil.queryAllEvents();
-        cursor.moveToFirst();
-        String eventString = cursor.getString(2);
-        JSONObject jsonObject = new JSONObject(eventString);
-        String eventType = jsonObject.getString("event_type");
-        assertEquals(Event.PresetEvent.FIRST_OPEN, eventType);
-        cursor.close();
-    }
 
     /**
-     * test execute handleFirstOpen method multi times.
-     *
-     * @throws Exception exception.
+     * test init SessionClient with IllegalArgumentException.
      */
-    @Test
-    public void testHandleFirstOpenMultiTimes() throws Exception {
-        client.handleFirstOpen();
-        client.handleFirstOpen();
-        client.handleFirstOpen();
-        assertEquals(1, dbUtil.getTotalNumber());
-        Cursor cursor = dbUtil.queryAllEvents();
-        cursor.moveToFirst();
-        String eventString = cursor.getString(2);
-        JSONObject jsonObject = new JSONObject(eventString);
-        String eventType = jsonObject.getString("event_type");
-        assertEquals(Event.PresetEvent.FIRST_OPEN, eventType);
-        cursor.close();
+    @Test(expected = IllegalArgumentException.class)
+    public void testInitSessionClientWithNullAnalyticsClient() {
+        ClickstreamContext context = mock(ClickstreamContext.class);
+        new SessionClient(context);
     }
 
     /**
@@ -189,6 +191,5 @@ public class SessionClientTest {
     @After
     public void tearDown() {
         dbUtil.closeDB();
-        client.stopSession();
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -17,8 +17,7 @@ package software.aws.solution.clickstream.client;
 
 import androidx.annotation.NonNull;
 
-import com.amazonaws.logging.Log;
-import com.amazonaws.logging.LogFactory;
+import software.aws.solution.clickstream.client.util.PreferencesUtil;
 import software.aws.solution.clickstream.client.util.StringUtil;
 
 import java.text.DateFormat;
@@ -33,8 +32,6 @@ import java.util.TimeZone;
  * has been paused.
  */
 public final class Session {
-
-    // - Session ID configuration constants -------------------------=
     /**
      * The session ID date format.
      */
@@ -55,12 +52,11 @@ public final class Session {
      * The session ID unique ID length.
      */
     private static final int SESSION_ID_UNIQUE_ID_LENGTH = 8;
-    private static final Log LOG = LogFactory.getLog(Session.class);
-    // - Field Declarations -----------------------------------------=
     private final DateFormat sessionIdTimeFormat;
     private final String sessionID;
     private final Long startTime;
-    private Long stopTime;
+    private Long pauseTime;
+    private final int sessionIndex;
 
     /**
      * CONSTRUCTOR - ACTUAL Used by SessionClient.
@@ -68,57 +64,70 @@ public final class Session {
      * @param context The context of ClickstreamContext.
      * @throws NullPointerException When the context is null.
      */
-    Session(@NonNull final ClickstreamContext context) {
+    Session(@NonNull final ClickstreamContext context, final int sessionIndex) {
         this.sessionIdTimeFormat = new SimpleDateFormat(SESSION_ID_DATE_FORMAT +
             SESSION_ID_DELIMITER + SESSION_ID_TIME_FORMAT, Locale.US);
         this.sessionIdTimeFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         this.startTime = System.currentTimeMillis();
-        this.stopTime = null;
+        this.pauseTime = null;
         this.sessionID = this.generateSessionID(context);
+        this.sessionIndex = sessionIndex;
     }
 
     /**
      * Used by deserializer.
      *
-     * @param sessionID The session ID.
-     * @param startTime The start session timestamp.
-     * @param stopTime  The stop session timestamp.
+     * @param sessionID    The session ID.
+     * @param startTime    The start session timestamp.
+     * @param pauseTime    The stop session timestamp.
+     * @param sessionIndex the index of session.
      */
-    Session(final String sessionID, final Long startTime, final Long stopTime) {
+    public Session(final String sessionID, final Long startTime, final Long pauseTime, final int sessionIndex) {
         this.sessionIdTimeFormat = new SimpleDateFormat(SESSION_ID_DATE_FORMAT +
             SESSION_ID_DELIMITER + SESSION_ID_TIME_FORMAT, Locale.US);
         this.sessionIdTimeFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         this.startTime = startTime;
-        this.stopTime = stopTime;
+        this.pauseTime = pauseTime;
         this.sessionID = sessionID;
+        this.sessionIndex = sessionIndex;
     }
 
     /**
-     * STATIC FACTORY.
+     * Get the session object from preferences, if exists and not expired return it.
+     * otherwise create a new session.
      *
      * @param context The {@link ClickstreamContext}.
      * @return new Session object.
      */
-    public static Session newInstance(final ClickstreamContext context) {
-        return new Session(context);
-    }
-
-    /**
-     * Session is considered paused if stopTime is not null.
-     *
-     * @return true iff session is currently paused.
-     */
-    public boolean isPaused() {
-        return (this.stopTime != null);
+    public static Session getInstance(final ClickstreamContext context) {
+        // get session from preference
+        Session storedSession = PreferencesUtil.getSession(context.getSystem().getPreferences());
+        int sessionIndex = 1;
+        if (storedSession != null) {
+            if (System.currentTimeMillis() - storedSession.getPauseTime() <
+                context.getClickstreamConfiguration().getSessionTimeoutDuration()) {
+                return storedSession;
+            } else {
+                sessionIndex = storedSession.sessionIndex + 1;
+            }
+        }
+        return new Session(context, sessionIndex);
     }
 
     /**
      * Pauses the session object. Generates a stop time.
      */
     public void pause() {
-        if (!isPaused()) {
-            this.stopTime = System.currentTimeMillis();
-        }
+        this.pauseTime = System.currentTimeMillis();
+    }
+
+    /**
+     * function for is new session.
+     *
+     * @return is new session
+     */
+    public boolean isNewSession() {
+        return this.pauseTime == null;
     }
 
     /**
@@ -128,7 +137,7 @@ public final class Session {
      * @return session duration in milliseconds.
      */
     public Long getSessionDuration() {
-        Long time = this.stopTime;
+        Long time = this.pauseTime;
         if (time == null) {
             time = System.currentTimeMillis();
         }
@@ -147,7 +156,7 @@ public final class Session {
      * @return [String] SessionID.
      */
     public String generateSessionID(final ClickstreamContext context) {
-        final String uniqueId = context.getUniqueId();
+        final String uniqueId = context.getDeviceId();
         final String time = this.sessionIdTimeFormat.format(this.startTime);
         return StringUtil.trimOrPadString(uniqueId, SESSION_ID_UNIQUE_ID_LENGTH, SESSION_ID_PAD_CHAR) +
             SESSION_ID_DELIMITER + time;
@@ -176,8 +185,17 @@ public final class Session {
      *
      * @return The long value of stop session timestamp.
      */
-    public Long getStopTime() {
-        return this.stopTime;
+    public Long getPauseTime() {
+        return this.pauseTime;
+    }
+
+    /**
+     * Get session index.
+     *
+     * @return The value of session index.
+     */
+    public int getSessionIndex() {
+        return this.sessionIndex;
     }
 }
 

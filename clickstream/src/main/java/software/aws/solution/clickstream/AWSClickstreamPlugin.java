@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import android.app.Application;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.ProcessLifecycleOwner;
 
 import com.amplifyframework.analytics.AnalyticsEventBehavior;
 import com.amplifyframework.analytics.AnalyticsException;
@@ -60,14 +61,19 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
 
     @Override
     public void identifyUser(@NonNull String userId, @Nullable UserProfile profile) {
-        analyticsClient.addUserAttribute(Event.ReservedAttribute.USER_ID, userId);
-        if (profile instanceof ClickstreamUserAttribute) {
-            for (Map.Entry<String, AnalyticsPropertyBehavior<?>> entry :
-                ((ClickstreamUserAttribute) profile).getUserAttributes()) {
-                AnalyticsPropertyBehavior<?> property = entry.getValue();
-                analyticsClient.addUserAttribute(entry.getKey(), property.getValue());
+        if (userId.equals(Event.ReservedAttribute.USER_ID_UNSET)) {
+            if (profile instanceof ClickstreamUserAttribute) {
+                for (Map.Entry<String, AnalyticsPropertyBehavior<?>> entry :
+                    ((ClickstreamUserAttribute) profile).getUserAttributes()) {
+                    AnalyticsPropertyBehavior<?> property = entry.getValue();
+                    analyticsClient.addUserAttribute(entry.getKey(), property.getValue());
+                }
             }
+        } else {
+            analyticsClient.updateUserId(userId);
         }
+        analyticsClient.updateUserAttribute();
+        recordEvent(Event.PresetEvent.PROFILE_SET);
     }
 
     @Override
@@ -79,7 +85,7 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
     @Override
     public void enable() {
         autoEventSubmitter.start();
-        activityLifecycleManager.startLifecycleTracking(application);
+        activityLifecycleManager.startLifecycleTracking(application, ProcessLifecycleOwner.get().getLifecycle());
     }
 
     @Override
@@ -191,7 +197,7 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
         autoEventSubmitter.start();
 
         activityLifecycleManager = new ActivityLifecycleManager(clickstreamManager);
-        activityLifecycleManager.startLifecycleTracking(application);
+        activityLifecycleManager.startLifecycleTracking(application, ProcessLifecycleOwner.get().getLifecycle());
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -37,8 +37,7 @@ import java.util.concurrent.TimeUnit;
  * Event Recorder.
  */
 public class EventRecorder {
-    static final String KEY_MAX_SUBMISSIONS_ALLOWED = "maxSubmissionAllowed";
-    static final String KEY_MAX_SUBMISSION_SIZE = "maxSubmissionSize";
+    static final String KEY_BUNDLE_SEQUENCE_ID_PREF = "event_bundle_sequence_id";
 
     private static final int DEFAULT_MAX_SUBMISSIONS_ALLOWED = 3;
     private static final int MAX_EVENT_OPERATIONS = 1000;
@@ -54,12 +53,14 @@ public class EventRecorder {
     private final ClickstreamContext clickstreamContext;
     private final ClickstreamDBUtil dbUtil;
     private final ExecutorService submissionRunnableQueue;
+    private int bundleSequenceId;
 
     EventRecorder(final ClickstreamContext clickstreamContext, final ClickstreamDBUtil dbUtil,
                   final ExecutorService submissionRunnableQueue) {
         this.clickstreamContext = clickstreamContext;
         this.dbUtil = dbUtil;
         this.submissionRunnableQueue = submissionRunnableQueue;
+        this.bundleSequenceId = clickstreamContext.getSystem().getPreferences().getInt(KEY_BUNDLE_SEQUENCE_ID_PREF, 1);
     }
 
     /**
@@ -91,12 +92,9 @@ public class EventRecorder {
                 LOG.info("save event: " + event.getEventType() + " success, event json:");
                 LOG.info(event.toJSONObject().toString());
             }
-
-            long maxPendingSize = clickstreamContext.getConfiguration().optLong(
-                "maxDbSize", DEFAULT_MAX_DB_SIZE);
-            while (this.dbUtil.getTotalSize() > maxPendingSize) {
+            while (this.dbUtil.getTotalSize() > DEFAULT_MAX_DB_SIZE) {
                 try (Cursor cursor = this.dbUtil.queryOldestEvents(QUERY_OLDEST_EVENT_LIMIT)) {
-                    while (this.dbUtil.getTotalSize() > maxPendingSize && cursor.moveToNext()) {
+                    while (this.dbUtil.getTotalSize() > DEFAULT_MAX_DB_SIZE && cursor.moveToNext()) {
                         this.dbUtil.deleteEvent(cursor.getInt(EventTable.ColumnIndex.ID.getValue()));
                     }
                 }
@@ -132,14 +130,14 @@ public class EventRecorder {
             }
 
             int submissions = 0;
-            final long maxSubmissionsAllowed = clickstreamContext.getConfiguration()
-                .optInt(KEY_MAX_SUBMISSIONS_ALLOWED, DEFAULT_MAX_SUBMISSIONS_ALLOWED);
-
             do {
                 final String[] event = this.getBatchOfEvents(cursor);
                 int lastId = Integer.parseInt(event[1]);
                 // upload events to server
-                boolean result = NetRequest.uploadEvents(event[0], clickstreamContext.getClickstreamConfiguration());
+                boolean result = NetRequest.uploadEvents(event[0], clickstreamContext.getClickstreamConfiguration(),
+                    bundleSequenceId);
+                bundleSequenceId += 1;
+                clickstreamContext.getSystem().getPreferences().putInt(KEY_BUNDLE_SEQUENCE_ID_PREF, bundleSequenceId);
                 if (!result) {
                     // if fail to upload event then end the process.
                     break;
@@ -155,8 +153,8 @@ public class EventRecorder {
                         String.format(Locale.US, "Failed to delete last event: %d with %s", lastId, exc.getMessage()));
                 }
                 // if the submissions time
-                if (submissions >= maxSubmissionsAllowed) {
-                    LOG.info("reached maxSubmissions: " + maxSubmissionsAllowed);
+                if (submissions >= DEFAULT_MAX_SUBMISSIONS_ALLOWED) {
+                    LOG.info("reached maxSubmissions: " + DEFAULT_MAX_SUBMISSIONS_ALLOWED);
                     break;
                 }
             } while (cursor.moveToNext());
@@ -179,8 +177,6 @@ public class EventRecorder {
     String[] getBatchOfEvents(final Cursor cursor) {
         long currentRequestSize = 0;
         String lastEventId = null;
-        final long maxRequestSize =
-            clickstreamContext.getConfiguration().optLong(KEY_MAX_SUBMISSION_SIZE, DEFAULT_MAX_SUBMISSION_SIZE);
         final StringBuilder eventBuilder = new StringBuilder();
         eventBuilder.append("[");
         int eventNumber = 0;
@@ -191,7 +187,8 @@ public class EventRecorder {
             if (!StringUtil.isNullOrEmpty(eventJson)) {
                 currentRequestSize += size;
                 eventNumber++;
-                if (currentRequestSize > maxRequestSize || eventNumber > Event.Limit.MAX_EVENT_NUMBER_OF_BATCH) {
+                if (currentRequestSize > DEFAULT_MAX_SUBMISSION_SIZE ||
+                    eventNumber > Event.Limit.MAX_EVENT_NUMBER_OF_BATCH) {
                     if (eventBuilder.length() > 2) {
                         int length = eventBuilder.length();
                         eventBuilder.replace(length - 1, length, "]");

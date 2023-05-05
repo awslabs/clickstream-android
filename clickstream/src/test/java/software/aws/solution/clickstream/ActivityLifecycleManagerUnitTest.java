@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -18,19 +18,22 @@ package software.aws.solution.clickstream;
 import android.app.Activity;
 import android.app.Application;
 import android.os.Bundle;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.LifecycleRegistry;
+import androidx.test.core.app.ApplicationProvider;
 
+import com.amazonaws.logging.Log;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InOrder;
 import org.robolectric.RobolectricTestRunner;
 import software.aws.solution.clickstream.client.AutoRecordEventClient;
 import software.aws.solution.clickstream.client.ClickstreamManager;
 import software.aws.solution.clickstream.client.SessionClient;
+import software.aws.solution.clickstream.util.ReflectUtil;
 
-import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -41,27 +44,36 @@ import static org.mockito.Mockito.when;
 public final class ActivityLifecycleManagerUnitTest {
     private SessionClient sessionClient;
     private AutoRecordEventClient autoRecordEventClient;
-    private ClickstreamManager clickstreamManager;
     private Application.ActivityLifecycleCallbacks callbacks;
+    private Log log;
+    private LifecycleRegistry lifecycle;
 
     /**
      * Setup dependencies and object under test.
+     *
+     * @throws Exception exception
      */
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         this.sessionClient = mock(SessionClient.class);
-        this.clickstreamManager = mock(ClickstreamManager.class);
+        ClickstreamManager clickstreamManager = mock(ClickstreamManager.class);
         this.autoRecordEventClient = mock(AutoRecordEventClient.class);
         when(clickstreamManager.getSessionClient()).thenReturn(sessionClient);
         when(clickstreamManager.getAutoRecordEventClient()).thenReturn(autoRecordEventClient);
-        this.callbacks = new ActivityLifecycleManager(clickstreamManager);
+        ActivityLifecycleManager lifecycleManager = new ActivityLifecycleManager(clickstreamManager);
+        this.callbacks = lifecycleManager;
+        log = mock(Log.class);
+        ReflectUtil.modifyFiled(this.callbacks, "LOG", log);
+
+        lifecycle = new LifecycleRegistry(mock(LifecycleOwner.class));
+        lifecycleManager.startLifecycleTracking(ApplicationProvider.getApplicationContext(), lifecycle);
     }
 
     /**
-     * When the app is opened, a start session should be recorded.
+     * When the app is opened, Application open will be logged.
      */
     @Test
-    public void sessionStartedWhenAppOpened() {
+    public void testWhenAppOpened() {
         // Given: the launcher activity instance and bundle class instance.
         Activity activity = mock(Activity.class);
         Bundle bundle = mock(Bundle.class);
@@ -70,18 +82,14 @@ public final class ActivityLifecycleManagerUnitTest {
         callbacks.onActivityCreated(activity, bundle);
         callbacks.onActivityStarted(activity);
         callbacks.onActivityResumed(activity);
-
-        // Then: Make sure that startSession was invoked on the session client.
-        verify(sessionClient).startSession();
-        verify(sessionClient).handleFirstOpen();
+        verify(log).debug("Application open.");
     }
 
     /**
-     * When the app is started, user interacts with the app and presses the home button
-     * stop session should be recorded.
+     * When the app is started, user interacts with the app and close the first activity.
      */
     @Test
-    public void sessionStoppedWhenHomeButtonPressed() {
+    public void testWhenAppEnterAndExit() {
         // Given: the launcher activity and the app is opened.
         Activity activity = mock(Activity.class);
         Bundle bundle = mock(Bundle.class);
@@ -93,131 +101,36 @@ public final class ActivityLifecycleManagerUnitTest {
         // When: home button is pressed, app goes to the background.
         // Activity stopped when home button is pressed and app goes to background.
         callbacks.onActivityPaused(activity);
-        callbacks.onActivityStopped(activity);
-
-        // Then: Make sure stopSession is invoked.
-        verify(sessionClient).stopSession();
-    }
-
-    /**
-     * When the app is started, user interacts with the app and presses the home button
-     * a start session and a stop session should be recorded in that order.
-     */
-    @Test
-    public void sessionStartedAndStoppedWhenAppIsOpenedAndHomeButtonIsPressed() {
-        // Given: the launcher activity.
-        Activity activity = mock(Activity.class);
-        Bundle bundle = mock(Bundle.class);
-
-        // When: the app is opened and home button is pressed
-        // Activity is put in resume state when the app is opened.
-        callbacks.onActivityCreated(activity, bundle);
-        callbacks.onActivityStarted(activity);
-        callbacks.onActivityResumed(activity);
-
-        // Activity is stopped when home button is pressed.
-        callbacks.onActivityPaused(activity);
-        callbacks.onActivityStopped(activity);
-
-        // Then: Make sure startSession and stopSession are invoked in that order.
-        InOrder inOrder = inOrder(sessionClient);
-        inOrder.verify(sessionClient).startSession();
-        inOrder.verify(sessionClient).stopSession();
-    }
-
-    /**
-     * When the app is started and later killed, a start session and a stop session should be recorded
-     * in that order.
-     */
-    @Test
-    public void sessionStopWhenAppKilled() {
-        // Given: the launcher activity and the app is opened.
-        Activity activity = mock(Activity.class);
-        Bundle bundle = mock(Bundle.class);
-        // Activity is put in resume state when the app is opened.
-        callbacks.onActivityCreated(activity, bundle);
-        callbacks.onActivityStarted(activity);
-        callbacks.onActivityResumed(activity);
-
-        // When: the app is killed, the current activity is destroyed.
-        // Activity stopped and destroyed when app is killed.
-        callbacks.onActivityPaused(activity);
+        callbacks.onActivitySaveInstanceState(activity, bundle);
         callbacks.onActivityStopped(activity);
         callbacks.onActivityDestroyed(activity);
 
-        // Then: Make sure stopSession is invoked.
-        verify(sessionClient).stopSession();
+        verify(log).debug("Application open.");
+        verify(log).debug("Application exit.");
     }
 
     /**
-     * When the app is temporarily interrupted by events such as phone call or a  pop-up,
-     * same session should be continued, i.e stop session should not be recorded.
+     * test onAppForegrounded event.
      */
     @Test
-    public void sessionNotStoppedWhenAppInterrupted() {
-        // Given: the launcher activity and the app is opened.
-        Activity activity = mock(Activity.class);
-        Bundle bundle = mock(Bundle.class);
-        // Activity is put in resume state when the app is started.
-        callbacks.onActivityCreated(activity, bundle);
-        callbacks.onActivityStarted(activity);
-        callbacks.onActivityResumed(activity);
-
-        // When: the app is interrupted by an event such as phone call, pop-up or app losing focus in
-        // Multi-window mode, running activity is paused.
-        // Activity paused upon interruption.
-        callbacks.onActivityPaused(activity);
-
-        // Then: Make sure stopSession is not invoked.
-        verify(sessionClient, never()).stopSession();
+    public void testOnAppForegrounded() {
+        when(sessionClient.initialSession()).thenReturn(true);
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
+        verify(autoRecordEventClient).updateEngageTimestamp();
+        verify(autoRecordEventClient).handleFirstOpen();
+        verify(sessionClient).initialSession();
+        verify(autoRecordEventClient).setIsEntrances();
     }
 
     /**
-     * When the app transitions from activity to another, session should not be interrupted i.e
-     * stop session should not be recorded.
+     * test onAppBackgrounded event.
      */
     @Test
-    public void sessionNotStoppedOnActivityTransition() {
-        // Given: two activities of the application
-        Activity activity1 = mock(Activity.class);
-        Activity activity2 = mock(Activity.class);
-        Bundle bundle = mock(Bundle.class);
-        // Launcher activity is started
-        callbacks.onActivityCreated(activity1, bundle);
-        callbacks.onActivityStarted(activity1);
-        callbacks.onActivityResumed(activity1);
-
-        // When: App transitions from first to the second activity
-        // Second activity is started causing first activity to be paused.
-        callbacks.onActivityPaused(activity1);
-
-        // Second activity is resumed
-        callbacks.onActivityCreated(activity2, bundle);
-        callbacks.onActivityStarted(activity2);
-        callbacks.onActivityResumed(activity2);
-
-        // First activity is stopped only after the new activity is in foreground.
-        callbacks.onActivityStopped(activity1);
-
-        // Then: Make sure that the session is not interrupted by the activity transition.
-        verify(sessionClient, never()).stopSession();
-    }
-
-    /**
-     * test user engagement event.
-     */
-    @Test
-    public void testUserEngagement() {
-        Activity activity = mock(Activity.class);
-        Bundle bundle = mock(Bundle.class);
-        callbacks.onActivityCreated(activity, bundle);
-        callbacks.onActivityStarted(activity);
-        callbacks.onActivityResumed(activity);
-        callbacks.onActivityPaused(activity);
-        callbacks.onActivityStopped(activity);
-        verify(autoRecordEventClient).recordActivityStart(activity);
-        verify(autoRecordEventClient).recordUserEngagement(activity);
-        verify(autoRecordEventClient).removeActivityStart(activity);
+    public void testOnAppBackgrounded() {
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_STOP);
+        verify(sessionClient).storeSession();
+        verify(autoRecordEventClient).recordUserEngagement();
     }
 
     /**
