@@ -40,6 +40,7 @@ import software.aws.solution.clickstream.client.ClickstreamContext;
 import software.aws.solution.clickstream.client.ClickstreamManager;
 import software.aws.solution.clickstream.client.Event;
 import software.aws.solution.clickstream.client.db.ClickstreamDBUtil;
+import software.aws.solution.clickstream.client.util.StringUtil;
 import software.aws.solution.clickstream.util.ReflectUtil;
 
 import java.util.ArrayList;
@@ -300,8 +301,9 @@ public class AutoRecordEventClientTest {
      */
     @Test
     public void testOSVersionForUpdate() throws Exception {
+        ReflectUtil.invokeMethod(client, "checkOSVersionUpdate");
         String previousOSVersion = clickstreamContext.getSystem().getPreferences().getString("osVersion", "");
-        assertNotNull(previousOSVersion);
+        assertFalse(StringUtil.isNullOrEmpty(previousOSVersion));
 
         ReflectionHelpers.setStaticField(Build.VERSION.class, "RELEASE", "10");
         ReflectUtil.invokeMethod(client, "checkOSVersionUpdate");

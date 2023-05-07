@@ -61,8 +61,6 @@ public class AutoRecordEventClient {
         }
         this.clickstreamContext = clickstreamContext;
         this.isFirstOpen = clickstreamContext.getSystem().getPreferences().getBoolean("isFirstOpen", true);
-        checkAppVersionUpdate();
-        checkOSVersionUpdate();
     }
 
     /**
@@ -152,6 +150,8 @@ public class AutoRecordEventClient {
      * handle the first open event.
      */
     public void handleFirstOpen() {
+        checkAppVersionUpdate();
+        checkOSVersionUpdate();
         if (isFirstOpen) {
             final AnalyticsEvent event =
                 this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.FIRST_OPEN);
