@@ -134,4 +134,19 @@ public class StringUtilTest {
         assertTrue(StringUtil.clipString("abcdefgh", 5, true).endsWith("..."));
         assertFalse(StringUtil.clipString("abcdefgh", 10, true).endsWith("..."));
     }
+
+    /**
+     * test validate gzip with no wrap.
+     */
+    @Test
+    public void validateGzipWithNoWrap() {
+        String str = "abcdeabcde";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 100; i++) {
+            sb.append(str);
+        }
+        String gzippedStr = StringUtil.compressForGzip(sb.toString());
+        assert gzippedStr != null;
+        assertFalse(gzippedStr.contains("\n"));
+    }
 }
