@@ -21,7 +21,7 @@ version = project.ext.VERSION_NAME
 group = POM_GROUP
 def keyFile = rootProject.file("key.properties")
 def keyProp = new Properties()
-keyProp.load(keyFile.newInputStream())
+keyFile.exists() ? keyProp.load(keyFile.newInputStream()) : keyProp
 
 afterEvaluate { project ->
     publishing {
@@ -89,10 +89,12 @@ afterEvaluate { project ->
     }
 
     signing {
-        def signingPassword = keyProp.getProperty("signing.password")
-        def keyId = keyProp.getProperty("signing.keyId")
-        def signingKey = keyProp.getProperty("signing.inMemoryKey").replace("\\n", "\n")
-        useInMemoryPgpKeys(keyId, signingKey, signingPassword)
-        sign publishing.publications.library
+        if (keyFile.exists()) {
+            def signingPassword = keyProp.getProperty("signing.password")
+            def keyId = keyProp.getProperty("signing.keyId")
+            def signingKey = keyProp.getProperty("signing.inMemoryKey").replace("\\n", "\n")
+            useInMemoryPgpKeys(keyId, signingKey, signingPassword)
+            sign publishing.publications.library
+        }
     }
 }
