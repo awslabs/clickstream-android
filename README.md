@@ -1,5 +1,6 @@
 # AWS Solution Clickstream Analytics SDK for Android
-
+[![GitHub release](https://img.shields.io/github/release/awslabs/clickstream-android.svg)](https://github.com/awslabs/clickstream-android/releases)
+[![Maven Central](https://img.shields.io/maven-central/v/software.aws.solution/clickstream.svg)](https://search.maven.org/artifact/software.aws.solution/clickstream)
 ## Introduction
 
 Clickstream Android SDK can help you easily report in-app events on Android. After the event is reported, statistics and analysis of specific scenario data can be completed on AWS Clickstream solution.
