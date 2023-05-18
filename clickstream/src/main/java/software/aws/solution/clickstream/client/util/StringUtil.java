@@ -57,7 +57,7 @@ public final class StringUtil {
             LOG.error("IOException occur when compressForGzip.");
         }
         if (encode != null) {
-            return Base64.encodeToString(encode, Base64.DEFAULT);
+            return Base64.encodeToString(encode, Base64.NO_WRAP);
         } else {
             LOG.error("compressForGzip fail.");
             return null;

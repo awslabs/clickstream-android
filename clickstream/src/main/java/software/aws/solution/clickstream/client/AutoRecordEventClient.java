@@ -120,6 +120,7 @@ public class AutoRecordEventClient {
                     this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.APP_UPDATE);
                 event.addAttribute(Event.ReservedAttribute.PREVIOUS_APP_VERSION, previousAppVersion);
                 this.clickstreamContext.getAnalyticsClient().recordEvent(event);
+                clickstreamContext.getSystem().getPreferences().putString("appVersion", currentVersion);
             }
         } else {
             clickstreamContext.getSystem().getPreferences()
@@ -139,6 +140,7 @@ public class AutoRecordEventClient {
                     this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.OS_UPDATE);
                 event.addAttribute(Event.ReservedAttribute.PREVIOUS_OS_VERSION, previousOSVersion);
                 this.clickstreamContext.getAnalyticsClient().recordEvent(event);
+                clickstreamContext.getSystem().getPreferences().putString("osVersion", currentOSVersion);
             }
         } else {
             clickstreamContext.getSystem().getPreferences()
