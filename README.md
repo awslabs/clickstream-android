@@ -1,5 +1,4 @@
 # AWS Solution Clickstream Analytics SDK for Android
-[![GitHub release](https://img.shields.io/github/release/awslabs/clickstream-android.svg)](https://github.com/awslabs/clickstream-android/releases)
 [![Maven Central](https://img.shields.io/maven-central/v/software.aws.solution/clickstream.svg)](https://search.maven.org/artifact/software.aws.solution/clickstream)
 ## Introduction
 
