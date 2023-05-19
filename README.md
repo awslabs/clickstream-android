@@ -14,7 +14,7 @@ The Clickstream SDK supports Android API level 16 (Android 4.1) and above.
 
 **1.Include SDK**
 
-Add the following dependency to your  `app` module's  `build.gradle` file.
+Add the following dependency to your `app` module's `build.gradle` file.
 
 ```groovy
 dependencies {
@@ -69,7 +69,7 @@ public void onCreate() {
     try{
         ClickstreamAnalytics.init(this);
         Log.i("MyApp", "Initialized ClickstreamAnalytics");
-    }catch(AmplifyException error){
+    } catch (AmplifyException error){
         Log.e("MyApp", "Could not initialize ClickstreamAnalytics", error);
     } 
 }
@@ -145,7 +145,7 @@ ClickstreamAnalytics.deleteGlobalAttributes("level");
 ```java
 import software.aws.solution.clickstream.ClickstreamAnalytics;
 
-// when user login susccess.
+// when user login success.
 ClickstreamAnalytics.setUserId("UserId");
 
 // when user logout
@@ -176,7 +176,7 @@ import software.aws.solution.clickstream.ClickstreamAnalytics;
 
 // log the event in debug mode.
 ClickstreamAnalytics.getClickStreamConfiguration()
-            .withLogEvents(BuildConfig.DEBUG)
+            .withLogEvents(BuildConfig.DEBUG);
 ```
 
 after config `.withLogEvents(true)` and when you record an event, you can see the event json at your AndroidStudio **Logcat** by filter `EventRecorder`.
@@ -188,7 +188,7 @@ import software.aws.solution.clickstream.ClickstreamAnalytics;
 
 // config custom dns.
 ClickstreamAnalytics.getClickStreamConfiguration()
-            .withCustomDns(CustomOkhttpDns.getInstance())
+            .withCustomDns(CustomOkhttpDns.getInstance());
 ```
 
 If you want to use custom DNS for network request, you can create your `CustomOkhttpDns` which implementaion `okhttp3.Dns`, then config `.withCustomDns(CustomOkhttpDns.getInstance())` to make it works.
