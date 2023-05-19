@@ -61,7 +61,7 @@ Your `appId` and `endpoint` are already set up in it, here's an explanation of e
 Please Initialize the SDK in the Application `onCreate()` method.
 
 ```java
-import com.amazonaws.solution.clickstream.ClickstreamAnalytics
+import software.aws.solution.clickstream.ClickstreamAnalytics;
 
 public void onCreate() {
     super.onCreate();
@@ -80,11 +80,11 @@ public void onCreate() {
 After initial the SDK we can use the following code to custom configure it.
 
 ```java
-import com.amazonaws.solution.clickstream.ClickstreamAnalytics;
+import software.aws.solution.clickstream.ClickstreamAnalytics;
 
 // config the SDK after initialize.
 ClickstreamAnalytics.getClickStreamConfiguration()
-            .withAppId("notepad-4a929eb9")
+            .withAppId("appId")
             .withEndpoint("https://example.com/collect")
             .withAuthCookie("your authentication cookie")
             .withSendEventsInterval(10000)
@@ -106,7 +106,7 @@ Now that you've integrated the SDK, let's start using it in your app.
 Add the following code where you need to report an event.
 
 ```java
-import com.amazonaws.solution.clickstream.ClickstreamAnalytics;
+import software.aws.solution.clickstream.ClickstreamAnalytics;
 import com.amplifyframework.analytics.AnalyticsEvent;
 
 AnalyticsEvent event = AnalyticsEvent.builder()
@@ -125,8 +125,8 @@ ClickstreamAnalytics.recordEvent("button_click");
 #### Add global attribute
 
 ```java
-import com.amazonaws.solution.clickstream.ClickstreamAttribute;
-import com.amazonaws.solution.clickstream.ClickstreamAnalytics;
+import software.aws.solution.clickstream.ClickstreamAttribute;
+import software.aws.solution.clickstream.ClickstreamAnalytics;
 
 ClickstreamAttribute globalAttribute = ClickstreamAttribute.builder()
     .add("channel", "HUAWEI")
@@ -143,7 +143,7 @@ ClickstreamAnalytics.deleteGlobalAttributes("level");
 #### Login and logout
 
 ```java
-import com.amazonaws.solution.clickstream.ClickstreamAnalytics;
+import software.aws.solution.clickstream.ClickstreamAnalytics;
 
 // when user login susccess.
 ClickstreamAnalytics.setUserId("UserId");
@@ -157,8 +157,8 @@ When we log into another user, we will clear the before user's user attributes, 
 #### Add user attribute
 
 ```java
-import com.amazonaws.solution.clickstream.ClickstreamAnalytcs;
-import com.amazonaws.solution.clickstream.ClickstreamUserAttribute;
+import software.aws.solution.clickstream.ClickstreamAnalytcs;
+import software.aws.solution.clickstream.ClickstreamUserAttribute;
 
 ClickstreamUserAttribute clickstreamUserAttribute = ClickstreamUserAttribute.builder()
     .add("_user_age", 21)
@@ -172,7 +172,7 @@ Current login user‘s attributes will be cached in disk, so the next time app l
 #### Log the event json in debug mode
 
 ```java
-import com.amazonaws.solution.clickstream.ClickstreamAnalytics;
+import software.aws.solution.clickstream.ClickstreamAnalytics;
 
 // log the event in debug mode.
 ClickstreamAnalytics.getClickStreamConfiguration()
@@ -184,7 +184,7 @@ after config `.withLogEvents(true)` and when you record an event, you can see th
 #### Config custom DNS
 
 ```java
-import com.amazonaws.solution.clickstream.ClickstreamAnalytics;
+import software.aws.solution.clickstream.ClickstreamAnalytics;
 
 // config custom dns.
 ClickstreamAnalytics.getClickStreamConfiguration()
