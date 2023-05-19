@@ -75,6 +75,7 @@ subprojects { project ->
     afterEvaluate {
         configAndroidLibrary(project)
         project.apply from: '../jacoco.gradle'
+        project.apply from: '../publishing.gradle'
     }
 }
 
