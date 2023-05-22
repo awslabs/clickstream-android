@@ -74,7 +74,7 @@ Copy-paste this, and complete the workflow in the UI. It will invite you to
 - If this PR includes breaking changes, they must be listed at the top of the changelog as described above in the Pull Request Checklist.
 - PR must be reviewed by at least one repository maintainer, in order
   to be considered for inclusion.
-- PR must also pass the CodeBuild workflow like Checkstyle, Lint, and unit tests.
+- PR must also pass the Actions like Checkstyle, Lint, and Unit tests.
 - Usually all these are going to be **squashed** when you merge to main.
 - Make sure to update the PR title/description if things change.
 - Rebase with the `main` branch if it has commits ahead of your fork.
