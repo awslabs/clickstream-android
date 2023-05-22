@@ -128,30 +128,7 @@ body:
         ```
 
         </details>
-  - type: markdown
-    attributes:
-      value: |
-        ## Configuration
-  - type: textarea
-    attributes:
-      label: amplifyconfiguration.json
-      description: If applicable, please provide your `amplifyconfiguration.json` file.
-      placeholder: |
-        ```json
-        {
-          "analytics": {
-            "plugins": {
-              "awsClickstreamPlugin": {
-                "appId": "appId",
-                "endpoint": "https://example.com/collect",
-                "isCompressEvents": true,
-                "autoFlushEventsInterval": 10000,
-                "isTrackAppExceptionEvents": false
-              }
-            }
-          }
-        }
-        ```
+
   - type: textarea
     attributes:
       label: Additional information and screenshots
