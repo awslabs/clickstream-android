@@ -107,9 +107,9 @@ Add the following code where you need to report an event.
 
 ```java
 import software.aws.solution.clickstream.ClickstreamAnalytics;
-import com.amplifyframework.analytics.AnalyticsEvent;
+import software.aws.solution.clickstream.ClickstreamEvent;
 
-AnalyticsEvent event = AnalyticsEvent.builder()
+ClickstreamEvent event = ClickstreamEvent.builder()
     .name("PasswordReset")
     .add("Channel", "SMS")
     .add("Successful", true)
