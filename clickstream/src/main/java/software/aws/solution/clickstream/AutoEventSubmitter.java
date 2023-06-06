@@ -23,7 +23,6 @@ import com.amplifyframework.core.Amplify;
 import com.amazonaws.logging.Log;
 import com.amazonaws.logging.LogFactory;
 
-
 /**
  * Submits all the recorded event periodically.
  */
