@@ -24,7 +24,7 @@ dependencies {
 }
 ```
 
-then sync your project.
+then sync your project, if you have problem to build your app, please check [troubleshooting](#Troubleshooting)
 
 **2.Parameter configuration**
 
@@ -209,6 +209,30 @@ open an terminal window, at the root project folder to execute:
 ```shell
 ./gradlew build -p clickstream
 ```
+
+## Troubleshooting
+
+#### Problem: Duplicate class for kotlin-stdlib:1.8.x
+
+If your project use kotlin 1.7 or lower, you may have this problem, you can choose one of  the following three ways to fix it.
+
+1. Upgrade your kotlin version to 1.8
+
+2. Add bom library to your app module's `build.gradle` file, it will align the kotlin version with 1.8
+   
+   ```kotlin
+   implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.8.10"))
+   ```
+
+3. add `resolutionStrategy` to your app module's  `build.gradle` file to force specifying your kotlin version to build.
+   
+   ```kotlin
+   configurations.all {
+       resolutionStrategy {
+           force("org.jetbrains.kotlin:kotlin-stdlib:1.7.20")
+       }
+   }
+   ```
 
 ## Security
 
