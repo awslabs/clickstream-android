@@ -40,7 +40,6 @@ final class AutoEventSubmitter {
         this.handler = new Handler(handlerThread.getLooper());
         this.autoFlushInterval = autoFlushInterval;
         this.submitRunnable = () -> {
-            LOG.debug(String.format(Locale.US, "Auto submitting events after %d seconds", autoFlushInterval));
             Amplify.Analytics.flushEvents();
             handler.postDelayed(this.submitRunnable, autoFlushInterval);
         };

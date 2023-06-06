@@ -125,7 +125,6 @@ public class EventRecorder {
         try (Cursor cursor = dbUtil.queryAllEvents()) {
             if (!cursor.moveToFirst()) {
                 // if the cursor is empty there is nothing to do.
-                LOG.info("No events available to submit.");
                 return totalEventNumber;
             }
 
