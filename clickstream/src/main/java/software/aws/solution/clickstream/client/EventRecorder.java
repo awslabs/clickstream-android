@@ -127,7 +127,7 @@ public class EventRecorder {
                 // if the cursor is empty there is nothing to do.
                 return totalEventNumber;
             }
-
+            LOG.debug("Start flushing events");
             int submissions = 0;
             do {
                 final String[] event = this.getBatchOfEvents(cursor);
@@ -146,14 +146,14 @@ public class EventRecorder {
                     int deleteSize = dbUtil.deleteBatchEvents(lastId);
                     submissions++;
                     totalEventNumber += deleteSize;
-                    LOG.info("deleted event number: " + deleteSize);
+                    LOG.debug("Send event number: " + deleteSize);
                 } catch (final IllegalArgumentException exc) {
                     LOG.error(
                         String.format(Locale.US, "Failed to delete last event: %d with %s", lastId, exc.getMessage()));
                 }
                 // if the submissions time
                 if (submissions >= DEFAULT_MAX_SUBMISSIONS_ALLOWED) {
-                    LOG.info("reached maxSubmissions: " + DEFAULT_MAX_SUBMISSIONS_ALLOWED);
+                    LOG.debug("Reached maxSubmissions: " + DEFAULT_MAX_SUBMISSIONS_ALLOWED);
                     break;
                 }
             } while (cursor.moveToNext());
