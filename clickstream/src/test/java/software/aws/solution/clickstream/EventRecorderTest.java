@@ -299,7 +299,6 @@ public class EventRecorderTest {
         setRequestPath(COLLECT_SUCCESS);
         assertEquals(0, dbUtil.getTotalNumber());
         int totalEventNumber = (int) ReflectUtil.invokeMethod(eventRecorder, "processEvents");
-        verify(log).info("No events available to submit.");
         assertEquals(0, totalEventNumber);
     }
 
@@ -381,8 +380,8 @@ public class EventRecorderTest {
         assertEquals(20, dbUtil.getTotalNumber());
         int eventNumber = (int) ReflectUtil.invokeMethod(eventRecorder, "processEvents");
         assertEquals(20, eventNumber);
-        verify(log).info("deleted event number: 12");
-        verify(log).info("deleted event number: 8");
+        verify(log).debug("Send event number: 12");
+        verify(log).debug("Send event number: 8");
         assertEquals(0, dbUtil.getTotalNumber());
 
     }
@@ -404,8 +403,8 @@ public class EventRecorderTest {
         assertEquals(40, dbUtil.getTotalNumber());
         int eventNumber = (int) ReflectUtil.invokeMethod(eventRecorder, "processEvents");
         assertEquals(36, eventNumber);
-        verify(log, times(3)).info("deleted event number: 12");
-        verify(log).info("reached maxSubmissions: 3");
+        verify(log, times(3)).debug("Send event number: 12");
+        verify(log).debug("Reached maxSubmissions: 3");
         assertEquals(4, dbUtil.getTotalNumber());
     }
 
@@ -445,8 +444,8 @@ public class EventRecorderTest {
         eventRecorder.submitEvents();
         assertEquals(1, ((ThreadPoolExecutor) executorService).getTaskCount());
         Thread.sleep(1500);
-        verify(log, times(3)).info("deleted event number: 12");
-        verify(log).info("reached maxSubmissions: 3");
+        verify(log, times(3)).debug("Send event number: 12");
+        verify(log).debug("Reached maxSubmissions: 3");
         assertEquals(4, dbUtil.getTotalNumber());
     }
 
@@ -470,9 +469,9 @@ public class EventRecorderTest {
         assertEquals(2, ((ThreadPoolExecutor) executorService).getTaskCount());
         assertTrue(((ThreadPoolExecutor) executorService).getActiveCount() < 2);
         Thread.sleep(1500);
-        verify(log, times(3)).info("deleted event number: 12");
-        verify(log).info("reached maxSubmissions: 3");
-        verify(log).info("deleted event number: 4");
+        verify(log, times(3)).debug("Send event number: 12");
+        verify(log).debug("Reached maxSubmissions: 3");
+        verify(log).debug("Send event number: 4");
         assertEquals(0, dbUtil.getTotalNumber());
     }
 
@@ -497,10 +496,9 @@ public class EventRecorderTest {
             eventRecorder.submitEvents();
         }
         Thread.sleep(1500);
-        verify(log, times(3)).info("deleted event number: 12");
-        verify(log).info("reached maxSubmissions: 3");
-        verify(log).info("deleted event number: 4");
-        verify(log).info("No events available to submit.");
+        verify(log, times(3)).debug("Send event number: 12");
+        verify(log).debug("Reached maxSubmissions: 3");
+        verify(log).debug("Send event number: 4");
         assertEquals(0, dbUtil.getTotalNumber());
     }
 
