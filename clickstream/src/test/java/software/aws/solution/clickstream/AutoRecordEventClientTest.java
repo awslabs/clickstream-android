@@ -39,6 +39,7 @@ import software.aws.solution.clickstream.client.AutoRecordEventClient;
 import software.aws.solution.clickstream.client.ClickstreamContext;
 import software.aws.solution.clickstream.client.ClickstreamManager;
 import software.aws.solution.clickstream.client.Event;
+import software.aws.solution.clickstream.client.EventRecorder;
 import software.aws.solution.clickstream.client.ScreenRefererTool;
 import software.aws.solution.clickstream.client.db.ClickstreamDBUtil;
 import software.aws.solution.clickstream.client.util.StringUtil;
@@ -46,6 +47,8 @@ import software.aws.solution.clickstream.util.ReflectUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -409,6 +412,23 @@ public class AutoRecordEventClientTest {
             assertEquals(activity1.getClass().getSimpleName(), appStart2.getString(ReservedAttribute.SCREEN_NAME));
             assertEquals(activity1.getClass().getCanonicalName(), appStart2.getString(ReservedAttribute.SCREEN_ID));
         }
+    }
+
+    /**
+     * test case for app move to background with flush event.
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testBackgroundRequest() throws Exception {
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
+        Thread.sleep(1100);
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_STOP);
+        EventRecorder eventRecorder =
+            (EventRecorder) ReflectUtil.getFiled(clickstreamContext.getAnalyticsClient(), "eventRecorder");
+        ExecutorService executorService =
+            (ExecutorService) ReflectUtil.getFiled(eventRecorder, "submissionRunnableQueue");
+        assertEquals(1, ((ThreadPoolExecutor) executorService).getActiveCount());
     }
 
     /**

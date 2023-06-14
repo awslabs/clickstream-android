@@ -110,6 +110,7 @@ public class AutoRecordEventClient {
             event.addAttribute(Event.ReservedAttribute.SCREEN_ID, ScreenRefererTool.getCurrentScreenId());
             this.clickstreamContext.getAnalyticsClient().recordEvent(event);
         }
+        this.clickstreamContext.getAnalyticsClient().submitEvents();
     }
 
     /**
