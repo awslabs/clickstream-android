@@ -59,7 +59,7 @@ public class AndroidDeviceDetails {
      * @return The name of platform.
      */
     public String platform() {
-        return "ANDROID";
+        return "Android";
     }
 
     /**

@@ -106,7 +106,7 @@ public final class NetRequest {
         RequestBody body = RequestBody.create(curStr, MediaType.parse("application/json; charset=utf-8"));
         Request request = new Request.Builder().url(endpoint).build();
         HttpUrl url = request.url().newBuilder()
-            .addQueryParameter("platform", "ANDROID")
+            .addQueryParameter("platform", "Android")
             .addQueryParameter("appId", appId)
             .addQueryParameter("event_bundle_sequence_id", String.valueOf(bundleSequenceId))
             .addQueryParameter("compression", compression)

@@ -39,6 +39,7 @@ import software.aws.solution.clickstream.client.AutoRecordEventClient;
 import software.aws.solution.clickstream.client.ClickstreamContext;
 import software.aws.solution.clickstream.client.ClickstreamManager;
 import software.aws.solution.clickstream.client.Event;
+import software.aws.solution.clickstream.client.ScreenRefererTool;
 import software.aws.solution.clickstream.client.db.ClickstreamDBUtil;
 import software.aws.solution.clickstream.client.util.StringUtil;
 import software.aws.solution.clickstream.util.ReflectUtil;
@@ -96,7 +97,7 @@ public class AutoRecordEventClientTest {
     @Test
     public void testUserEngagementSuccess() throws Exception {
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
-        Thread.sleep(1500);
+        Thread.sleep(1100);
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_STOP);
         try (Cursor cursor = dbUtil.queryAllEvents()) {
             List<String> eventList = new ArrayList<>();
@@ -108,12 +109,15 @@ public class AutoRecordEventClientTest {
                 if (eventName.equals(Event.PresetEvent.USER_ENGAGEMENT)) {
                     JSONObject attributes = jsonObject.getJSONObject("attributes");
                     assertTrue(attributes.has(ReservedAttribute.ENGAGEMENT_TIMESTAMP));
+                    assertFalse(attributes.has(ReservedAttribute.SCREEN_NAME));
+                    assertFalse(attributes.has(ReservedAttribute.SCREEN_ID));
                     assertTrue(attributes.getLong(ReservedAttribute.ENGAGEMENT_TIMESTAMP) > 1000);
                 }
             }
             assertEquals(Event.PresetEvent.FIRST_OPEN, eventList.get(0));
-            assertEquals(Event.PresetEvent.SESSION_START, eventList.get(1));
-            assertEquals(Event.PresetEvent.USER_ENGAGEMENT, eventList.get(2));
+            assertEquals(Event.PresetEvent.APP_START, eventList.get(1));
+            assertEquals(Event.PresetEvent.SESSION_START, eventList.get(2));
+            assertEquals(Event.PresetEvent.USER_ENGAGEMENT, eventList.get(3));
         }
     }
 
@@ -164,6 +168,7 @@ public class AutoRecordEventClientTest {
                     Assert.assertFalse(attributes.has(ReservedAttribute.PREVIOUS_SCREEN_NAME));
                     Assert.assertFalse(attributes.has(ReservedAttribute.PREVIOUS_SCREEN_ID));
                     Assert.assertEquals(1, attributes.getInt(ReservedAttribute.ENTRANCES));
+                    Assert.assertFalse(attributes.has(ReservedAttribute.ENGAGEMENT_TIMESTAMP));
                 }
             }
             assertTrue(eventList.contains(Event.PresetEvent.SCREEN_VIEW));
@@ -208,8 +213,9 @@ public class AutoRecordEventClientTest {
                 attributes.getString(ReservedAttribute.PREVIOUS_SCREEN_NAME));
             assertEquals(activity1.getClass().getCanonicalName(),
                 attributes.getString(ReservedAttribute.PREVIOUS_SCREEN_ID));
-
             assertEquals(0, attributes.getInt(ReservedAttribute.ENTRANCES));
+            Assert.assertTrue(attributes.has(ReservedAttribute.ENGAGEMENT_TIMESTAMP));
+            Assert.assertTrue(attributes.getLong(ReservedAttribute.ENGAGEMENT_TIMESTAMP) >= 0);
         }
     }
 
@@ -333,8 +339,8 @@ public class AutoRecordEventClientTest {
      */
     @Test
     public void testHandleFirstOpen() throws Exception {
-        client.handleFirstOpen();
-        assertEquals(1, dbUtil.getTotalNumber());
+        client.handleAppStart();
+        assertEquals(2, dbUtil.getTotalNumber());
         Cursor cursor = dbUtil.queryAllEvents();
         cursor.moveToFirst();
         String eventString = cursor.getString(2);
@@ -351,10 +357,10 @@ public class AutoRecordEventClientTest {
      */
     @Test
     public void testHandleFirstOpenMultiTimes() throws Exception {
-        client.handleFirstOpen();
-        client.handleFirstOpen();
-        client.handleFirstOpen();
-        assertEquals(1, dbUtil.getTotalNumber());
+        client.handleAppStart();
+        client.handleAppStart();
+        client.handleAppStart();
+        assertEquals(4, dbUtil.getTotalNumber());
         Cursor cursor = dbUtil.queryAllEvents();
         cursor.moveToFirst();
         String eventString = cursor.getString(2);
@@ -362,6 +368,47 @@ public class AutoRecordEventClientTest {
         String eventType = jsonObject.getString("event_type");
         assertEquals(Event.PresetEvent.FIRST_OPEN, eventType);
         cursor.close();
+    }
+
+    /**
+     * test execute handleAppStart.
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testHandleAppStart() throws Exception {
+        client.handleAppStart();
+        Activity activity1 = mock(Activity.class);
+        Bundle bundle = mock(Bundle.class);
+        callbacks.onActivityCreated(activity1, bundle);
+        callbacks.onActivityStarted(activity1);
+        callbacks.onActivityResumed(activity1);
+        client.handleAppStart();
+        assertEquals(4, dbUtil.getTotalNumber());
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            List<JSONObject> eventList = new ArrayList<>();
+            while (cursor.moveToNext()) {
+                String eventString = cursor.getString(2);
+                JSONObject jsonObject = new JSONObject(eventString);
+                eventList.add(jsonObject);
+            }
+            assertEquals(Event.PresetEvent.FIRST_OPEN, eventList.get(0).getString("event_type"));
+            assertEquals(Event.PresetEvent.APP_START, eventList.get(1).getString("event_type"));
+            JSONObject appStart1 = eventList.get(1).getJSONObject("attributes");
+            assertTrue(appStart1.getBoolean(Event.ReservedAttribute.IS_FIRST_TIME));
+            assertFalse(appStart1.has(ReservedAttribute.SCREEN_NAME));
+            assertFalse(appStart1.has(Event.ReservedAttribute.SCREEN_ID));
+
+            assertEquals(Event.PresetEvent.SCREEN_VIEW, eventList.get(2).getString("event_type"));
+
+            assertEquals(Event.PresetEvent.APP_START, eventList.get(3).getString("event_type"));
+            JSONObject appStart2 = eventList.get(3).getJSONObject("attributes");
+            assertFalse(appStart2.getBoolean(Event.ReservedAttribute.IS_FIRST_TIME));
+            assertTrue(appStart2.has(ReservedAttribute.SCREEN_NAME));
+            assertTrue(appStart2.has(Event.ReservedAttribute.SCREEN_ID));
+            assertEquals(activity1.getClass().getSimpleName(), appStart2.getString(ReservedAttribute.SCREEN_NAME));
+            assertEquals(activity1.getClass().getCanonicalName(), appStart2.getString(ReservedAttribute.SCREEN_ID));
+        }
     }
 
     /**
@@ -378,6 +425,8 @@ public class AutoRecordEventClientTest {
      */
     @After
     public void tearDown() {
+        ScreenRefererTool.setCurrentScreenName(null);
+        ScreenRefererTool.setCurrentScreenId(null);
         dbUtil.closeDB();
     }
 }

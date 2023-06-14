@@ -43,6 +43,11 @@ public class AutoRecordEventClient {
     private boolean isFirstOpen;
 
     /**
+     * whether app is first time start from process launch.
+     */
+    private boolean isFirstTime = true;
+
+    /**
      * current screen is entrances.
      */
     private boolean isEntrances;
@@ -71,8 +76,10 @@ public class AutoRecordEventClient {
     public void recordViewScreen(Activity activity) {
         String screenId = activity.getClass().getCanonicalName();
         String screenName = activity.getClass().getSimpleName();
+        long currentTimestamp = System.currentTimeMillis();
         ScreenRefererTool.setCurrentScreenId(screenId);
         ScreenRefererTool.setCurrentScreenName(screenName);
+        ScreenRefererTool.setCurrentScreenStartTimestamp(currentTimestamp);
         final AnalyticsEvent event =
             this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.SCREEN_VIEW);
         event.addAttribute(Event.ReservedAttribute.SCREEN_NAME, ScreenRefererTool.getCurrentScreenName());
@@ -80,8 +87,10 @@ public class AutoRecordEventClient {
         event.addAttribute(Event.ReservedAttribute.PREVIOUS_SCREEN_NAME, ScreenRefererTool.getPreviousScreenName());
         event.addAttribute(Event.ReservedAttribute.PREVIOUS_SCREEN_ID, ScreenRefererTool.getPreviousScreenId());
         event.addAttribute(Event.ReservedAttribute.ENTRANCES, isEntrances ? 1 : 0);
-        event.addAttribute(Event.ReservedAttribute.ENGAGEMENT_TIMESTAMP,
-            System.currentTimeMillis() - startEngageTimestamp);
+        if (!isEntrances) {
+            event.addAttribute(Event.ReservedAttribute.ENGAGEMENT_TIMESTAMP,
+                currentTimestamp - ScreenRefererTool.getPreviousScreenStartTimestamp());
+        }
         this.clickstreamContext.getAnalyticsClient().recordEvent(event);
         isEntrances = false;
         LOG.debug("record an _screen_view event, screenId:" + screenId + "lastScreenId:" +
@@ -97,6 +106,8 @@ public class AutoRecordEventClient {
             final AnalyticsEvent event =
                 this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.USER_ENGAGEMENT);
             event.addAttribute(Event.ReservedAttribute.ENGAGEMENT_TIMESTAMP, engagementTime);
+            event.addAttribute(Event.ReservedAttribute.SCREEN_NAME, ScreenRefererTool.getCurrentScreenName());
+            event.addAttribute(Event.ReservedAttribute.SCREEN_ID, ScreenRefererTool.getCurrentScreenId());
             this.clickstreamContext.getAnalyticsClient().recordEvent(event);
         }
     }
@@ -151,7 +162,7 @@ public class AutoRecordEventClient {
     /**
      * handle the first open event.
      */
-    public void handleFirstOpen() {
+    public void handleAppStart() {
         checkAppVersionUpdate();
         checkOSVersionUpdate();
         if (isFirstOpen) {
@@ -161,6 +172,13 @@ public class AutoRecordEventClient {
             clickstreamContext.getSystem().getPreferences().putBoolean("isFirstOpen", false);
             isFirstOpen = false;
         }
+        final AnalyticsEvent event =
+            this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.APP_START);
+        event.addAttribute(Event.ReservedAttribute.IS_FIRST_TIME, isFirstTime);
+        event.addAttribute(Event.ReservedAttribute.SCREEN_NAME, ScreenRefererTool.getCurrentScreenName());
+        event.addAttribute(Event.ReservedAttribute.SCREEN_ID, ScreenRefererTool.getCurrentScreenId());
+        this.clickstreamContext.getAnalyticsClient().recordEvent(event);
+        isFirstTime = false;
     }
 
     /**
