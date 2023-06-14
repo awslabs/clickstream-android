@@ -269,6 +269,11 @@ public final class Event {
          */
         public static final String ENGAGEMENT_TIMESTAMP = "_engagement_time_msec";
 
+        /**
+         * is the first time attribute.
+         */
+        public static final String IS_FIRST_TIME = "_is_first_time";
+
         private ReservedAttribute() {
         }
     }
@@ -283,13 +288,14 @@ public final class Event {
         public static final String SESSION_START = "_session_start";
 
         /**
-         * The eventType recorded for session stop events.
-         */
-        public static final String SESSION_STOP = "_session_stop";
-        /**
          * The eventType recorded for app first open from install.
          */
         public static final String FIRST_OPEN = "_first_open";
+
+        /**
+         * The eventType recorded for app start when app move to foreground.
+         */
+        public static final String APP_START = "_app_start";
 
         /**
          * The user engagement event when the app is in the foreground at least one second.

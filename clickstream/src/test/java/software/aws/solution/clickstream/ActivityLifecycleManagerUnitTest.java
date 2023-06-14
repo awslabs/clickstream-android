@@ -117,7 +117,7 @@ public final class ActivityLifecycleManagerUnitTest {
         when(sessionClient.initialSession()).thenReturn(true);
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
         verify(autoRecordEventClient).updateEngageTimestamp();
-        verify(autoRecordEventClient).handleFirstOpen();
+        verify(autoRecordEventClient).handleAppStart();
         verify(sessionClient).initialSession();
         verify(autoRecordEventClient).setIsEntrances();
     }

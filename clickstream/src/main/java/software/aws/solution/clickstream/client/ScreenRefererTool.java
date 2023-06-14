@@ -24,6 +24,8 @@ public final class ScreenRefererTool {
     private static String mCurrentScreenId;
     private static String mPreviousScreenName;
     private static String mCurrentScreenName;
+    private static long mPreviousScreenStartTimestamp;
+    private static long mCurrentScreenStartTimestamp;
 
     private ScreenRefererTool() {
     }
@@ -46,6 +48,16 @@ public final class ScreenRefererTool {
     public static void setCurrentScreenId(String screenId) {
         mPreviousScreenId = mCurrentScreenId;
         mCurrentScreenId = screenId;
+    }
+
+    /**
+     * set current screen id.
+     *
+     * @param timestamp current screen engage timestamp.
+     */
+    public static void setCurrentScreenStartTimestamp(long timestamp) {
+        mPreviousScreenStartTimestamp = mCurrentScreenStartTimestamp;
+        mCurrentScreenStartTimestamp = timestamp;
     }
 
     /**
@@ -82,5 +94,14 @@ public final class ScreenRefererTool {
      */
     public static String getPreviousScreenId() {
         return mPreviousScreenId;
+    }
+
+    /**
+     * get previous screen start timestamp.
+     *
+     * @return previous screen start timestamp
+     */
+    public static long getPreviousScreenStartTimestamp() {
+        return mPreviousScreenStartTimestamp;
     }
 }
