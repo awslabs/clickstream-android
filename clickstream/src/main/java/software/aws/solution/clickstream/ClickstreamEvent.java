@@ -168,6 +168,20 @@ public final class ClickstreamEvent implements AnalyticsEventBehavior {
         }
 
         /**
+         * Adds an Long property to the {@link ClickstreamEvent} under construction.
+         *
+         * @param name  The name of the property
+         * @param value The Long value of the property
+         * @return Current Builder instance, for fluent method chaining
+         */
+        @NonNull
+        public Builder add(@NonNull @Size(min = 1L, max = MAX_NAME_LENGTH) String name,
+                           @NonNull Long value) {
+            this.propertiesBuilder.add(name, AnalyticsLongProperty.from(value));
+            return this;
+        }
+
+        /**
          * Returns the built {@link ClickstreamEvent}.
          *
          * @return The constructed {@link ClickstreamEvent} configured with the parameters set in
