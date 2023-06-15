@@ -145,6 +145,7 @@ public class IntegrationTest {
                 .add("Channel", "SMS")
                 .add("Successful", true)
                 .add("ProcessDuration", 792)
+                .add("Timestamp", 169823889238L)
                 .add("UserAge", 120.3)
                 .build();
         ClickstreamAnalytics.recordEvent(event);
@@ -160,6 +161,7 @@ public class IntegrationTest {
         Assert.assertTrue(attribute.getBoolean("Successful"));
         Assert.assertEquals(792, attribute.getInt("ProcessDuration"));
         Assert.assertEquals(120.3, attribute.getDouble("UserAge"), 0.01);
+        Assert.assertEquals(169823889238L, attribute.getLong("Timestamp"));
 
         Thread.sleep(1500);
         assertEquals(0, dbUtil.getTotalNumber());
