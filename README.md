@@ -56,7 +56,7 @@ Your `appId` and `endpoint` are already set up in it, here's an explanation of e
 - **endpoint**: the endpoint url you will upload the event to AWS server.
 - **isCompressEvents**: whether to compress event content when uploading events, default is `true`
 - **autoFlushEventsInterval**: event sending interval, the default is `10s`
-- **isTrackAppExceptionEvents**: whether auto track exception event in app, default is `true`
+- **isTrackAppExceptionEvents**: whether auto track exception event in app, default is `false`
 
 **3.Initialize the SDK**
 
