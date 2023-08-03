@@ -20,7 +20,7 @@ Add the following dependency to your `app` module's `build.gradle` file.
 
 ```groovy
 dependencies {
-    implementation 'software.aws.solution:clickstream:0.5.1'
+    implementation 'software.aws.solution:clickstream:0.5.2'
 }
 ```
 
@@ -32,7 +32,7 @@ Find the res directory under your  `project/app/src/main` , and manually create 
 
 ![](images/raw_folder.png)
 
-Downlod your `amplifyconfiguration.json` file from your clickstream control plane, and paste it to raw floder, the json file will be as following:
+Download your `amplifyconfiguration.json` file from your clickstream control plane, and paste it to raw folder, the json file will be as following:
 
 ```json
 {
@@ -69,7 +69,7 @@ public void onCreate() {
     super.onCreate();
 
     try{
-        ClickstreamAnalytics.init(this);
+        ClickstreamAnalytics.init(getApplicationContext());
         Log.i("MyApp", "Initialized ClickstreamAnalytics");
     } catch (AmplifyException error){
         Log.e("MyApp", "Could not initialize ClickstreamAnalytics", error);

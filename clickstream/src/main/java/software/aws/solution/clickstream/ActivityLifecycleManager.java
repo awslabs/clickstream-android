@@ -17,6 +17,7 @@ package software.aws.solution.clickstream;
 
 import android.app.Activity;
 import android.app.Application;
+import android.content.Context;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.Lifecycle;
@@ -35,11 +36,8 @@ import software.aws.solution.clickstream.client.SessionClient;
  **/
 final class ActivityLifecycleManager implements Application.ActivityLifecycleCallbacks, LifecycleEventObserver {
     private static final Log LOG = LogFactory.getLog(ActivityLifecycleManager.class);
-
     private final SessionClient sessionClient;
     private final AutoRecordEventClient autoRecordEventClient;
-    private boolean inForeground;
-    private int foregroundActivityCount;
 
     /**
      * Constructor. Registers to receive activity lifecycle events.
@@ -49,17 +47,21 @@ final class ActivityLifecycleManager implements Application.ActivityLifecycleCal
     ActivityLifecycleManager(final ClickstreamManager clickstreamManager) {
         this.sessionClient = clickstreamManager.getSessionClient();
         this.autoRecordEventClient = clickstreamManager.getAutoRecordEventClient();
-        inForeground = false;
-        foregroundActivityCount = 0;
     }
 
-    void startLifecycleTracking(final Application application, Lifecycle lifecycle) {
-        application.registerActivityLifecycleCallbacks(this);
-        lifecycle.addObserver(this);
+    void startLifecycleTracking(final Context context, Lifecycle lifecycle) {
+        if (context instanceof Application) {
+            ((Application) context).registerActivityLifecycleCallbacks(this);
+            lifecycle.addObserver(this);
+        } else {
+            LOG.warn("The context is not ApplicationContext, so lifecycle events are not automatically recorded");
+        }
     }
 
-    void stopLifecycleTracking(final Application application) {
-        application.unregisterActivityLifecycleCallbacks(this);
+    void stopLifecycleTracking(final Context context) {
+        if (context instanceof Application) {
+            ((Application) context).unregisterActivityLifecycleCallbacks(this);
+        }
     }
 
     @Override
@@ -77,8 +79,6 @@ final class ActivityLifecycleManager implements Application.ActivityLifecycleCal
         // An activity came to foreground. Application potentially entered foreground as well
         // if there were no other activities in the foreground.
         LOG.debug("Activity resumed: " + activity.getLocalClassName());
-        checkIfApplicationEnteredForeground();
-        foregroundActivityCount++;
         autoRecordEventClient.recordViewScreen(activity);
     }
 
@@ -97,8 +97,6 @@ final class ActivityLifecycleManager implements Application.ActivityLifecycleCal
         // no other activities in non-stopped states, in which case app is not visible to user and has
         // entered background state.
         LOG.debug("Activity stopped: " + activity.getLocalClassName());
-        foregroundActivityCount--;
-        checkIfApplicationEnteredBackground();
     }
 
     @Override
@@ -110,29 +108,6 @@ final class ActivityLifecycleManager implements Application.ActivityLifecycleCal
     public void onActivityDestroyed(final Activity activity) {
         // onStop is always called before onDestroy so no action is required in onActivityDestroyed.
         LOG.debug("Activity destroyed " + activity.getLocalClassName());
-    }
-
-    /**
-     * Called from onActivityResumed to check if the application came to the foreground.
-     */
-    private void checkIfApplicationEnteredForeground() {
-        // if nothing is in the activity lifecycle map indicating that we are likely in the background, and the flag
-        // indicates we are indeed in the background.
-        if (foregroundActivityCount == 0 && !inForeground) {
-            inForeground = true;
-            LOG.debug("Application open.");
-        }
-    }
-
-    /**
-     * Called from onActivityStopped to check if the application receded to the background.
-     */
-    private void checkIfApplicationEnteredBackground() {
-        // If the App is in the foreground and there are no longer any activities that have not been stopped.
-        if (foregroundActivityCount == 0 && inForeground) {
-            inForeground = false;
-            LOG.debug("Application exit.");
-        }
     }
 
     @Override
