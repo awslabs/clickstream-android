@@ -47,6 +47,7 @@ public final class ActivityLifecycleManagerUnitTest {
     private Application.ActivityLifecycleCallbacks callbacks;
     private Log log;
     private LifecycleRegistry lifecycle;
+    private ActivityLifecycleManager lifecycleManager;
 
     /**
      * Setup dependencies and object under test.
@@ -60,7 +61,7 @@ public final class ActivityLifecycleManagerUnitTest {
         this.autoRecordEventClient = mock(AutoRecordEventClient.class);
         when(clickstreamManager.getSessionClient()).thenReturn(sessionClient);
         when(clickstreamManager.getAutoRecordEventClient()).thenReturn(autoRecordEventClient);
-        ActivityLifecycleManager lifecycleManager = new ActivityLifecycleManager(clickstreamManager);
+        lifecycleManager = new ActivityLifecycleManager(clickstreamManager);
         this.callbacks = lifecycleManager;
         log = mock(Log.class);
         ReflectUtil.modifyFiled(this.callbacks, "LOG", log);
@@ -82,7 +83,6 @@ public final class ActivityLifecycleManagerUnitTest {
         callbacks.onActivityCreated(activity, bundle);
         callbacks.onActivityStarted(activity);
         callbacks.onActivityResumed(activity);
-        verify(log).debug("Application open.");
     }
 
     /**
@@ -104,9 +104,16 @@ public final class ActivityLifecycleManagerUnitTest {
         callbacks.onActivitySaveInstanceState(activity, bundle);
         callbacks.onActivityStopped(activity);
         callbacks.onActivityDestroyed(activity);
+    }
 
-        verify(log).debug("Application open.");
-        verify(log).debug("Application exit.");
+    /**
+     * test invalid context.
+     */
+    @Test
+    public void testContextIsInValid() {
+        Activity activity = mock(Activity.class);
+        lifecycleManager.startLifecycleTracking(activity, lifecycle);
+        verify(log).warn("The context is not ApplicationContext, so lifecycle events are not automatically recorded");
     }
 
     /**

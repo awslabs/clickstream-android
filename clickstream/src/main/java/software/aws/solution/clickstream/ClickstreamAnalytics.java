@@ -15,7 +15,7 @@
 
 package software.aws.solution.clickstream;
 
-import android.app.Application;
+import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
@@ -40,7 +40,7 @@ public final class ClickstreamAnalytics {
      * @param context ApplicationContext
      * @throws AmplifyException Exception of init.
      */
-    public static void init(@NonNull Application context) throws AmplifyException {
+    public static void init(@NonNull Context context) throws AmplifyException {
         Amplify.addPlugin(new AWSClickstreamPlugin(context));
         Amplify.configure(context);
     }

@@ -15,7 +15,6 @@
 
 package software.aws.solution.clickstream;
 
-import android.app.Application;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -45,7 +44,7 @@ import java.util.Map;
 public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
 
     private static final Log LOG = LogFactory.getLog(AWSClickstreamPlugin.class);
-    private final Application application;
+    private final Context context;
     private AnalyticsClient analyticsClient;
     private AutoEventSubmitter autoEventSubmitter;
     private ActivityLifecycleManager activityLifecycleManager;
@@ -53,10 +52,10 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
     /**
      * Constructs a new {@link AWSClickstreamPlugin}.
      *
-     * @param application Global application context
+     * @param context ApplicationContext
      */
-    public AWSClickstreamPlugin(final Application application) {
-        this.application = application;
+    public AWSClickstreamPlugin(final Context context) {
+        this.context = context;
     }
 
     @Override
@@ -79,13 +78,13 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
     @Override
     public void disable() {
         autoEventSubmitter.stop();
-        activityLifecycleManager.stopLifecycleTracking(application);
+        activityLifecycleManager.stopLifecycleTracking(context);
     }
 
     @Override
     public void enable() {
         autoEventSubmitter.start();
-        activityLifecycleManager.startLifecycleTracking(application, ProcessLifecycleOwner.get().getLifecycle());
+        activityLifecycleManager.startLifecycleTracking(context, ProcessLifecycleOwner.get().getLifecycle());
     }
 
     @Override
@@ -197,7 +196,7 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
         autoEventSubmitter.start();
 
         activityLifecycleManager = new ActivityLifecycleManager(clickstreamManager);
-        activityLifecycleManager.startLifecycleTracking(application, ProcessLifecycleOwner.get().getLifecycle());
+        activityLifecycleManager.startLifecycleTracking(this.context, ProcessLifecycleOwner.get().getLifecycle());
     }
 
     @Override
