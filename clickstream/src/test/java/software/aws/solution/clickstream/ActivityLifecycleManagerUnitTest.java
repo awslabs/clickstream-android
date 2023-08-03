@@ -107,7 +107,7 @@ public final class ActivityLifecycleManagerUnitTest {
     }
 
     /**
-     * test invalided context
+     * test invalid context.
      */
     @Test
     public void testContextIsInValid() {
