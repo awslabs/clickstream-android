@@ -44,7 +44,7 @@ public class InitClientTest {
         AWSClickstreamPluginConfiguration.Builder configurationBuilder = AWSClickstreamPluginConfiguration.builder();
         configurationBuilder.withEndpoint(
                 "http://click-serve-HCJIDWGD3S9F-1166279006.ap-southeast-1.elb.amazonaws.com/collect")
-            .withSendEventsInterval(15000).withTrackAppLifecycleEvents(false);
+            .withSendEventsInterval(15000);
         clickstreamPluginConfiguration = configurationBuilder.build();
     }
 
@@ -67,7 +67,7 @@ public class InitClientTest {
             "http://click-serve-HCJIDWGD3S9F-1166279006.ap-southeast-1.elb.amazonaws.com/collect");
         Assert.assertEquals(clickstreamContext.getClickstreamConfiguration().getSendEventsInterval(), 15000);
         Assert.assertTrue(clickstreamContext.getClickstreamConfiguration().isCompressEvents());
-        Assert.assertFalse(clickstreamContext.getClickstreamConfiguration().isTrackAppLifecycleEvents());
+        Assert.assertTrue(clickstreamContext.getClickstreamConfiguration().isTrackScreenViewEvents());
         Assert.assertFalse(clickstreamContext.getClickstreamConfiguration().isTrackAppExceptionEvents());
 
         Assert.assertEquals(clickstreamContext.getSDKInfo().getName(), "aws-solution-clickstream-sdk");
