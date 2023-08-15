@@ -36,7 +36,7 @@ final class ClickstreamManagerFactory {
                 .withSendEventsInterval(clickstreamPluginConfiguration.getSendEventsInterval())
                 .withCallTimeOut(clickstreamPluginConfiguration.getCallTimeOut())
                 .withCompressEvents(clickstreamPluginConfiguration.isCompressEvents())
-                .withTrackAppLifecycleEvents(clickstreamPluginConfiguration.isTrackAppLifecycleEvents())
+                .withTrackScreenViewEvents(clickstreamPluginConfiguration.isTrackScreenViewEvents())
                 .withTrackAppExceptionEvents(clickstreamPluginConfiguration.isTrackAppExceptionEvents())
                 .withSessionTimeoutDuration(clickstreamPluginConfiguration.getSessionTimeOut());
 

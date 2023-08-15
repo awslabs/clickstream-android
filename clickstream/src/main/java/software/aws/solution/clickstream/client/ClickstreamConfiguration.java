@@ -31,7 +31,7 @@ public class ClickstreamConfiguration {
     private long sendEventsInterval;
     private long callTimeOut;
     private boolean isCompressEvents;
-    private boolean isTrackAppLifecycleEvents;
+    private boolean isTrackScreenViewEvents;
     private boolean isTrackAppExceptionEvents;
     private boolean isLogEvents;
     private String authCookie;
@@ -184,22 +184,22 @@ public class ClickstreamConfiguration {
     }
 
     /**
-     * Is track app lifecycle events.
+     * Is track app screen view events.
      *
      * @return Is track appLifecycle events.
      */
-    public boolean isTrackAppLifecycleEvents() {
-        return this.isTrackAppLifecycleEvents;
+    public boolean isTrackScreenViewEvents() {
+        return this.isTrackScreenViewEvents;
     }
 
     /**
-     * Is track app lifecycle events.
+     * Is track app screen view events.
      *
-     * @param isTrackAppLifecycleEvents Is track app lifecycle events.
+     * @param isTrackScreenViewEvents Is track screen view events.
      * @return the current ClickstreamConfiguration instance.
      */
-    public ClickstreamConfiguration withTrackAppLifecycleEvents(final boolean isTrackAppLifecycleEvents) {
-        this.isTrackAppLifecycleEvents = isTrackAppLifecycleEvents;
+    public ClickstreamConfiguration withTrackScreenViewEvents(final boolean isTrackScreenViewEvents) {
+        this.isTrackScreenViewEvents = isTrackScreenViewEvents;
         return this;
     }
 

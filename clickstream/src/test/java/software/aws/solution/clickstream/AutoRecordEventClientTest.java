@@ -79,7 +79,7 @@ public class AutoRecordEventClientTest {
         AWSClickstreamPluginConfiguration.Builder configurationBuilder = AWSClickstreamPluginConfiguration.builder();
         configurationBuilder.withAppId("demo-app")
             .withEndpoint("http://cs-se-serve-1qtj719j88vwn-1291141553.ap-southeast-1.elb.amazonaws.com/collect")
-            .withSendEventsInterval(10000).withTrackAppLifecycleEvents(false);
+            .withSendEventsInterval(10000).withTrackScreenViewEvents(true);
         AWSClickstreamPluginConfiguration clickstreamPluginConfiguration = configurationBuilder.build();
         ClickstreamManager clickstreamManager =
             ClickstreamManagerFactory.create(context, clickstreamPluginConfiguration);
@@ -175,6 +175,32 @@ public class AutoRecordEventClientTest {
                 }
             }
             assertTrue(eventList.contains(Event.PresetEvent.SCREEN_VIEW));
+        }
+    }
+
+    /**
+     * test close screen view events in configuration.
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testCloseScreenViewEventsRecord() throws Exception {
+        clickstreamContext.getClickstreamConfiguration().withTrackScreenViewEvents(false);
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
+        Activity activity = mock(Activity.class);
+        Bundle bundle = mock(Bundle.class);
+        callbacks.onActivityCreated(activity, bundle);
+        callbacks.onActivityStarted(activity);
+        callbacks.onActivityResumed(activity);
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            List<String> eventList = new ArrayList<>();
+            while (cursor.moveToNext()) {
+                String eventString = cursor.getString(2);
+                JSONObject jsonObject = new JSONObject(eventString);
+                String eventName = jsonObject.getString("event_type");
+                eventList.add(eventName);
+            }
+            assertFalse(eventList.contains(Event.PresetEvent.SCREEN_VIEW));
         }
     }
 
