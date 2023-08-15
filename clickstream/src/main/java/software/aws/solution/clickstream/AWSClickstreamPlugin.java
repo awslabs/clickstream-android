@@ -168,7 +168,7 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
             }
 
             if (pluginConfiguration.has(ConfigurationKey.TRACK_APP_LIFECYCLE_EVENTS.getConfigurationKey())) {
-                configurationBuilder.withTrackAppLifecycleEvents(pluginConfiguration
+                configurationBuilder.withTrackScreenViewEvents(pluginConfiguration
                     .getBoolean(ConfigurationKey.TRACK_APP_LIFECYCLE_EVENTS.getConfigurationKey()));
             }
 

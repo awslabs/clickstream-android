@@ -57,7 +57,7 @@ public class AnalyticsClientTest {
         AWSClickstreamPluginConfiguration.Builder configurationBuilder = AWSClickstreamPluginConfiguration.builder();
         configurationBuilder.withAppId("demo-app")
             .withEndpoint("http://cs-se-serve-1qtj719j88vwn-1291141553.ap-southeast-1.elb.amazonaws.com/collect")
-            .withSendEventsInterval(10000).withTrackAppLifecycleEvents(false);
+            .withSendEventsInterval(10000);
         AWSClickstreamPluginConfiguration clickstreamPluginConfiguration = configurationBuilder.build();
         ClickstreamManager clickstreamManager =
             ClickstreamManagerFactory.create(context, clickstreamPluginConfiguration);
