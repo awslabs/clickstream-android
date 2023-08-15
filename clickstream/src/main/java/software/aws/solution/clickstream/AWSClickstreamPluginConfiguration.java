@@ -28,14 +28,14 @@ public final class AWSClickstreamPluginConfiguration {
     private final String endpoint;
     private final long sendEventsInterval;
     private final long callTimeOut;
-    private final boolean isTrackAppLifecycleEvents;
+    private final boolean isTrackScreenViewEvents;
     private final boolean isTrackAppExceptionEvents;
     private final boolean isCompressEvents;
     private final long sessionTimeOut;
 
     private AWSClickstreamPluginConfiguration(Builder builder) {
         this.appId = builder.appId;
-        this.isTrackAppLifecycleEvents = builder.isTrackAppLifecycleEvents;
+        this.isTrackScreenViewEvents = builder.isTrackScreenViewEvents;
         this.isTrackAppExceptionEvents = builder.isTrackAppExceptionEvents;
         this.callTimeOut = builder.callTimeOut;
         this.sendEventsInterval = builder.sendEventsInterval;
@@ -72,12 +72,12 @@ public final class AWSClickstreamPluginConfiguration {
     }
 
     /**
-     * Is auto session tracking enabled.
+     * Is auto screen view tracking enabled.
      *
-     * @return Is auto session tracking enabled.
+     * @return Is auto screen view tracking enabled.
      */
-    boolean isTrackAppLifecycleEvents() {
-        return isTrackAppLifecycleEvents;
+    boolean isTrackScreenViewEvents() {
+        return isTrackScreenViewEvents;
     }
 
     /**
@@ -135,7 +135,7 @@ public final class AWSClickstreamPluginConfiguration {
         private long sendEventsInterval = DEFAULT_SEND_EVENTS_INTERVAL;
         private final long callTimeOut = DEFAULT_CALL_TIME_OUT;
         private boolean isCompressEvents = true;
-        private boolean isTrackAppLifecycleEvents = true;
+        private boolean isTrackScreenViewEvents = true;
         private boolean isTrackAppExceptionEvents = false;
 
         private long sessionTimeOut = DEFAULT_SESSION_TIME_OUT;
@@ -160,8 +160,8 @@ public final class AWSClickstreamPluginConfiguration {
             return this;
         }
 
-        Builder withTrackAppLifecycleEvents(final boolean trackAppLifecycleEvents) {
-            this.isTrackAppLifecycleEvents = trackAppLifecycleEvents;
+        Builder withTrackScreenViewEvents(final boolean trackScreenViewEvents) {
+            this.isTrackScreenViewEvents = trackScreenViewEvents;
             return this;
         }
 

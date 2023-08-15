@@ -74,6 +74,9 @@ public class AutoRecordEventClient {
      * @param activity the activity to record.
      */
     public void recordViewScreen(Activity activity) {
+        if (!clickstreamContext.getClickstreamConfiguration().isTrackScreenViewEvents()) {
+            return;
+        }
         String screenId = activity.getClass().getCanonicalName();
         String screenName = activity.getClass().getSimpleName();
         long currentTimestamp = System.currentTimeMillis();
