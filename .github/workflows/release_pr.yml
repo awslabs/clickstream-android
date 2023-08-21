@@ -9,35 +9,21 @@ on:
 env:
   NEW_VERSION: ${{ github.event.inputs.release_tag }}
 jobs:
-  release_pr:
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
           ref: main
           fetch-depth: 0
+          token : ${{ secrets.PROJECT_TOKEN }}
       - name: Modify for next release
         run: |
           chmod +x release.sh
           ./release.sh ${{ env.NEW_VERSION }}
           git diff
-      - name: Create PR
-        uses: peter-evans/create-pull-request@v5
-        with:
-          commit-message: 'release: clickstream Android ${{ env.NEW_VERSION }}'
-          committer: clickstream-auto <clickstream-auto-no-reply@github.com>
-          author: clickstream-auto <clickstream-auto-no-reply@github.com>
-          branch: release_${{ env.NEW_VERSION }}
-          base: main
-          delete-branch: true
-          title: 'release: clickstream Android ${{ env.NEW_VERSION }}'
-          body: |
-            ### Release PR review checklist
-             - [ ] Verify version name in gradle.properties
-             - [ ] Verify version name in README.md
-            ### Release versions
-            Clickstream Android ${{ env.NEW_VERSION }}
-          labels: release
-          assignees: ${{ vars.ASSIGNEES }}
-          reviewers: ${{ vars.REVIEWERS }}
-          draft: false
+          git config user.name '${{ vars.USER_NAME }}'
+          git config user.email '${{ vars.USER_EMAIL }}'
+          git add .
+          git commit -m 'release: clickstream Android ${{ env.NEW_VERSION }}'
+          git push
