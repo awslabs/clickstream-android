@@ -36,7 +36,7 @@ public final class PreferencesUtil {
     private static final String CURRENT_USER_UNIQUE_ID = "clickstream_current_user_unique_id";
     private static final String CURRENT_USER_FIRST_TOUCH_TIMESTAMP = "clickstream_current_user_first_touch_timestamp";
     private static final String CURRENT_SESSION = "clickstream_current_session";
-    private static final String ENGAGEMENT_START_TIMESTAMP = "clickstream_engagement_start_timestamp";
+    private static final String PREVIOUS_SCREEN_VIEW_TIMESTAMP = "clickstream_previous_screen_view_timestamp";
 
     /**
      * Default constructor.
@@ -164,8 +164,7 @@ public final class PreferencesUtil {
             userAttribute.putOpt(Event.ReservedAttribute.USER_FIRST_TOUCH_TIMESTAMP, attribute);
             updateUserAttribute(preferences, userAttribute);
         } catch (JSONException exception) {
-            LOG.error(
-                "Could not create Json object of user first touch timestamp. error: " + exception.getMessage());
+            LOG.error("Could not create Json object of user first touch timestamp. error: " + exception.getMessage());
         }
     }
 
@@ -234,13 +233,23 @@ public final class PreferencesUtil {
     }
 
     /**
-     * get engagement start timestamp.
+     * get last screen view start timestamp.
      *
      * @param preferences AndroidPreferences
-     * @return engagement start timestamp
+     * @return last screen view start timestamp
      */
-    public static long getEngageStartTimestamp(final AndroidPreferences preferences) {
-        return preferences.getLong(ENGAGEMENT_START_TIMESTAMP, 0);
+    public static long getPreviousScreenViewTimestamp(final AndroidPreferences preferences) {
+        return preferences.getLong(PREVIOUS_SCREEN_VIEW_TIMESTAMP, 0);
+    }
+
+    /**
+     * set last screen view start timestamp.
+     *
+     * @param preferences AndroidPreferences
+     * @param timestamp   the last screen view start time stamp
+     */
+    public static void savePreviousScreenViewTimestamp(final AndroidPreferences preferences, long timestamp) {
+        preferences.putLong(PREVIOUS_SCREEN_VIEW_TIMESTAMP, timestamp);
     }
 
 }

@@ -243,6 +243,11 @@ public final class Event {
          * screen id.
          */
         public static final String SCREEN_ID = "_screen_id";
+
+        /**
+         * screen unique id.
+         */
+        public static final String SCREEN_UNIQUE_ID = "_screen_unique_id";
         /**
          * previous screen name.
          */
@@ -251,6 +256,15 @@ public final class Event {
          * previous screen id.
          */
         public static final String PREVIOUS_SCREEN_ID = "_previous_screen_id";
+
+        /**
+         * previous screen unique id.
+         */
+        public static final String PREVIOUS_SCREEN_UNIQUE_ID = "_previous_screen_unique_id";
+        /**
+         * previous event timestamp.
+         */
+        public static final String PREVIOUS_TIMESTAMP = "_previous_timestamp";
         /**
          * entrances.
          */

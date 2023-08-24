@@ -101,6 +101,7 @@ public class AutoRecordEventClientTest {
     public void testUserEngagementSuccess() throws Exception {
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
         Thread.sleep(1100);
+        client.updateEndEngageTimestamp();
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_STOP);
         try (Cursor cursor = dbUtil.queryAllEvents()) {
             List<String> eventList = new ArrayList<>();
@@ -114,6 +115,7 @@ public class AutoRecordEventClientTest {
                     assertTrue(attributes.has(ReservedAttribute.ENGAGEMENT_TIMESTAMP));
                     assertFalse(attributes.has(ReservedAttribute.SCREEN_NAME));
                     assertFalse(attributes.has(ReservedAttribute.SCREEN_ID));
+                    assertFalse(attributes.has(ReservedAttribute.SCREEN_UNIQUE_ID));
                     assertTrue(attributes.getLong(ReservedAttribute.ENGAGEMENT_TIMESTAMP) > 1000);
                 }
             }
@@ -171,7 +173,8 @@ public class AutoRecordEventClientTest {
                     Assert.assertFalse(attributes.has(ReservedAttribute.PREVIOUS_SCREEN_NAME));
                     Assert.assertFalse(attributes.has(ReservedAttribute.PREVIOUS_SCREEN_ID));
                     Assert.assertEquals(1, attributes.getInt(ReservedAttribute.ENTRANCES));
-                    Assert.assertFalse(attributes.has(ReservedAttribute.ENGAGEMENT_TIMESTAMP));
+                    Assert.assertTrue(attributes.has(ReservedAttribute.ENGAGEMENT_TIMESTAMP));
+                    Assert.assertFalse(attributes.has(ReservedAttribute.PREVIOUS_TIMESTAMP));
                 }
             }
             assertTrue(eventList.contains(Event.PresetEvent.SCREEN_VIEW));
@@ -213,8 +216,8 @@ public class AutoRecordEventClientTest {
     @Test
     public void testViewTwoScreenEvent() throws Exception {
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
-        Activity activity1 = mock(Activity.class);
-        Activity activity2 = mock(Activity.class);
+        Activity activity1 = mock(ActivityA.class);
+        Activity activity2 = mock(ActivityB.class);
         Bundle bundle = mock(Bundle.class);
         callbacks.onActivityCreated(activity1, bundle);
         callbacks.onActivityStarted(activity1);
@@ -247,6 +250,157 @@ public class AutoRecordEventClientTest {
             Assert.assertTrue(attributes.getLong(ReservedAttribute.ENGAGEMENT_TIMESTAMP) >= 0);
         }
     }
+
+    /**
+     * test view two same screen and record one screen view event
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testViewTwoSameScreenEvent() throws Exception {
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
+        Activity activity1 = mock(ActivityA.class);
+        Bundle bundle = mock(Bundle.class);
+        callbacks.onActivityCreated(activity1, bundle);
+        callbacks.onActivityStarted(activity1);
+        callbacks.onActivityResumed(activity1);
+        callbacks.onActivityPaused(activity1);
+
+        callbacks.onActivityCreated(activity1, bundle);
+        callbacks.onActivityStarted(activity1);
+        callbacks.onActivityResumed(activity1);
+
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            List<String> eventList = new ArrayList<>();
+            while (cursor.moveToNext()) {
+                String eventString = cursor.getString(2);
+                JSONObject jsonObject = new JSONObject(eventString);
+                String eventName = jsonObject.getString("event_type");
+                if (eventName.equals(Event.PresetEvent.SCREEN_VIEW)) {
+                    eventList.add(eventName);
+                }
+            }
+            assertEquals(1, eventList.size());
+        }
+    }
+
+    /**
+     * test view same screen twice and only record the last screen view engagement_time_msec
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testSameScreenViewAndRecordLastEngagementTime() throws Exception {
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
+        Activity activityA = mock(ActivityA.class);
+        Activity activityB = mock(ActivityB.class);
+        Bundle bundle = mock(Bundle.class);
+        callbacks.onActivityCreated(activityA, bundle);
+        callbacks.onActivityStarted(activityA);
+        callbacks.onActivityResumed(activityA);
+        Thread.sleep(200);
+        callbacks.onActivityPaused(activityA);
+
+
+        callbacks.onActivityCreated(activityA, bundle);
+        callbacks.onActivityStarted(activityA);
+        callbacks.onActivityResumed(activityA);
+        Thread.sleep(200);
+
+        callbacks.onActivityCreated(activityB, bundle);
+        callbacks.onActivityStarted(activityB);
+        callbacks.onActivityResumed(activityB);
+
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            cursor.moveToLast();
+            String eventString = cursor.getString(2);
+            JSONObject jsonObject = new JSONObject(eventString);
+            String eventName = jsonObject.getString("event_type");
+            assertEquals(Event.PresetEvent.SCREEN_VIEW, eventName);
+            JSONObject attributes = jsonObject.getJSONObject("attributes");
+            assertEquals(activityB.getClass().getSimpleName(), attributes.getString(ReservedAttribute.SCREEN_NAME));
+            assertEquals(activityB.getClass().getCanonicalName(), attributes.getString(ReservedAttribute.SCREEN_ID));
+            assertTrue(attributes.getString(ReservedAttribute.SCREEN_UNIQUE_ID).contains(activityB.hashCode() + ""));
+            assertTrue(attributes.getLong(ReservedAttribute.ENGAGEMENT_TIMESTAMP) < 400);
+        }
+    }
+
+    /**
+     * test view to different screen with _user_engagement event.
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testViewTwoScreenWithUserEngagementEvent() throws Exception {
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
+        Activity activityA = mock(ActivityA.class);
+        Activity activityB = mock(ActivityB.class);
+        Bundle bundle = mock(Bundle.class);
+        callbacks.onActivityCreated(activityA, bundle);
+        callbacks.onActivityStarted(activityA);
+        callbacks.onActivityResumed(activityA);
+        Thread.sleep(1100);
+        callbacks.onActivityPaused(activityA);
+
+        callbacks.onActivityCreated(activityB, bundle);
+        callbacks.onActivityStarted(activityB);
+        callbacks.onActivityResumed(activityB);
+
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            cursor.moveToLast();
+            String eventString = cursor.getString(2);
+            JSONObject jsonObject = new JSONObject(eventString);
+            String eventName = jsonObject.getString("event_type");
+            assertEquals(Event.PresetEvent.SCREEN_VIEW, eventName);
+            JSONObject attributes = jsonObject.getJSONObject("attributes");
+            long engagementTime = attributes.getLong(ReservedAttribute.ENGAGEMENT_TIMESTAMP);
+
+            cursor.moveToPrevious();
+            String eventString1 = cursor.getString(2);
+            JSONObject jsonObject1 = new JSONObject(eventString1);
+            String eventName1 = jsonObject1.getString("event_type");
+            assertEquals(Event.PresetEvent.USER_ENGAGEMENT, eventName1);
+            JSONObject attributes1 = jsonObject1.getJSONObject("attributes");
+            assertEquals(engagementTime, attributes1.getLong(ReservedAttribute.ENGAGEMENT_TIMESTAMP));
+        }
+    }
+
+    /**
+     * test previous timestamp is setting correct in screen events
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testPreviousTimestampInTwoScreenViewEvent() throws Exception {
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
+        Activity activityA = mock(ActivityA.class);
+        Activity activityB = mock(ActivityB.class);
+        Bundle bundle = mock(Bundle.class);
+        callbacks.onActivityCreated(activityA, bundle);
+        callbacks.onActivityStarted(activityA);
+        callbacks.onActivityResumed(activityA);
+        callbacks.onActivityPaused(activityA);
+
+        callbacks.onActivityCreated(activityB, bundle);
+        callbacks.onActivityStarted(activityB);
+        callbacks.onActivityResumed(activityB);
+
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            cursor.moveToLast();
+            String eventString = cursor.getString(2);
+            JSONObject jsonObject = new JSONObject(eventString);
+            String eventName = jsonObject.getString("event_type");
+            assertEquals(Event.PresetEvent.SCREEN_VIEW, eventName);
+            JSONObject attributes = jsonObject.getJSONObject("attributes");
+            long previousTimestamp = attributes.getLong(ReservedAttribute.PREVIOUS_TIMESTAMP);
+
+            cursor.moveToPrevious();
+            String previousEventString = cursor.getString(2);
+            JSONObject previousJsonObject = new JSONObject(previousEventString);
+            assertEquals(previousTimestamp, previousJsonObject.getLong("timestamp"));
+        }
+    }
+
 
     /**
      * test app version not update.
@@ -473,6 +627,13 @@ public class AutoRecordEventClientTest {
     public void tearDown() {
         ScreenRefererTool.setCurrentScreenName(null);
         ScreenRefererTool.setCurrentScreenId(null);
+        ScreenRefererTool.setCurrentScreenUniqueId(null);
         dbUtil.closeDB();
+    }
+
+    static class ActivityA extends Activity {
+    }
+
+    static class ActivityB extends Activity {
     }
 }
