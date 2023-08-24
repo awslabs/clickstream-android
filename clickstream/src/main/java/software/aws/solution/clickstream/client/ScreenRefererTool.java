@@ -87,7 +87,6 @@ public final class ScreenRefererTool {
         return mCurrentScreenUniqueId;
     }
 
-
     /**
      * get previous ScreenName.
      *

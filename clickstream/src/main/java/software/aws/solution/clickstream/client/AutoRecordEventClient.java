@@ -117,6 +117,13 @@ public class AutoRecordEventClient {
             ScreenRefererTool.getPreviousScreenId());
     }
 
+    /**
+     * get the screen unique id for activity.
+     * the unique id calculated by appending the last 8 characters of the device id with "_" and the activity hash code.
+     *
+     * @param activity the activity for holding the screen
+     * @return the unique of the activity
+     */
     public String getScreenUniqueId(Activity activity) {
         String clipDeviceId = StringUtil.trimOrPadString(clickstreamContext.getDeviceId(), DEVICE_ID_CLIP_LENGTH, '_');
         return clipDeviceId + "_" + activity.hashCode();
@@ -138,6 +145,9 @@ public class AutoRecordEventClient {
         }
     }
 
+    /**
+     * the method for flush events when app move to background.
+     */
     public void flushEvents() {
         this.clickstreamContext.getAnalyticsClient().submitEvents();
     }

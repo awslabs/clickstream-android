@@ -252,7 +252,7 @@ public class AutoRecordEventClientTest {
     }
 
     /**
-     * test view two same screen and record one screen view event
+     * test view two same screen and record one screen view event.
      *
      * @throws Exception exception.
      */
@@ -285,7 +285,7 @@ public class AutoRecordEventClientTest {
     }
 
     /**
-     * test view same screen twice and only record the last screen view engagement_time_msec
+     * test view same screen twice and only record the last screen view engagement_time_msec.
      *
      * @throws Exception exception.
      */
@@ -300,7 +300,6 @@ public class AutoRecordEventClientTest {
         callbacks.onActivityResumed(activityA);
         Thread.sleep(200);
         callbacks.onActivityPaused(activityA);
-
 
         callbacks.onActivityCreated(activityA, bundle);
         callbacks.onActivityStarted(activityA);
@@ -366,7 +365,7 @@ public class AutoRecordEventClientTest {
     }
 
     /**
-     * test previous timestamp is setting correct in screen events
+     * test previous timestamp is setting correct in screen events.
      *
      * @throws Exception exception.
      */
