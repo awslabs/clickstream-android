@@ -29,6 +29,7 @@ public final class AWSClickstreamPluginConfiguration {
     private final long sendEventsInterval;
     private final long callTimeOut;
     private final boolean isTrackScreenViewEvents;
+    private final boolean isTrackUserEngagementEvents;
     private final boolean isTrackAppExceptionEvents;
     private final boolean isCompressEvents;
     private final long sessionTimeOut;
@@ -36,6 +37,7 @@ public final class AWSClickstreamPluginConfiguration {
     private AWSClickstreamPluginConfiguration(Builder builder) {
         this.appId = builder.appId;
         this.isTrackScreenViewEvents = builder.isTrackScreenViewEvents;
+        this.isTrackUserEngagementEvents = builder.isTrackUserEngagementEvents;
         this.isTrackAppExceptionEvents = builder.isTrackAppExceptionEvents;
         this.callTimeOut = builder.callTimeOut;
         this.sendEventsInterval = builder.sendEventsInterval;
@@ -78,6 +80,15 @@ public final class AWSClickstreamPluginConfiguration {
      */
     boolean isTrackScreenViewEvents() {
         return isTrackScreenViewEvents;
+    }
+
+    /**
+     * Is auto user engagement tracking enabled.
+     *
+     * @return Is auto user engagement tracking enabled.
+     */
+    boolean isTrackUserEngagementEvents() {
+        return isTrackUserEngagementEvents;
     }
 
     /**
@@ -136,6 +147,7 @@ public final class AWSClickstreamPluginConfiguration {
         private final long callTimeOut = DEFAULT_CALL_TIME_OUT;
         private boolean isCompressEvents = true;
         private boolean isTrackScreenViewEvents = true;
+        private boolean isTrackUserEngagementEvents = true;
         private boolean isTrackAppExceptionEvents = false;
 
         private long sessionTimeOut = DEFAULT_SESSION_TIME_OUT;
@@ -162,6 +174,11 @@ public final class AWSClickstreamPluginConfiguration {
 
         Builder withTrackScreenViewEvents(final boolean trackScreenViewEvents) {
             this.isTrackScreenViewEvents = trackScreenViewEvents;
+            return this;
+        }
+
+        Builder withTrackUserEngagementEvents(final boolean trackUserEngagementEvents) {
+            this.isTrackUserEngagementEvents = trackUserEngagementEvents;
             return this;
         }
 
