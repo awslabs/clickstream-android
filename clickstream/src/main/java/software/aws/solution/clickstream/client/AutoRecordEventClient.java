@@ -134,7 +134,8 @@ public class AutoRecordEventClient {
      */
     public void recordUserEngagement() {
         lastEngageTime = endEngageTimestamp - startEngageTimestamp;
-        if (lastEngageTime > MIN_ENGAGEMENT_TIME) {
+        if (clickstreamContext.getClickstreamConfiguration().isTrackUserEngagementEvents() &&
+            lastEngageTime > MIN_ENGAGEMENT_TIME) {
             final AnalyticsEvent event =
                 this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.USER_ENGAGEMENT);
             event.addAttribute(Event.ReservedAttribute.ENGAGEMENT_TIMESTAMP, lastEngageTime);

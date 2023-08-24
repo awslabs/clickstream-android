@@ -167,11 +167,6 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
                     pluginConfiguration.getBoolean(ConfigurationKey.COMPRESS_EVENTS.getConfigurationKey()));
             }
 
-            if (pluginConfiguration.has(ConfigurationKey.TRACK_APP_LIFECYCLE_EVENTS.getConfigurationKey())) {
-                configurationBuilder.withTrackScreenViewEvents(pluginConfiguration
-                    .getBoolean(ConfigurationKey.TRACK_APP_LIFECYCLE_EVENTS.getConfigurationKey()));
-            }
-
             if (pluginConfiguration.has(ConfigurationKey.TRACK_APP_EXCEPTION_EVENTS.getConfigurationKey())) {
                 configurationBuilder.withTrackAppExceptionEvents(pluginConfiguration
                     .getBoolean(ConfigurationKey.TRACK_APP_EXCEPTION_EVENTS.getConfigurationKey()));
@@ -234,11 +229,6 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
          * Whether to compress events.
          */
         COMPRESS_EVENTS("isCompressEvents"),
-
-        /**
-         * Whether to track app lifecycle events automatically.
-         */
-        TRACK_APP_LIFECYCLE_EVENTS("isTrackAppLifecycleEvents"),
 
         /**
          * Whether to track app exception events automatically.
