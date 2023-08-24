@@ -123,7 +123,7 @@ public final class ActivityLifecycleManagerUnitTest {
     public void testOnAppForegrounded() {
         when(sessionClient.initialSession()).thenReturn(true);
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
-        verify(autoRecordEventClient).updateEngageTimestamp();
+        verify(autoRecordEventClient).updateStartEngageTimestamp();
         verify(autoRecordEventClient).handleAppStart();
         verify(sessionClient).initialSession();
         verify(autoRecordEventClient).setIsEntrances();

@@ -24,8 +24,8 @@ public final class ScreenRefererTool {
     private static String mCurrentScreenId;
     private static String mPreviousScreenName;
     private static String mCurrentScreenName;
-    private static long mPreviousScreenStartTimestamp;
-    private static long mCurrentScreenStartTimestamp;
+    private static String mPreviousScreenUniqueId;
+    private static String mCurrentScreenUniqueId;
 
     private ScreenRefererTool() {
     }
@@ -51,13 +51,13 @@ public final class ScreenRefererTool {
     }
 
     /**
-     * set current screen id.
+     * set current screen unique id.
      *
-     * @param timestamp current screen engage timestamp.
+     * @param screenUniqueId current screen unique id to set.
      */
-    public static void setCurrentScreenStartTimestamp(long timestamp) {
-        mPreviousScreenStartTimestamp = mCurrentScreenStartTimestamp;
-        mCurrentScreenStartTimestamp = timestamp;
+    public static void setCurrentScreenUniqueId(String screenUniqueId) {
+        mPreviousScreenUniqueId = mCurrentScreenUniqueId;
+        mCurrentScreenUniqueId = screenUniqueId;
     }
 
     /**
@@ -79,6 +79,15 @@ public final class ScreenRefererTool {
     }
 
     /**
+     * get current screen unique id.
+     *
+     * @return mCurrentScreenUniqueId
+     */
+    public static String getCurrentScreenUniqueId() {
+        return mCurrentScreenUniqueId;
+    }
+
+    /**
      * get previous ScreenName.
      *
      * @return mPreviousScreenName
@@ -97,11 +106,27 @@ public final class ScreenRefererTool {
     }
 
     /**
-     * get previous screen start timestamp.
+     * get previous screen unique id.
      *
-     * @return previous screen start timestamp
+     * @return mPreviousScreenUniqueId
      */
-    public static long getPreviousScreenStartTimestamp() {
-        return mPreviousScreenStartTimestamp;
+    public static String getPreviousScreenUniqueId() {
+        return mPreviousScreenUniqueId;
+    }
+
+    /**
+     * Judging that the current screen is the same as the previous screen.
+     *
+     * @param screenId       current screen id
+     * @param screenName     current screen name
+     * @param screenUniqueId current screen unique id
+     * @return the boolean value for is the same screen
+     */
+    public static boolean isSameScreen(String screenId, String screenName, String screenUniqueId) {
+        return mCurrentScreenId != null
+            && mCurrentScreenName != null
+            && mCurrentScreenId.equals(screenId)
+            && mCurrentScreenName.equals(screenName)
+            && mCurrentScreenUniqueId.equals(screenUniqueId);
     }
 }
