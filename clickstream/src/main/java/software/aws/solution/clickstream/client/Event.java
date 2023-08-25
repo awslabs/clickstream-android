@@ -312,6 +312,11 @@ public final class Event {
         public static final String APP_START = "_app_start";
 
         /**
+         * The eventType recorded for app end when app move to background.
+         */
+        public static final String APP_END = "_app_end";
+
+        /**
          * The user engagement event when the app is in the foreground at least one second.
          */
         public static final String USER_ENGAGEMENT = "_user_engagement";

@@ -123,6 +123,7 @@ final class ActivityLifecycleManager implements Application.ActivityLifecycleCal
         if (event == Lifecycle.Event.ON_STOP) {
             LOG.debug("Application entered the background.");
             autoRecordEventClient.recordUserEngagement();
+            autoRecordEventClient.handleAppEnd();
             sessionClient.storeSession();
             autoRecordEventClient.flushEvents();
         } else if (event == Lifecycle.Event.ON_START) {

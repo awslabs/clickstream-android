@@ -125,6 +125,7 @@ public class AutoRecordEventClientTest {
             assertEquals(Event.PresetEvent.APP_START, eventList.get(1));
             assertEquals(Event.PresetEvent.SESSION_START, eventList.get(2));
             assertEquals(Event.PresetEvent.USER_ENGAGEMENT, eventList.get(3));
+            assertEquals(Event.PresetEvent.APP_END, eventList.get(4));
         }
     }
 
@@ -614,6 +615,32 @@ public class AutoRecordEventClientTest {
             assertTrue(appStart2.has(Event.ReservedAttribute.SCREEN_ID));
             assertEquals(activity1.getClass().getSimpleName(), appStart2.getString(ReservedAttribute.SCREEN_NAME));
             assertEquals(activity1.getClass().getCanonicalName(), appStart2.getString(ReservedAttribute.SCREEN_ID));
+        }
+    }
+
+    /**
+     * test app end event.
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testAppEnd() throws Exception {
+        Activity activity = mock(Activity.class);
+        Bundle bundle = mock(Bundle.class);
+        callbacks.onActivityCreated(activity, bundle);
+        callbacks.onActivityStarted(activity);
+        callbacks.onActivityResumed(activity);
+        client.handleAppEnd();
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            cursor.moveToLast();
+            String eventString = cursor.getString(2);
+            JSONObject jsonObject = new JSONObject(eventString);
+            String eventType = jsonObject.getString("event_type");
+            JSONObject attributes = jsonObject.getJSONObject("attributes");
+            assertEquals(Event.PresetEvent.APP_END, eventType);
+            assertTrue(attributes.has(ReservedAttribute.SCREEN_NAME));
+            assertTrue(attributes.has(ReservedAttribute.SCREEN_ID));
+            assertTrue(attributes.has(ReservedAttribute.SCREEN_UNIQUE_ID));
         }
     }
 
