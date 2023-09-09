@@ -19,8 +19,10 @@ import androidx.annotation.NonNull;
 
 import com.amazonaws.logging.Log;
 import com.amazonaws.logging.LogFactory;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import software.aws.solution.clickstream.ClickstreamItem;
 import software.aws.solution.clickstream.client.system.AndroidAppDetails;
 import software.aws.solution.clickstream.client.system.AndroidConnectivity;
 import software.aws.solution.clickstream.client.system.AndroidDeviceDetails;
@@ -45,6 +47,7 @@ public class AnalyticsEvent implements JSONSerializable {
     private String sdkName;
     private String sdkVersion;
     private final JSONObject attributes = new JSONObject();
+    private final JSONArray items = new JSONArray();
     private final JSONObject userAttributes;
     private final Long timestamp;
     private final String uniqueId;
@@ -249,7 +252,7 @@ public class AnalyticsEvent implements JSONSerializable {
             return;
         }
         if (null != value) {
-            Event.EventError attributeError = Event.checkAttribute(getCurrentNumOfAttributes(), name, value);
+            Event.EventError attributeError = EventChecker.checkAttribute(getCurrentNumOfAttributes(), name, value);
             try {
                 if (attributeError != null) {
                     if (!attributes.has(attributeError.getErrorType())) {
@@ -263,6 +266,32 @@ public class AnalyticsEvent implements JSONSerializable {
             }
         } else {
             attributes.remove(name);
+        }
+    }
+
+    /**
+     * Adds items to this {@link AnalyticsEvent}.
+     *
+     * @param items The name of the attribute.
+     */
+    public void addItems(final ClickstreamItem[] items) {
+        if (null == items) {
+            return;
+        }
+        try {
+            for (ClickstreamItem item : items) {
+//                Event.EventError attributeError = EventChecker.checkAttribute(getCurrentNumOfAttributes(), name, value);
+//
+//                if (attributeError != null) {
+//                    if (!attributes.has(attributeError.getErrorType())) {
+//                        attributes.putOpt(attributeError.getErrorType(), attributeError.getErrorMessage());
+//                    }
+//                } else {
+//                    attributes.putOpt(name, value);
+//                }
+            }
+        } catch (JSONException exception) {
+            LOG.error("error parsing json, error message:" + exception.getMessage());
         }
     }
 

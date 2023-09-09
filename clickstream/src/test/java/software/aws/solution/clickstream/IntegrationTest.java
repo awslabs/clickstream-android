@@ -258,6 +258,41 @@ public class IntegrationTest {
     }
 
     /**
+     * test add items.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testAddItem() throws Exception {
+        ClickstreamItem item = ClickstreamItem.builder()
+            .add("a", 1)
+            .build();
+
+        ClickstreamEvent event = ClickstreamEvent.builder()
+            .name("PasswordReset")
+            .add("Message", "SMS")
+            .add("Successful", true)
+            .add("ProcessDuration", 792)
+            .add("Number", 20.1)
+            .setItems(new ClickstreamItem[] {item})
+            .build();
+        ClickstreamAnalytics.recordEvent(event);
+        assertEquals(1, dbUtil.getTotalNumber());
+        Cursor cursor = dbUtil.queryAllEvents();
+        cursor.moveToFirst();
+        String eventString = cursor.getString(2);
+        JSONObject jsonObject = new JSONObject(eventString);
+        JSONObject attribute = jsonObject.getJSONObject("attributes");
+
+        Assert.assertEquals("HUAWEI", attribute.getString("channel"));
+
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1000);
+        assertEquals(0, dbUtil.getTotalNumber());
+        cursor.close();
+    }
+
+    /**
      * test add user attribute.
      *
      * @throws Exception exception

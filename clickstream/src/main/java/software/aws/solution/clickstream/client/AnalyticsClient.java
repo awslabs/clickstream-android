@@ -65,7 +65,7 @@ public class AnalyticsClient {
      */
     public void addGlobalAttribute(String name, Object value) {
         if (value != null) {
-            Event.EventError error = Event.checkAttribute(globalAttributes.size(), name, value);
+            Event.EventError error = EventChecker.checkAttribute(globalAttributes.size(), name, value);
             if (error != null) {
                 if (!globalAttributes.containsKey(error.getErrorType())) {
                     globalAttributes.put(error.getErrorType(), error.getErrorMessage());
@@ -99,7 +99,7 @@ public class AnalyticsClient {
      */
     public void addUserAttribute(String name, Object value) {
         if (value != null) {
-            Event.EventError error = Event.checkUserAttribute(userAttributes.length(), name, value);
+            Event.EventError error = EventChecker.checkUserAttribute(userAttributes.length(), name, value);
             if (error != null) {
                 if (!globalAttributes.containsKey(error.getErrorType())) {
                     globalAttributes.put(error.getErrorType(), error.getErrorMessage());
