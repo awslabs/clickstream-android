@@ -207,6 +207,31 @@ public class AutoRecordEventClientTest {
     }
 
     /**
+     * test screen view event with screen unique id.
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testScreenViewWithUniqueId() throws Exception {
+        Activity activity = mock(Activity.class);
+        Bundle bundle = mock(Bundle.class);
+        callbacks.onActivityCreated(activity, bundle);
+        callbacks.onActivityStarted(activity);
+        callbacks.onActivityResumed(activity);
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            cursor.moveToLast();
+            String eventString = cursor.getString(2);
+            JSONObject jsonObject = new JSONObject(eventString);
+            String eventName = jsonObject.getString("event_type");
+            assertEquals(eventName, Event.PresetEvent.SCREEN_VIEW);
+            JSONObject attributes = jsonObject.getJSONObject("attributes");
+            String screenUniqueId = attributes.getString(ReservedAttribute.SCREEN_UNIQUE_ID);
+            assertNotNull(screenUniqueId);
+            assertEquals(screenUniqueId, String.valueOf(activity.hashCode()));
+        }
+    }
+
+    /**
      * test close screen view events in configuration.
      *
      * @throws Exception exception.
