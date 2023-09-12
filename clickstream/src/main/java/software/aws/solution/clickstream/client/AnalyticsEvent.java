@@ -482,6 +482,17 @@ public class AnalyticsEvent implements JSONSerializable {
             }
         }
 
+        String screenName = ScreenRefererTool.getCurrentScreenName();
+        String screenUniqueId = ScreenRefererTool.getCurrentScreenUniqueId();
+        if (screenName != null) {
+            try {
+                attributes.put(Event.ReservedAttribute.SCREEN_NAME, screenName);
+                attributes.put(Event.ReservedAttribute.SCREEN_UNIQUE_ID, screenUniqueId);
+            } catch (final JSONException jsonException) {
+                LOG.error("Error serializing session information " + jsonException.getMessage());
+            }
+        }
+
         // ****************************************************
         // ====SDK Details Attributes -- Prefix with 'sdk_'====
         // ****************************************************

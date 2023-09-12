@@ -97,9 +97,7 @@ public class AutoRecordEventClient {
             this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.SCREEN_VIEW);
         long currentTimestamp = event.getEventTimestamp();
         startEngageTimestamp = currentTimestamp;
-        event.addAttribute(Event.ReservedAttribute.SCREEN_NAME, ScreenRefererTool.getCurrentScreenName());
         event.addAttribute(Event.ReservedAttribute.SCREEN_ID, ScreenRefererTool.getCurrentScreenId());
-        event.addAttribute(Event.ReservedAttribute.SCREEN_UNIQUE_ID, ScreenRefererTool.getCurrentScreenUniqueId());
         event.addAttribute(Event.ReservedAttribute.PREVIOUS_SCREEN_NAME, ScreenRefererTool.getPreviousScreenName());
         event.addAttribute(Event.ReservedAttribute.PREVIOUS_SCREEN_ID, ScreenRefererTool.getPreviousScreenId());
         event.addAttribute(Event.ReservedAttribute.PREVIOUS_SCREEN_UNIQUE_ID,
@@ -138,9 +136,6 @@ public class AutoRecordEventClient {
             final AnalyticsEvent event =
                 this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.USER_ENGAGEMENT);
             event.addAttribute(Event.ReservedAttribute.ENGAGEMENT_TIMESTAMP, lastEngageTime);
-            event.addAttribute(Event.ReservedAttribute.SCREEN_NAME, ScreenRefererTool.getCurrentScreenName());
-            event.addAttribute(Event.ReservedAttribute.SCREEN_ID, ScreenRefererTool.getCurrentScreenId());
-            event.addAttribute(Event.ReservedAttribute.SCREEN_UNIQUE_ID, ScreenRefererTool.getCurrentScreenUniqueId());
             this.clickstreamContext.getAnalyticsClient().recordEvent(event);
         }
     }
@@ -222,9 +217,6 @@ public class AutoRecordEventClient {
         final AnalyticsEvent event =
             this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.APP_START);
         event.addAttribute(Event.ReservedAttribute.IS_FIRST_TIME, isFirstTime);
-        event.addAttribute(Event.ReservedAttribute.SCREEN_NAME, ScreenRefererTool.getCurrentScreenName());
-        event.addAttribute(Event.ReservedAttribute.SCREEN_ID, ScreenRefererTool.getCurrentScreenId());
-        event.addAttribute(Event.ReservedAttribute.SCREEN_UNIQUE_ID, ScreenRefererTool.getCurrentScreenUniqueId());
         this.clickstreamContext.getAnalyticsClient().recordEvent(event);
         isFirstTime = false;
     }
@@ -235,9 +227,6 @@ public class AutoRecordEventClient {
     public void handleAppEnd() {
         final AnalyticsEvent event =
             this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.APP_END);
-        event.addAttribute(Event.ReservedAttribute.SCREEN_NAME, ScreenRefererTool.getCurrentScreenName());
-        event.addAttribute(Event.ReservedAttribute.SCREEN_ID, ScreenRefererTool.getCurrentScreenId());
-        event.addAttribute(Event.ReservedAttribute.SCREEN_UNIQUE_ID, ScreenRefererTool.getCurrentScreenUniqueId());
         this.clickstreamContext.getAnalyticsClient().recordEvent(event);
     }
 
