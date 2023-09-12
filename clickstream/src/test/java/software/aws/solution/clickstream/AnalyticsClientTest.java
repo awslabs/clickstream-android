@@ -25,15 +25,23 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import software.aws.solution.clickstream.client.AnalyticsClient;
+import software.aws.solution.clickstream.client.AnalyticsEvent;
 import software.aws.solution.clickstream.client.ClickstreamManager;
 import software.aws.solution.clickstream.client.Event;
+import software.aws.solution.clickstream.client.Event.ErrorCode;
 import software.aws.solution.clickstream.util.ReflectUtil;
 
 import java.util.Map;
 import java.util.Objects;
+
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(manifest = Config.NONE)
@@ -45,6 +53,12 @@ public class AnalyticsClientTest {
     private String exceedLengthName = "abcdefghijabcdefghijabcdefghijabcdefghijabcdefghij";
     private final String invalidName = "1_goods_expose";
     private String exceedLengthValue = "";
+
+    private AnalyticsClient mockAnalyticsClient;
+    private ArgumentCaptor<AnalyticsEvent> analyticsEventCaptor;
+
+    private String errorCodeKey = Event.ReservedAttribute.ERROR_CODE;
+    private String errorMessageKey = Event.ReservedAttribute.ERROR_MESSAGE;
 
     /**
      * prepare eventRecorder and context.
@@ -72,24 +86,44 @@ public class AnalyticsClientTest {
         }
         exceedLengthValue = sb.toString();
         exceedLengthName = exceedLengthName + "1";
+        mockAnalyticsClient = Mockito.spy(analyticsClient);
+        analyticsEventCaptor = ArgumentCaptor.forClass(AnalyticsEvent.class);
     }
 
     /**
-     * test create event when event name exceed the max length or event name was not valid.
+     * test create event when event name exceed the max length.
+     *
+     * @throws JSONException the json exception
      */
     @Test
-    public void testCreateEventException() {
-        try {
-            analyticsClient.createEvent(exceedLengthName);
-        } catch (Exception exception) {
-            Assert.assertEquals("The event name passed into create event was too long", exception.getMessage());
-        }
-        try {
-            analyticsClient.createEvent(invalidName);
-        } catch (Exception exception) {
-            Assert.assertEquals("The event name was not valid", exception.getMessage());
-        }
+    public void testCreateEventWithNameLengthError() throws JSONException {
+        AnalyticsEvent event = mockAnalyticsClient.createEvent(exceedLengthName);
+        Assert.assertNull(event);
+
+        verify(mockAnalyticsClient).recordEvent(analyticsEventCaptor.capture());
+        AnalyticsEvent errorEvent = analyticsEventCaptor.getValue();
+        Assert.assertEquals(Event.PresetEvent.CLICKSTREAM_ERROR, errorEvent.getEventType());
+        Assert.assertEquals(ErrorCode.EVENT_NAME_LENGTH_EXCEED,
+            errorEvent.getAttributes().get(errorCodeKey));
     }
+
+    /**
+     * test create event when event name was invalid.
+     *
+     * @throws JSONException the json exception
+     */
+    @Test
+    public void testCreateEventWithInvalidNameError() throws JSONException {
+        AnalyticsEvent event = mockAnalyticsClient.createEvent(invalidName);
+        Assert.assertNull(event);
+
+        verify(mockAnalyticsClient).recordEvent(analyticsEventCaptor.capture());
+        AnalyticsEvent errorEvent = analyticsEventCaptor.getValue();
+        Assert.assertEquals(Event.PresetEvent.CLICKSTREAM_ERROR, errorEvent.getEventType());
+        Assert.assertEquals(ErrorCode.EVENT_NAME_INVALID,
+            errorEvent.getAttributes().get(errorCodeKey));
+    }
+
 
     /**
      * test add global attribute when success.
@@ -103,25 +137,33 @@ public class AnalyticsClientTest {
 
     /**
      * test add global attribute when error.
+     *
+     * @throws JSONException the json exception
      */
     @Test
-    public void testAddGlobalAttributeWhenError() {
-        analyticsClient.addGlobalAttribute(exceedLengthName, "value");
-        Assert.assertTrue(globalAttributes.containsKey("_error_name_length_exceed"));
-        Assert.assertTrue(Objects.requireNonNull(globalAttributes.get("_error_name_length_exceed")).toString()
-            .contains(exceedLengthName));
+    public void testAddGlobalAttributeWhenError() throws JSONException {
+        mockAnalyticsClient.addGlobalAttribute(exceedLengthName, "value");
+        verify(mockAnalyticsClient).recordEvent(analyticsEventCaptor.capture());
+        AnalyticsEvent errorEvent = analyticsEventCaptor.getValue();
+        Assert.assertEquals(Event.PresetEvent.CLICKSTREAM_ERROR, errorEvent.getEventType());
+        Assert.assertEquals(ErrorCode.ATTRIBUTE_NAME_LENGTH_EXCEED,
+            errorEvent.getAttributes().get(errorCodeKey));
 
-        analyticsClient.addGlobalAttribute(invalidName, "value");
-        Assert.assertTrue(globalAttributes.containsKey("_error_name_invalid"));
-        Assert.assertTrue(
-            Objects.requireNonNull(globalAttributes.get("_error_name_invalid")).toString().contains(invalidName));
+        Mockito.reset(mockAnalyticsClient);
+        mockAnalyticsClient.addGlobalAttribute(invalidName, "value");
+        verify(mockAnalyticsClient).recordEvent(analyticsEventCaptor.capture());
+        AnalyticsEvent errorEvent1 = analyticsEventCaptor.getValue();
+        Assert.assertEquals(Event.PresetEvent.CLICKSTREAM_ERROR, errorEvent1.getEventType());
+        Assert.assertEquals(ErrorCode.ATTRIBUTE_NAME_INVALID,
+            errorEvent1.getAttributes().get(errorCodeKey));
 
-        analyticsClient.addGlobalAttribute("name01", exceedLengthValue);
-        Assert.assertTrue(globalAttributes.containsKey("_error_value_length_exceed"));
-        Assert.assertTrue(
-            Objects.requireNonNull(globalAttributes.get("_error_value_length_exceed")).toString().contains("name01"));
-        Assert.assertTrue(Objects.requireNonNull(globalAttributes.get("_error_value_length_exceed")).toString()
-            .contains("attribute value:"));
+        Mockito.reset(mockAnalyticsClient);
+        mockAnalyticsClient.addGlobalAttribute("name01", exceedLengthValue);
+        verify(mockAnalyticsClient).recordEvent(analyticsEventCaptor.capture());
+        AnalyticsEvent errorEvent2 = analyticsEventCaptor.getValue();
+        Assert.assertEquals(Event.PresetEvent.CLICKSTREAM_ERROR, errorEvent2.getEventType());
+        Assert.assertEquals(ErrorCode.ATTRIBUTE_VALUE_LENGTH_EXCEED,
+            errorEvent2.getAttributes().get(errorCodeKey));
     }
 
     /**
@@ -143,9 +185,10 @@ public class AnalyticsClientTest {
     @Test
     public void testAddGlobalAttributeSameNameMultiTimes() {
         for (int i = 0; i < 501; i++) {
-            analyticsClient.addGlobalAttribute("name", "value" + i);
+            mockAnalyticsClient.addGlobalAttribute("name", "value" + i);
         }
         Assert.assertFalse(globalAttributes.containsKey("_error_attribute_size_exceed"));
+        verify(mockAnalyticsClient, never()).createEvent(anyString());
         Assert.assertEquals(1, globalAttributes.size());
         Assert.assertEquals("value500", Objects.requireNonNull(globalAttributes.get("name")).toString());
     }
@@ -166,38 +209,49 @@ public class AnalyticsClientTest {
 
     /**
      * test add user attribute when error.
+     *
+     * @throws JSONException the json exception
      */
     @Test
-    public void testAddUserAttributeWhenError() {
-        analyticsClient.addUserAttribute(exceedLengthName, "value");
-        Assert.assertTrue(globalAttributes.containsKey("_error_name_length_exceed"));
-        Assert.assertTrue(Objects.requireNonNull(globalAttributes.get("_error_name_length_exceed")).toString()
-            .contains(exceedLengthName));
+    public void testAddUserAttributeWhenError() throws JSONException {
+        mockAnalyticsClient.addUserAttribute(exceedLengthName, "value");
+        verify(mockAnalyticsClient).recordEvent(analyticsEventCaptor.capture());
+        AnalyticsEvent event = analyticsEventCaptor.getValue();
+        Assert.assertEquals(Event.PresetEvent.CLICKSTREAM_ERROR, event.getEventType());
+        Assert.assertEquals(ErrorCode.USER_ATTRIBUTE_NAME_LENGTH_EXCEED,
+            event.getAttributes().get(errorCodeKey));
 
-        analyticsClient.addUserAttribute(invalidName, "value");
-        Assert.assertTrue(globalAttributes.containsKey("_error_name_invalid"));
-        Assert.assertTrue(
-            Objects.requireNonNull(globalAttributes.get("_error_name_invalid")).toString().contains(invalidName));
+        Mockito.reset(mockAnalyticsClient);
+        mockAnalyticsClient.addUserAttribute(invalidName, "value");
+        verify(mockAnalyticsClient).recordEvent(analyticsEventCaptor.capture());
+        AnalyticsEvent event1 = analyticsEventCaptor.getValue();
+        Assert.assertEquals(Event.PresetEvent.CLICKSTREAM_ERROR, event1.getEventType());
+        Assert.assertEquals(ErrorCode.USER_ATTRIBUTE_NAME_INVALID,
+            event1.getAttributes().get(errorCodeKey));
 
-        analyticsClient.addUserAttribute("name01", exceedLengthValue);
-        Assert.assertTrue(globalAttributes.containsKey("_error_value_length_exceed"));
-        Assert.assertTrue(
-            Objects.requireNonNull(globalAttributes.get("_error_value_length_exceed")).toString().contains("name01"));
-        Assert.assertTrue(Objects.requireNonNull(globalAttributes.get("_error_value_length_exceed")).toString()
-            .contains("attribute value:"));
+        Mockito.reset(mockAnalyticsClient);
+        mockAnalyticsClient.addUserAttribute("name01", exceedLengthValue);
+        verify(mockAnalyticsClient).recordEvent(analyticsEventCaptor.capture());
+        AnalyticsEvent event2 = analyticsEventCaptor.getValue();
+        Assert.assertEquals(Event.PresetEvent.CLICKSTREAM_ERROR, event2.getEventType());
+        Assert.assertEquals(ErrorCode.USER_ATTRIBUTE_VALUE_LENGTH_EXCEED,
+            event2.getAttributes().get(errorCodeKey));
     }
 
     /**
      * test add user attribute when exceed max number limit.
+     *
+     * @throws JSONException the json exception
      */
     @Test
-    public void testAddUserAttributeWhenExceedNumberLimit() {
-        for (int i = 0; i < 101; i++) {
-            analyticsClient.addUserAttribute("name" + i, "value" + i);
+    public void testAddUserAttributeWhenExceedNumberLimit() throws JSONException {
+        for (int i = 0; i < 100; i++) {
+            mockAnalyticsClient.addUserAttribute("name" + i, "value" + i);
         }
-        Assert.assertTrue(globalAttributes.containsKey("_error_attribute_size_exceed"));
-        Assert.assertEquals("attribute name: name99",
-            Objects.requireNonNull(globalAttributes.get("_error_attribute_size_exceed")).toString());
+        verify(mockAnalyticsClient).recordEvent(analyticsEventCaptor.capture());
+        AnalyticsEvent event = analyticsEventCaptor.getValue();
+        Assert.assertEquals(ErrorCode.USER_ATTRIBUTE_SIZE_EXCEED, event.getAttributes().get(errorCodeKey));
+        Assert.assertEquals("attribute name: name99", event.getAttributes().get(errorMessageKey));
     }
 
     /**
@@ -209,9 +263,9 @@ public class AnalyticsClientTest {
     @Test
     public void testAddUserAttributeSameNameMultiTimes() throws JSONException {
         for (int i = 0; i < 101; i++) {
-            analyticsClient.addUserAttribute("name", "value" + i);
+            mockAnalyticsClient.addUserAttribute("name", "value" + i);
         }
-        Assert.assertFalse(globalAttributes.containsKey("_error_attribute_size_exceed"));
+        verify(mockAnalyticsClient, never()).createEvent(anyString());
         Assert.assertEquals(2, userAttributes.length());
         Assert.assertEquals("value100", ((JSONObject) userAttributes.get("name")).get("value"));
     }

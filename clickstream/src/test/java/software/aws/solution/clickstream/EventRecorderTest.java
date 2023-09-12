@@ -24,6 +24,7 @@ import com.amazonaws.logging.Log;
 import com.github.dreamhead.moco.HttpServer;
 import com.github.dreamhead.moco.Runner;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -38,6 +39,7 @@ import software.aws.solution.clickstream.client.AnalyticsEvent;
 import software.aws.solution.clickstream.client.ClickstreamConfiguration;
 import software.aws.solution.clickstream.client.ClickstreamContext;
 import software.aws.solution.clickstream.client.ClickstreamManager;
+import software.aws.solution.clickstream.client.Event;
 import software.aws.solution.clickstream.client.EventRecorder;
 import software.aws.solution.clickstream.client.db.ClickstreamDBUtil;
 import software.aws.solution.clickstream.util.ReflectUtil;
@@ -162,16 +164,18 @@ public class EventRecorderTest {
 
     /**
      * test insert single event when exceed attribute number limit.
+     * @throws JSONException the json exception
      */
     @Test
-    public void testRecordEventExceedAttributeNumberLimit() {
+    public void testRecordEventExceedAttributeNumberLimit() throws JSONException {
         for (int i = 0; i < 501; i++) {
             event.addAttribute("name" + i, "value" + i);
         }
         assertEquals("value499", event.getStringAttribute("name499"));
         assertFalse(event.hasAttribute("name500"));
-        assertTrue(event.hasAttribute("_error_attribute_size_exceed"));
-        assertEquals("attribute name: name500", event.getStringAttribute("_error_attribute_size_exceed"));
+        assertEquals(Event.ErrorCode.ATTRIBUTE_SIZE_EXCEED,
+            event.getAttributes().get(Event.ReservedAttribute.ERROR_CODE));
+        assertEquals("attribute name: name500", event.getStringAttribute(Event.ReservedAttribute.ERROR_MESSAGE));
     }
 
     /**
@@ -185,7 +189,7 @@ public class EventRecorderTest {
         }
         assertEquals("value500", event.getStringAttribute("name"));
         Assert.assertEquals(1, event.getCurrentNumOfAttributes());
-        assertFalse(event.hasAttribute("_error_attribute_size_exceed"));
+        assertFalse(event.hasAttribute(Event.ReservedAttribute.ERROR_CODE));
     }
 
     /**
