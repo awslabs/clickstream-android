@@ -33,7 +33,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class AnalyticsClient {
     private static final Log LOG = LogFactory.getLog(AnalyticsClient.class);
-    private static final int MAX_EVENT_TYPE_LENGTH = 50;
     private final ClickstreamContext context;
     private final Map<String, Object> globalAttributes = new ConcurrentHashMap<>();
     private JSONObject userAttributes;
@@ -67,9 +66,10 @@ public class AnalyticsClient {
         if (value != null) {
             Event.EventError error = Event.checkAttribute(globalAttributes.size(), name, value);
             if (error != null) {
-                if (!globalAttributes.containsKey(error.getErrorType())) {
-                    globalAttributes.put(error.getErrorType(), error.getErrorMessage());
-                }
+                final AnalyticsEvent event = createEvent(Event.PresetEvent.CLICKSTREAM_ERROR);
+                event.addAttribute(Event.ReservedAttribute.ERROR_CODE, error.getErrorCode());
+                event.addAttribute(Event.ReservedAttribute.ERROR_MESSAGE, error.getErrorMessage());
+                recordEvent(event);
                 return;
             }
             globalAttributes.put(name, value);
@@ -101,9 +101,10 @@ public class AnalyticsClient {
         if (value != null) {
             Event.EventError error = Event.checkUserAttribute(userAttributes.length(), name, value);
             if (error != null) {
-                if (!globalAttributes.containsKey(error.getErrorType())) {
-                    globalAttributes.put(error.getErrorType(), error.getErrorMessage());
-                }
+                final AnalyticsEvent event = createEvent(Event.PresetEvent.CLICKSTREAM_ERROR);
+                event.addAttribute(Event.ReservedAttribute.ERROR_CODE, error.getErrorCode());
+                event.addAttribute(Event.ReservedAttribute.ERROR_MESSAGE, error.getErrorMessage());
+                recordEvent(event);
                 return;
             }
             try {
@@ -166,16 +167,19 @@ public class AnalyticsClient {
      * @throws IllegalArgumentException throws when fail to check the argument.
      */
     public AnalyticsEvent createEvent(String eventType) {
-        if (eventType.length() > MAX_EVENT_TYPE_LENGTH) {
-            LOG.error("The event name is too long, the max event type length is " + MAX_EVENT_TYPE_LENGTH +
-                " characters. event name:" + eventType);
-            throw new IllegalArgumentException("The event name passed into create event was too long");
+        Event.EventError error = Event.checkEventName(eventType);
+        if (error != null) {
+            LOG.error(error.getErrorMessage());
+            AnalyticsEvent event = createAnalyticsEvent(Event.PresetEvent.CLICKSTREAM_ERROR);
+            event.addAttribute(Event.ReservedAttribute.ERROR_CODE, error.getErrorCode());
+            event.addAttribute(Event.ReservedAttribute.ERROR_MESSAGE, error.getErrorMessage());
+            recordEvent(event);
+            return null;
         }
-        if (!Event.isValidName(eventType)) {
-            LOG.error("Event name can only contains uppercase and lowercase letters, underscores, number, " +
-                "and is not start with a number. event name:" + eventType);
-            throw new IllegalArgumentException("The event name was not valid");
-        }
+        return createAnalyticsEvent(eventType);
+    }
+
+    private AnalyticsEvent createAnalyticsEvent(String eventType) {
         long timestamp = System.currentTimeMillis();
         AnalyticsEvent event = new AnalyticsEvent(eventType, globalAttributes, userAttributes, timestamp, userUniqueId);
         event.setDeviceId(this.context.getDeviceId());

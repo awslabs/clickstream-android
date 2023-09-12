@@ -252,8 +252,9 @@ public class AnalyticsEvent implements JSONSerializable {
             Event.EventError attributeError = Event.checkAttribute(getCurrentNumOfAttributes(), name, value);
             try {
                 if (attributeError != null) {
-                    if (!attributes.has(attributeError.getErrorType())) {
-                        attributes.putOpt(attributeError.getErrorType(), attributeError.getErrorMessage());
+                    if (!attributes.has(Event.ReservedAttribute.ERROR_CODE)) {
+                        attributes.putOpt(Event.ReservedAttribute.ERROR_CODE, attributeError.getErrorCode());
+                        attributes.putOpt(Event.ReservedAttribute.ERROR_MESSAGE, attributeError.getErrorMessage());
                     }
                 } else {
                     attributes.putOpt(name, value);

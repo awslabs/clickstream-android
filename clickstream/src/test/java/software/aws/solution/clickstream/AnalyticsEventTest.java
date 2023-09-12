@@ -29,6 +29,7 @@ import org.robolectric.annotation.Config;
 import software.aws.solution.clickstream.client.AnalyticsClient;
 import software.aws.solution.clickstream.client.AnalyticsEvent;
 import software.aws.solution.clickstream.client.ClickstreamManager;
+import software.aws.solution.clickstream.client.Event;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(manifest = Config.NONE)
@@ -93,9 +94,11 @@ public class AnalyticsEventTest {
 
     /**
      * test the event attribute reach the limit.
+     *
+     * @throws JSONException the json exception
      */
     @Test
-    public void eventAttributeReachLimit() {
+    public void eventAttributeReachLimit() throws JSONException {
         AnalyticsEvent event = analyticsClient.createEvent("testEvent");
         for (int i = 1; i < 502; i++) {
             event.addAttribute("name" + i, "value" + i);
@@ -104,9 +107,9 @@ public class AnalyticsEventTest {
         Assert.assertEquals(event.getStringAttribute("name11"), "value11");
         Assert.assertEquals(event.getStringAttribute("name500"), "value500");
         Assert.assertNull(event.getStringAttribute("name501"));
-        Assert.assertEquals(event.getCurrentNumOfAttributes(), 501);
-        Assert.assertTrue(event.hasAttribute("_error_attribute_size_exceed"));
-        Assert.assertNotNull(event.getStringAttribute("_error_attribute_size_exceed"));
+        Assert.assertEquals(502, event.getCurrentNumOfAttributes());
+        Assert.assertEquals(Event.ErrorCode.ATTRIBUTE_SIZE_EXCEED,
+            event.getAttributes().get(Event.ReservedAttribute.ERROR_CODE));
     }
 
     /**
