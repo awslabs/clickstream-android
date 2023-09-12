@@ -637,9 +637,9 @@ public class AutoRecordEventClientTest {
             JSONObject appStart2 = eventList.get(3).getJSONObject("attributes");
             assertFalse(appStart2.getBoolean(Event.ReservedAttribute.IS_FIRST_TIME));
             assertTrue(appStart2.has(ReservedAttribute.SCREEN_NAME));
-            assertTrue(appStart2.has(Event.ReservedAttribute.SCREEN_ID));
+            assertTrue(appStart2.has(ReservedAttribute.SCREEN_UNIQUE_ID));
             assertEquals(activity1.getClass().getSimpleName(), appStart2.getString(ReservedAttribute.SCREEN_NAME));
-            assertEquals(activity1.getClass().getCanonicalName(), appStart2.getString(ReservedAttribute.SCREEN_ID));
+            assertEquals(String.valueOf(activity1.hashCode()), appStart2.getString(ReservedAttribute.SCREEN_UNIQUE_ID));
         }
     }
 
@@ -664,7 +664,6 @@ public class AutoRecordEventClientTest {
             JSONObject attributes = jsonObject.getJSONObject("attributes");
             assertEquals(Event.PresetEvent.APP_END, eventType);
             assertTrue(attributes.has(ReservedAttribute.SCREEN_NAME));
-            assertTrue(attributes.has(ReservedAttribute.SCREEN_ID));
             assertTrue(attributes.has(ReservedAttribute.SCREEN_UNIQUE_ID));
         }
     }
