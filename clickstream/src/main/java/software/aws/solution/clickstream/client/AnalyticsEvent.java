@@ -26,6 +26,7 @@ import software.aws.solution.clickstream.client.system.AndroidConnectivity;
 import software.aws.solution.clickstream.client.system.AndroidDeviceDetails;
 import software.aws.solution.clickstream.client.util.JSONBuilder;
 import software.aws.solution.clickstream.client.util.JSONSerializable;
+import software.aws.solution.clickstream.client.util.StringUtil;
 
 import java.util.Calendar;
 import java.util.Locale;
@@ -509,6 +510,7 @@ public class AnalyticsEvent implements JSONSerializable {
         builder.withAttribute("app_title", this.appDetails.getAppTitle());
         builder.withAttribute("user", this.userAttributes);
         builder.withAttribute("attributes", this.attributes);
+        builder.withAttribute("hashCode", StringUtil.getHashCode(builder.toJSONObject().toString()));
         return builder.toJSONObject();
     }
 }

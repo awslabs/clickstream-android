@@ -32,24 +32,26 @@ public class JSONBuilder implements JSONSerializable {
 
     /**
      * The constructor of JSONBuilder with parameters.
+     *
      * @param component the instance of component.
      */
     public JSONBuilder(Object component) {
         if (null != component) {
-            this.withAttribute("hashCode", Integer.toHexString(component.hashCode()));
+            this.withAttribute("hashCode", "");
         }
     }
 
     /**
      * Get the instance of JSONBuilder with key and value.
-     * @param key The key.
+     *
+     * @param key   The key.
      * @param value The value.
      * @return The instance of JSONBuilder.
      */
     public JSONBuilder withAttribute(String key, Object value) {
         final Object jsonValue = value instanceof JSONSerializable
-                ? ((JSONSerializable) value).toJSONObject()
-                : value;
+            ? ((JSONSerializable) value).toJSONObject()
+            : value;
         try {
             json.putOpt(key, jsonValue);
         } catch (final JSONException jsonException) {
@@ -60,6 +62,7 @@ public class JSONBuilder implements JSONSerializable {
 
     /**
      * Convert to JSON format.
+     *
      * @return The JSON object.
      */
     @Override
@@ -69,6 +72,7 @@ public class JSONBuilder implements JSONSerializable {
 
     /**
      * Convert to string.
+     *
      * @return The string.
      */
     @NonNull

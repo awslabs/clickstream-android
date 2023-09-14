@@ -90,7 +90,7 @@ public class EventRecorder {
             if (clickstreamContext.getClickstreamConfiguration() != null &&
                 clickstreamContext.getClickstreamConfiguration().isLogEvents()) {
                 LOG.info("save event: " + event.getEventType() + " success, event json:");
-                LOG.info(event.toJSONObject().toString());
+                LOG.info(event.toString());
             }
             while (this.dbUtil.getTotalSize() > DEFAULT_MAX_DB_SIZE) {
                 try (Cursor cursor = this.dbUtil.queryOldestEvents(QUERY_OLDEST_EVENT_LIMIT)) {

@@ -30,6 +30,7 @@ import software.aws.solution.clickstream.client.AnalyticsClient;
 import software.aws.solution.clickstream.client.AnalyticsEvent;
 import software.aws.solution.clickstream.client.ClickstreamManager;
 import software.aws.solution.clickstream.client.Event;
+import software.aws.solution.clickstream.client.util.StringUtil;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(manifest = Config.NONE)
@@ -62,9 +63,11 @@ public class AnalyticsEventTest {
 
     /**
      * test the analyticsClient with createEvent.
+     *
+     * @throws JSONException the json exception
      */
     @Test
-    public void createEvent() {
+    public void createEvent() throws JSONException {
         AnalyticsEvent event = analyticsClient.createEvent("testEvent");
         Assert.assertNotNull(event.getEventId());
         Assert.assertEquals(event.getEventType(), "testEvent");
@@ -75,6 +78,7 @@ public class AnalyticsEventTest {
         Assert.assertNotNull(event.getAppDetails().getAppTitle());
         Assert.assertNotNull(event.getAppDetails().packageName());
         Assert.assertEquals(0, event.getAttributes().length());
+        Assert.assertTrue(event.toJSONObject().getString("hashCode").length() > 0);
     }
 
 
@@ -134,5 +138,48 @@ public class AnalyticsEventTest {
         } catch (JSONException error) {
             Assert.fail("Json parse err" + error.getMessage());
         }
+    }
+
+    /**
+     * test the event hash code.
+     */
+    @Test
+    public void testEventHashCodeTwice() {
+        AnalyticsEvent event = analyticsClient.createEvent("testEvent");
+        String eventJson = event.toJSONObject().toString();
+        String hashCode1 = StringUtil.getHashCode(eventJson);
+        String hashCode2 = StringUtil.getHashCode(eventJson);
+        Assert.assertEquals(hashCode1, hashCode2);
+    }
+
+    /**
+     * test event modified by compare hash code.
+     *
+     * @throws JSONException the json exception
+     */
+    @Test
+    public void testEventModified() throws JSONException {
+        AnalyticsEvent event = analyticsClient.createEvent("testEvent");
+        JSONObject jsonObject = event.toJSONObject();
+        String originHashCode = jsonObject.getString("hashCode");
+        jsonObject.put("hashCode", "");
+        jsonObject.put("event_type", "testEvent1");
+        String computedHashCode = StringUtil.getHashCode(jsonObject.toString());
+        Assert.assertNotEquals(originHashCode, computedHashCode);
+    }
+
+    /**
+     * test event not modified by compare hash code.
+     *
+     * @throws JSONException the json exception
+     */
+    @Test
+    public void testEventNotModified() throws JSONException {
+        AnalyticsEvent event = analyticsClient.createEvent("testEvent");
+        JSONObject jsonObject = event.toJSONObject();
+        String originHashCode = jsonObject.getString("hashCode");
+        jsonObject.put("hashCode", "");
+        String computedHashCode = StringUtil.getHashCode(jsonObject.toString());
+        Assert.assertEquals(originHashCode, computedHashCode);
     }
 }
