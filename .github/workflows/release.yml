@@ -11,12 +11,14 @@ env:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v3
         with:
           ref: main
           fetch-depth: 0
-          token : ${{ secrets.PROJECT_TOKEN }}
+          token: ${{ secrets.PROJECT_TOKEN }}
       - name: Modify for next release
         run: |
           chmod +x release.sh
@@ -27,3 +29,18 @@ jobs:
           git add .
           git commit -m 'release: clickstream Android ${{ env.NEW_VERSION }}'
           git push
+          git tag v${{ env.NEW_VERSION }}
+          git push origin v${{ env.NEW_VERSION }}
+      - name: Assemble release
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: "Clickstream Android ${{ env.NEW_VERSION }}"
+          files: |
+            clickstream/build/outputs/aar/clickstream-release.aar
+          tag_name: "v${{ env.NEW_VERSION }}"
+          prerelease: true
+          generate_release_notes: true
