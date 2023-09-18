@@ -33,12 +33,8 @@ public class JSONBuilder implements JSONSerializable {
     /**
      * The constructor of JSONBuilder with parameters.
      *
-     * @param component the instance of component.
      */
-    public JSONBuilder(Object component) {
-        if (null != component) {
-            this.withAttribute("hashCode", "");
-        }
+    public JSONBuilder() {
     }
 
     /**
