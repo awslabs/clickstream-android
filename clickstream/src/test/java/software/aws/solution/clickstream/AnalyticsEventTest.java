@@ -62,9 +62,11 @@ public class AnalyticsEventTest {
 
     /**
      * test the analyticsClient with createEvent.
+     *
+     * @throws JSONException the json exception
      */
     @Test
-    public void createEvent() {
+    public void createEvent() throws JSONException {
         AnalyticsEvent event = analyticsClient.createEvent("testEvent");
         Assert.assertNotNull(event.getEventId());
         Assert.assertEquals(event.getEventType(), "testEvent");

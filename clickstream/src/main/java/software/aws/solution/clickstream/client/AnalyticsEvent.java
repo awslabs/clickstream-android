@@ -423,7 +423,7 @@ public class AnalyticsEvent implements JSONSerializable {
         final String carrier = this.deviceDetails.carrier();
         final String carrierString = carrier != null ? carrier : "UNKNOWN";
 
-        final JSONBuilder builder = new JSONBuilder(this);
+        final JSONBuilder builder = new JSONBuilder();
 
         // ****************************************************
         // ==================System Attributes=================

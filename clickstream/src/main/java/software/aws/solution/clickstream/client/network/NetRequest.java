@@ -108,6 +108,7 @@ public final class NetRequest {
         HttpUrl url = request.url().newBuilder()
             .addQueryParameter("platform", "Android")
             .addQueryParameter("appId", appId)
+            .addQueryParameter("hashCode", StringUtil.getHashCode(curStr))
             .addQueryParameter("event_bundle_sequence_id", String.valueOf(bundleSequenceId))
             .addQueryParameter("compression", compression)
             .build();

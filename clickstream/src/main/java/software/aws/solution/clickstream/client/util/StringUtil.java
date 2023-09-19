@@ -23,6 +23,8 @@ import com.amazonaws.logging.LogFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -30,6 +32,8 @@ import java.util.zip.GZIPOutputStream;
  */
 public final class StringUtil {
     private static final Log LOG = LogFactory.getLog(StringUtil.class);
+    private static final int HASH_CODE_BYTE_LENGTH = 4;
+    private static final int HASH_CODE_PREFIX = 0xFF;
 
     /**
      * Default constructor.
@@ -133,6 +137,36 @@ public final class StringUtil {
         }
 
         return s.toString();
+    }
+
+    /**
+     * method for get event hash code.
+     *
+     * @param str event json string
+     * @return the first 8 sha256 character of the event json
+     */
+    public static String getHashCode(String str) {
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("SHA-256");
+            digest.update(str.getBytes());
+            return bytesToHexString(digest.digest());
+        } catch (NoSuchAlgorithmException error) {
+            LOG.error("Failed to get sha256 for str:" + str);
+        }
+        return "";
+    }
+
+    private static String bytesToHexString(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < HASH_CODE_BYTE_LENGTH; i++) {
+            String hex = Integer.toHexString(HASH_CODE_PREFIX & bytes[i]);
+            if (hex.length() == 1) {
+                sb.append('0');
+            }
+            sb.append(hex);
+        }
+        return sb.toString();
     }
 }
 
