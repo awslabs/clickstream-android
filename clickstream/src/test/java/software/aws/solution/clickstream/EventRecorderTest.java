@@ -42,6 +42,8 @@ import software.aws.solution.clickstream.client.ClickstreamManager;
 import software.aws.solution.clickstream.client.Event;
 import software.aws.solution.clickstream.client.EventRecorder;
 import software.aws.solution.clickstream.client.db.ClickstreamDBUtil;
+import software.aws.solution.clickstream.client.network.NetRequest;
+import software.aws.solution.clickstream.client.util.StringUtil;
 import software.aws.solution.clickstream.util.ReflectUtil;
 
 import java.lang.reflect.Method;
@@ -50,8 +52,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import static com.github.dreamhead.moco.Moco.and;
 import static com.github.dreamhead.moco.Moco.by;
+import static com.github.dreamhead.moco.Moco.eq;
 import static com.github.dreamhead.moco.Moco.httpServer;
+import static com.github.dreamhead.moco.Moco.query;
 import static com.github.dreamhead.moco.Moco.status;
 import static com.github.dreamhead.moco.Moco.text;
 import static com.github.dreamhead.moco.Moco.uri;
@@ -70,8 +75,10 @@ import static org.mockito.Mockito.verify;
 public class EventRecorderTest {
     private static final String COLLECT_SUCCESS = "/collect/success";
     private static final String COLLECT_FAIL = "/collect/fail";
+    private static final String COLLECT_FOR_VERIFY_HASH_CODE = "/collect/hashcode";
     private static Runner runner;
     private static String jsonString;
+    private static HttpServer server;
 
     private ClickstreamDBUtil dbUtil;
     private EventRecorder eventRecorder;
@@ -87,7 +94,7 @@ public class EventRecorderTest {
     @BeforeClass
     public static void beforeClass() {
         //config and start server
-        final HttpServer server = httpServer(8082);
+        server = httpServer(8082);
         server.request(by(uri(COLLECT_SUCCESS))).response(status(200), text("success"));
         server.request(by(uri(COLLECT_FAIL))).response(status(403), text("fail"));
         runner = runner(server);
@@ -164,6 +171,7 @@ public class EventRecorderTest {
 
     /**
      * test insert single event when exceed attribute number limit.
+     *
      * @throws JSONException the json exception
      */
     @Test
@@ -526,6 +534,23 @@ public class EventRecorderTest {
         }
         assertTrue(((ThreadPoolExecutor) executorService).getActiveCount() < 2);
         assertEquals(1001, ((ThreadPoolExecutor) executorService).getTaskCount());
+    }
+
+    /**
+     * test record event with request parameter hash code.
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testRecordEventRequestWithHashCode() throws Exception {
+        clickstreamContext.getClickstreamConfiguration().withCompressEvents(false);
+        setRequestPath(COLLECT_FOR_VERIFY_HASH_CODE);
+        String eventJson = "[" + event.toJSONObject().toString() + "]";
+        String eventHashCode = StringUtil.getHashCode(eventJson);
+        server.request(and(by(uri(COLLECT_FOR_VERIFY_HASH_CODE)), eq(query("hashCode"), eventHashCode)))
+            .response(status(200), text("success"));
+        boolean requestResult = NetRequest.uploadEvents(eventJson, clickstreamContext.getClickstreamConfiguration(), 1);
+        assertTrue(requestResult);
     }
 
     /**
