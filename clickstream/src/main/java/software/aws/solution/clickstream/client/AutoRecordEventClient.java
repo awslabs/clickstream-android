@@ -33,7 +33,6 @@ public class AutoRecordEventClient {
      */
     private static final Log LOG = LogFactory.getLog(AutoRecordEventClient.class);
     private static final int MIN_ENGAGEMENT_TIME = 1000;
-    private static final int DEVICE_ID_CLIP_LENGTH = 8;
     /**
      * The context object wraps all the essential information from the app
      * that are required.
@@ -56,7 +55,6 @@ public class AutoRecordEventClient {
     private boolean isEntrances;
 
     private long startEngageTimestamp;
-    private long endEngageTimestamp;
     private long lastEngageTime;
     private final AndroidPreferences preferences;
 
@@ -132,7 +130,10 @@ public class AutoRecordEventClient {
      * record user engagement event.
      */
     public void recordUserEngagement() {
-        lastEngageTime = endEngageTimestamp - startEngageTimestamp;
+        if (startEngageTimestamp == 0) {
+            return;
+        }
+        lastEngageTime = System.currentTimeMillis() - startEngageTimestamp;
         if (clickstreamContext.getClickstreamConfiguration().isTrackUserEngagementEvents() &&
             lastEngageTime > MIN_ENGAGEMENT_TIME) {
             final AnalyticsEvent event =
@@ -154,13 +155,6 @@ public class AutoRecordEventClient {
      */
     public void updateStartEngageTimestamp() {
         startEngageTimestamp = System.currentTimeMillis();
-    }
-
-    /**
-     * update end engage timestamp.
-     */
-    public void updateEndEngageTimestamp() {
-        endEngageTimestamp = System.currentTimeMillis();
     }
 
     /**

@@ -83,7 +83,7 @@ final class ActivityLifecycleManager implements Application.ActivityLifecycleCal
         boolean isSameScreen =
             ScreenRefererTool.isSameScreen(activity.getClass().getCanonicalName(), activity.getClass().getSimpleName(),
                 autoRecordEventClient.getScreenUniqueId(activity));
-        if (!isSameScreen) {
+        if (ScreenRefererTool.getCurrentScreenName() != null && !isSameScreen) {
             autoRecordEventClient.recordUserEngagement();
         }
         autoRecordEventClient.recordViewScreen(activity);
@@ -96,7 +96,6 @@ final class ActivityLifecycleManager implements Application.ActivityLifecycleCal
         // resumed if app regains focus.In either case, app foreground status does not change for the
         // purpose of session tracking.
         LOG.debug("Activity paused: " + activity.getLocalClassName());
-        autoRecordEventClient.updateEndEngageTimestamp();
     }
 
     @Override

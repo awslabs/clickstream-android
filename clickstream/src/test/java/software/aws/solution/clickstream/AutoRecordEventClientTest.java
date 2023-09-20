@@ -103,7 +103,6 @@ public class AutoRecordEventClientTest {
     public void testUserEngagementSuccess() throws Exception {
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
         Thread.sleep(1100);
-        client.updateEndEngageTimestamp();
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_STOP);
         try (Cursor cursor = dbUtil.queryAllEvents()) {
             List<String> eventList = new ArrayList<>();
@@ -350,7 +349,8 @@ public class AutoRecordEventClientTest {
         callbacks.onActivityResumed(activityA);
         Thread.sleep(200);
         callbacks.onActivityPaused(activityA);
-
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_STOP);
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
         callbacks.onActivityCreated(activityA, bundle);
         callbacks.onActivityStarted(activityA);
         callbacks.onActivityResumed(activityA);
@@ -700,7 +700,10 @@ public class AutoRecordEventClientTest {
     @After
     public void tearDown() {
         ScreenRefererTool.setCurrentScreenName(null);
+        ScreenRefererTool.setCurrentScreenName(null);
         ScreenRefererTool.setCurrentScreenId(null);
+        ScreenRefererTool.setCurrentScreenId(null);
+        ScreenRefererTool.setCurrentScreenUniqueId(null);
         ScreenRefererTool.setCurrentScreenUniqueId(null);
         dbUtil.closeDB();
     }
