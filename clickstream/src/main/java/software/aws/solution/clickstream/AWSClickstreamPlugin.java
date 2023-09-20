@@ -90,7 +90,9 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
     @Override
     public void recordEvent(@NonNull String eventName) {
         final AnalyticsEvent event = analyticsClient.createEvent(eventName);
-        analyticsClient.recordEvent(event);
+        if (event != null) {
+            analyticsClient.recordEvent(event);
+        }
     }
 
     @Override

@@ -131,6 +131,26 @@ public class IntegrationTest {
     }
 
     /**
+     * test record event with invalid name.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testRecordEventWithInvalidName() throws Exception {
+        executeBackground();
+        ClickstreamAnalytics.recordEvent("01TestEvent");
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            cursor.moveToFirst();
+            String eventString = cursor.getString(2);
+            JSONObject jsonObject = new JSONObject(eventString);
+            assertEquals(Event.PresetEvent.CLICKSTREAM_ERROR, jsonObject.getString("event_type"));
+        }
+        assertEquals(1, dbUtil.getTotalNumber());
+        Thread.sleep(1500);
+        assertEquals(0, dbUtil.getTotalNumber());
+    }
+
+    /**
      * test record one AnalyticsEvent use ClickstreamAnalytics api and
      * make sure the event data is valid from db.
      *
