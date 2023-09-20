@@ -107,7 +107,9 @@ public class AutoRecordEventClient {
             event.addAttribute(Event.ReservedAttribute.PREVIOUS_TIMESTAMP, lastScreenViewEventTimestamp);
         }
         event.addAttribute(Event.ReservedAttribute.ENTRANCES, isEntrances ? 1 : 0);
-        event.addAttribute(Event.ReservedAttribute.ENGAGEMENT_TIMESTAMP, lastEngageTime);
+        if (lastEngageTime > 0) {
+            event.addAttribute(Event.ReservedAttribute.ENGAGEMENT_TIMESTAMP, lastEngageTime);
+        }
         this.clickstreamContext.getAnalyticsClient().recordEvent(event);
         PreferencesUtil.savePreviousScreenViewTimestamp(preferences, currentTimestamp);
         isEntrances = false;

@@ -198,7 +198,7 @@ public class AutoRecordEventClientTest {
                     Assert.assertFalse(attributes.has(ReservedAttribute.PREVIOUS_SCREEN_NAME));
                     Assert.assertFalse(attributes.has(ReservedAttribute.PREVIOUS_SCREEN_ID));
                     Assert.assertEquals(1, attributes.getInt(ReservedAttribute.ENTRANCES));
-                    Assert.assertTrue(attributes.has(ReservedAttribute.ENGAGEMENT_TIMESTAMP));
+                    Assert.assertFalse(attributes.has(ReservedAttribute.ENGAGEMENT_TIMESTAMP));
                     Assert.assertFalse(attributes.has(ReservedAttribute.PREVIOUS_TIMESTAMP));
                 }
             }
