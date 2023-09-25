@@ -158,6 +158,13 @@ public class AutoRecordEventClient {
     }
 
     /**
+     * reset last engagement time when app warm start.
+     */
+    public void resetLastEngageTime() {
+        lastEngageTime = 0;
+    }
+
+    /**
      * check and record _app_update event.
      */
     private void checkAppVersionUpdate() {

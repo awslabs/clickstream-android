@@ -37,6 +37,7 @@ import software.aws.solution.clickstream.client.SessionClient;
  **/
 final class ActivityLifecycleManager implements Application.ActivityLifecycleCallbacks, LifecycleEventObserver {
     private static final Log LOG = LogFactory.getLog(ActivityLifecycleManager.class);
+    private static boolean isFromForeground;
     private final SessionClient sessionClient;
     private final AutoRecordEventClient autoRecordEventClient;
 
@@ -84,9 +85,14 @@ final class ActivityLifecycleManager implements Application.ActivityLifecycleCal
             ScreenRefererTool.isSameScreen(activity.getClass().getCanonicalName(), activity.getClass().getSimpleName(),
                 autoRecordEventClient.getScreenUniqueId(activity));
         if (ScreenRefererTool.getCurrentScreenName() != null && !isSameScreen) {
-            autoRecordEventClient.recordUserEngagement();
+            if (!isFromForeground) {
+                autoRecordEventClient.recordUserEngagement();
+            } else {
+                autoRecordEventClient.resetLastEngageTime();
+            }
         }
         autoRecordEventClient.recordViewScreen(activity);
+        isFromForeground = false;
     }
 
     @Override
@@ -127,6 +133,7 @@ final class ActivityLifecycleManager implements Application.ActivityLifecycleCal
             autoRecordEventClient.flushEvents();
         } else if (event == Lifecycle.Event.ON_START) {
             LOG.debug("Application entered the foreground.");
+            isFromForeground = true;
             autoRecordEventClient.handleAppStart();
             boolean isNewSession = sessionClient.initialSession();
             if (isNewSession) {
