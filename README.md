@@ -20,7 +20,7 @@ Add the following dependency to your `app` module's `build.gradle` file.
 
 ```groovy
 dependencies {
-    implementation 'software.aws.solution:clickstream:0.7.1'
+    implementation 'software.aws.solution:clickstream:0.8.0'
 }
 ```
 
