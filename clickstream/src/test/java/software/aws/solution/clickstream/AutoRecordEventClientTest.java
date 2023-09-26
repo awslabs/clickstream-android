@@ -450,6 +450,41 @@ public class AutoRecordEventClientTest {
         }
     }
 
+    /**
+     * test app warm start without engagement_mesc attribute.
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testAppWarmStartWithoutEngagementTime() throws Exception {
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
+        Activity activityA = mock(ActivityA.class);
+
+        Bundle bundle = mock(Bundle.class);
+        callbacks.onActivityCreated(activityA, bundle);
+        callbacks.onActivityStarted(activityA);
+        callbacks.onActivityResumed(activityA);
+        callbacks.onActivityPaused(activityA);
+        callbacks.onActivityDestroyed(activityA);
+
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_STOP);
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
+
+        Activity activityA1 = mock(ActivityA.class);
+        callbacks.onActivityCreated(activityA1, bundle);
+        callbacks.onActivityStarted(activityA1);
+        callbacks.onActivityResumed(activityA1);
+
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            cursor.moveToLast();
+            String eventString = cursor.getString(2);
+            JSONObject jsonObject = new JSONObject(eventString);
+            String eventName = jsonObject.getString("event_type");
+            assertEquals(Event.PresetEvent.SCREEN_VIEW, eventName);
+            JSONObject attributes = jsonObject.getJSONObject("attributes");
+            Assert.assertFalse(attributes.has(ReservedAttribute.ENGAGEMENT_TIMESTAMP));
+        }
+    }
 
     /**
      * test app version not update.
