@@ -44,10 +44,12 @@ public final class ClickstreamEvent implements AnalyticsEventBehavior {
     private static final int MAX_VALUE_LENGTH = 1024;
     private final String name;
     private final AnalyticsProperties properties;
+    private final ClickstreamItem[] items;
 
-    private ClickstreamEvent(String name, AnalyticsProperties properties) {
+    private ClickstreamEvent(String name, AnalyticsProperties properties, ClickstreamItem[] items) {
         this.name = name;
         this.properties = properties;
+        this.items = items;
     }
 
     /**
@@ -73,6 +75,16 @@ public final class ClickstreamEvent implements AnalyticsEventBehavior {
     }
 
     /**
+     * Returns the {@link ClickstreamItem} array of the event.
+     *
+     * @return The {@link ClickstreamItem} array of the event
+     */
+    @NonNull
+    public ClickstreamItem[] getItems() {
+        return items;
+    }
+
+    /**
      * Returns a new {@link Builder} to configure an instance of ClickstreamEvent.
      *
      * @return a {@link Builder}
@@ -91,7 +103,8 @@ public final class ClickstreamEvent implements AnalyticsEventBehavior {
      */
     public static final class Builder {
         private String name;
-        private AnalyticsProperties.Builder propertiesBuilder;
+        private final AnalyticsProperties.Builder propertiesBuilder;
+        private ClickstreamItem[] items;
 
         /**
          * the builder for add event attribute.
@@ -182,6 +195,18 @@ public final class ClickstreamEvent implements AnalyticsEventBehavior {
         }
 
         /**
+         * Adds items to the {@link ClickstreamEvent}.
+         *
+         * @param items The items of the event
+         * @return Current Builder instance, for fluent method chaining
+         */
+        @NonNull
+        public Builder setItems(ClickstreamItem[] items) {
+            this.items = items;
+            return this;
+        }
+
+        /**
          * Returns the built {@link ClickstreamEvent}.
          *
          * @return The constructed {@link ClickstreamEvent} configured with the parameters set in
@@ -189,7 +214,7 @@ public final class ClickstreamEvent implements AnalyticsEventBehavior {
          */
         @NonNull
         public ClickstreamEvent build() {
-            return new ClickstreamEvent(name, propertiesBuilder.build());
+            return new ClickstreamEvent(name, propertiesBuilder.build(), this.items);
         }
     }
 }

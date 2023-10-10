@@ -19,8 +19,10 @@ import androidx.annotation.NonNull;
 
 import com.amazonaws.logging.Log;
 import com.amazonaws.logging.LogFactory;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import software.aws.solution.clickstream.ClickstreamItem;
 import software.aws.solution.clickstream.client.system.AndroidAppDetails;
 import software.aws.solution.clickstream.client.system.AndroidConnectivity;
 import software.aws.solution.clickstream.client.system.AndroidDeviceDetails;
@@ -45,6 +47,7 @@ public class AnalyticsEvent implements JSONSerializable {
     private String sdkName;
     private String sdkVersion;
     private final JSONObject attributes = new JSONObject();
+    private final JSONArray eventItems = new JSONArray();
     private final JSONObject userAttributes;
     private final Long timestamp;
     private final String uniqueId;
@@ -249,9 +252,9 @@ public class AnalyticsEvent implements JSONSerializable {
             return;
         }
         if (null != value) {
-            Event.EventError attributeError = Event.checkAttribute(getCurrentNumOfAttributes(), name, value);
+            Event.EventError attributeError = EventChecker.checkAttribute(getCurrentNumOfAttributes(), name, value);
             try {
-                if (attributeError != null) {
+                if (attributeError.getErrorCode() > 0) {
                     if (!attributes.has(Event.ReservedAttribute.ERROR_CODE)) {
                         attributes.putOpt(Event.ReservedAttribute.ERROR_CODE, attributeError.getErrorCode());
                         attributes.putOpt(Event.ReservedAttribute.ERROR_MESSAGE, attributeError.getErrorMessage());
@@ -264,6 +267,36 @@ public class AnalyticsEvent implements JSONSerializable {
             }
         } else {
             attributes.remove(name);
+        }
+    }
+
+    /**
+     * Adds items to this {@link AnalyticsEvent}.
+     *
+     * @param items The name of the attribute.
+     */
+    public void addItems(final ClickstreamItem[] items) {
+        if (null == items || items.length == 0) {
+            return;
+        }
+        try {
+            for (ClickstreamItem item : items) {
+                if (item.getAttributes().length() == 0) {
+                    return;
+                }
+                Event.EventError attributeError =
+                    EventChecker.checkItemAttribute(eventItems.length(), item);
+
+                if (attributeError.getErrorCode() > 0 && !attributes.has(Event.ReservedAttribute.ERROR_CODE)) {
+                    attributes.putOpt(Event.ReservedAttribute.ERROR_CODE, attributeError.getErrorCode());
+                    attributes.putOpt(Event.ReservedAttribute.ERROR_MESSAGE, attributeError.getErrorMessage());
+                }
+                if (attributeError.getErrorCode() != Event.ErrorCode.ITEM_SIZE_EXCEED) {
+                    eventItems.put(item.getAttributes());
+                }
+            }
+        } catch (JSONException exception) {
+            LOG.error("error parsing json, error message:" + exception.getMessage());
         }
     }
 
@@ -371,6 +404,15 @@ public class AnalyticsEvent implements JSONSerializable {
      */
     public JSONObject getAttributes() {
         return attributes;
+    }
+
+    /**
+     * Get event items.
+     *
+     * @return the JSONArray of items.
+     */
+    public JSONArray getItems() {
+        return eventItems;
     }
 
     /**
@@ -507,6 +549,7 @@ public class AnalyticsEvent implements JSONSerializable {
         //builder.withAttribute("app_version_code", this.appDetails.versionCode());
         builder.withAttribute("app_package_name", this.appDetails.packageName());
         builder.withAttribute("app_title", this.appDetails.getAppTitle());
+        builder.withAttribute("items", this.eventItems);
         builder.withAttribute("user", this.userAttributes);
         builder.withAttribute("attributes", this.attributes);
         return builder.toJSONObject();
