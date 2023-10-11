@@ -349,6 +349,7 @@ public class AutoRecordEventClientTest {
         callbacks.onActivityResumed(activityA);
         Thread.sleep(200);
         callbacks.onActivityPaused(activityA);
+        Thread.sleep(50);
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_STOP);
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
         callbacks.onActivityCreated(activityA, bundle);
