@@ -60,9 +60,10 @@ final class ActivityLifecycleManager implements Application.ActivityLifecycleCal
         }
     }
 
-    void stopLifecycleTracking(final Context context) {
+    void stopLifecycleTracking(final Context context, Lifecycle lifecycle) {
         if (context instanceof Application) {
             ((Application) context).unregisterActivityLifecycleCallbacks(this);
+            lifecycle.removeObserver(this);
         }
     }
 

@@ -200,8 +200,23 @@ If you want to use custom DNS for network request, you can create your `CustomOk
 #### Send event immediately
 
 ```java
+import software.aws.solution.clickstream.ClickstreamAnalytics;
+
 // for send event immediately.
 ClickstreamAnalytics.flushEvent();
+```
+
+#### Disable SDK
+You can disable the SDK in the scenario you need. After disabling the SDK, the SDK will not handle the logging and sending of any events. Of course you can enable the SDK when you need to continue logging events.
+
+```java
+import software.aws.solution.clickstream.ClickstreamAnalytics;
+
+// disable SDK
+ClickstreamAnalytics.disable();
+
+// enable SDK
+ClickstreamAnalytics.enable();
 ```
 
 ## How to build locally

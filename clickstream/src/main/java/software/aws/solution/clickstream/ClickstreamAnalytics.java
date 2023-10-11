@@ -111,6 +111,20 @@ public final class ClickstreamAnalytics {
     }
 
     /**
+     * Enable clickstream SDK.
+     */
+    public static void enable() {
+        Amplify.Analytics.enable();
+    }
+
+    /**
+     * Disable clickstream SDK.
+     */
+    public static void disable() {
+        Amplify.Analytics.disable();
+    }
+
+    /**
      * get clickstream configuration
      * please config it after initialize.
      *
