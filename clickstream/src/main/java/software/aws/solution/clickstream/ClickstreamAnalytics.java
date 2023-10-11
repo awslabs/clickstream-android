@@ -71,7 +71,7 @@ public final class ClickstreamAnalytics {
     }
 
     /**
-     * add user clickstreamAttribute.
+     * Add user clickstreamAttribute.
      *
      * @param clickstreamAttribute the global clickstreamAttribute.
      */
@@ -80,7 +80,7 @@ public final class ClickstreamAnalytics {
     }
 
     /**
-     * delete global attributes.
+     * Delete global attributes.
      *
      * @param attributeName the attribute name to delete.
      */
@@ -89,7 +89,7 @@ public final class ClickstreamAnalytics {
     }
 
     /**
-     * add user attributes.
+     * Add user attributes.
      *
      * @param userProfile user
      */
@@ -98,7 +98,7 @@ public final class ClickstreamAnalytics {
     }
 
     /**
-     * set user id.
+     * Set user id.
      *
      * @param userId user
      */
@@ -125,7 +125,7 @@ public final class ClickstreamAnalytics {
     }
 
     /**
-     * get clickstream configuration
+     * Get clickstream configuration
      * please config it after initialize.
      *
      * @return ClickstreamConfiguration configurationF
