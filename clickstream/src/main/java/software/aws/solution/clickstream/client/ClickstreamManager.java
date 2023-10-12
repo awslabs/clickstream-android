@@ -39,6 +39,7 @@ public class ClickstreamManager {
     private final AnalyticsClient analyticsClient;
     private final SessionClient sessionClient;
     private final AutoRecordEventClient autoRecordEventClient;
+    private ClickstreamExceptionHandler exceptionHandler;
 
     /**
      * Constructor.
@@ -57,6 +58,7 @@ public class ClickstreamManager {
             this.autoRecordEventClient = new AutoRecordEventClient(this.clickstreamContext);
             this.clickstreamContext.setSessionClient(this.sessionClient);
             if (config.isTrackAppExceptionEvents()) {
+                exceptionHandler = ClickstreamExceptionHandler.init(this.clickstreamContext);
                 enableTrackAppException();
             }
             LOG.debug(String.format(Locale.US,
@@ -68,9 +70,22 @@ public class ClickstreamManager {
         }
     }
 
-    private void enableTrackAppException() {
-        ClickstreamExceptionHandler handler = ClickstreamExceptionHandler.init();
-        handler.setClickstreamContext(this.clickstreamContext);
+    /**
+     * Enable track app exception.
+     */
+    public void enableTrackAppException() {
+        if (exceptionHandler != null) {
+            exceptionHandler.startTrackException();
+        }
+    }
+
+    /**
+     * Disable track app exception.
+     */
+    public void disableTrackAppException() {
+        if (exceptionHandler != null) {
+            exceptionHandler.stopTackException();
+        }
     }
 
     /**

@@ -86,4 +86,20 @@ public class InitClientTest {
         ClickstreamAnalytics.init(activity.getApplication());
     }
 
+    /**
+     * test init SDK not in main thread.
+     */
+    @Test
+    public void testInitSDKNotInMainThreadThrowsAmplifyException() {
+        new Thread(() -> {
+            Activity activity = mock(Activity.class);
+            try {
+                ClickstreamAnalytics.init(activity.getApplication());
+                Assert.fail();
+            } catch (AmplifyException exception) {
+                Assert.assertEquals("Clickstream SDK initialization failed", exception.getMessage());
+                Assert.assertEquals("Please initialize in the main thread", exception.getRecoverySuggestion());
+            }
+        }).start();
+    }
 }
