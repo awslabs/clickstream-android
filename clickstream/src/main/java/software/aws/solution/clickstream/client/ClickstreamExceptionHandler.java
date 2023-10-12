@@ -101,12 +101,13 @@ public final class ClickstreamExceptionHandler implements Thread.UncaughtExcepti
                 event.addInternalAttribute("exception_message", exceptionMessage);
                 event.addInternalAttribute("exception_stack", exceptionStack);
                 this.clickstreamContext.getAnalyticsClient().recordEvent(event);
+            }
 
-                try {
-                    Thread.sleep(SLEEP_TIMEOUT_MS);
-                } catch (InterruptedException exception) {
-                    LOG.error("interrupted exception for sleep:", exception);
-                }
+            this.clickstreamContext.getAnalyticsClient().submitEvents();
+            try {
+                Thread.sleep(SLEEP_TIMEOUT_MS);
+            } catch (InterruptedException exception) {
+                LOG.error("interrupted exception for sleep:", exception);
             }
             if (defaultExceptionHandler != null) {
                 defaultExceptionHandler.uncaughtException(thread, throwable);

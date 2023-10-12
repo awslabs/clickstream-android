@@ -49,6 +49,7 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
     private AutoEventSubmitter autoEventSubmitter;
     private ActivityLifecycleManager activityLifecycleManager;
     private ClickstreamManager clickstreamManager;
+    private boolean isEnable = true;
 
     /**
      * Constructs a new {@link AWSClickstreamPlugin}.
@@ -77,17 +78,25 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
     }
 
     @Override
-    public void disable() {
-        autoEventSubmitter.stop();
-        activityLifecycleManager.stopLifecycleTracking(context, ProcessLifecycleOwner.get().getLifecycle());
-        clickstreamManager.disableTrackAppException();
+    public synchronized void disable() {
+        if (isEnable) {
+            autoEventSubmitter.stop();
+            activityLifecycleManager.stopLifecycleTracking(context, ProcessLifecycleOwner.get().getLifecycle());
+            clickstreamManager.disableTrackAppException();
+            isEnable = false;
+            LOG.info("Clickstream SDK disabled");
+        }
     }
 
     @Override
-    public void enable() {
-        autoEventSubmitter.start();
-        activityLifecycleManager.startLifecycleTracking(context, ProcessLifecycleOwner.get().getLifecycle());
-        clickstreamManager.enableTrackAppException();
+    public synchronized void enable() {
+        if (!isEnable) {
+            autoEventSubmitter.start();
+            activityLifecycleManager.startLifecycleTracking(context, ProcessLifecycleOwner.get().getLifecycle());
+            clickstreamManager.enableTrackAppException();
+            isEnable = true;
+            LOG.info("Clickstream SDK enabled");
+        }
     }
 
     @Override

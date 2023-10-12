@@ -21,14 +21,18 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 
+import com.amazonaws.logging.Log;
+import com.amazonaws.logging.LogFactory;
 import software.aws.solution.clickstream.client.AnalyticsClient;
 import software.aws.solution.clickstream.client.ClickstreamConfiguration;
 import software.aws.solution.clickstream.client.Event;
+import software.aws.solution.clickstream.client.util.ThreadUtil;
 
 /**
  * This is the top-level customer-facing interface to The ClickstreamAnalytics.
  */
 public final class ClickstreamAnalytics {
+    private static final Log LOG = LogFactory.getLog(ClickstreamAnalytics.class);
 
     private ClickstreamAnalytics() {
         throw new UnsupportedOperationException("No instances allowed.");
@@ -41,6 +45,9 @@ public final class ClickstreamAnalytics {
      * @throws AmplifyException Exception of init.
      */
     public static void init(@NonNull Context context) throws AmplifyException {
+        if (ThreadUtil.notInMainThread()) {
+            throw new AmplifyException("Clickstream SDK initialization failed", "Please initialize in the main thread");
+        }
         Amplify.addPlugin(new AWSClickstreamPlugin(context));
         Amplify.configure(context);
     }
@@ -114,6 +121,10 @@ public final class ClickstreamAnalytics {
      * Enable clickstream SDK.
      */
     public static void enable() {
+        if (ThreadUtil.notInMainThread()) {
+            LOG.error("Clickstream SDK enabled failed, please execute in the main thread");
+            return;
+        }
         Amplify.Analytics.enable();
     }
 
@@ -121,6 +132,10 @@ public final class ClickstreamAnalytics {
      * Disable clickstream SDK.
      */
     public static void disable() {
+        if (ThreadUtil.notInMainThread()) {
+            LOG.error("Clickstream SDK disabled failed, please execute in the main thread");
+            return;
+        }
         Amplify.Analytics.disable();
     }
 

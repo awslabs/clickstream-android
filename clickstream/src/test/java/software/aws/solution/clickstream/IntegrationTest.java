@@ -62,6 +62,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -188,7 +189,7 @@ public class IntegrationTest {
         Assert.assertEquals(120.3, attribute.getDouble("UserAge"), 0.01);
         Assert.assertEquals(169823889238L, attribute.getLong("Timestamp"));
 
-        Thread.sleep(1500);
+        Thread.sleep(2500);
         assertEquals(0, dbUtil.getTotalNumber());
         cursor.close();
     }
@@ -670,18 +671,38 @@ public class IntegrationTest {
     }
 
     /**
-     * test enable.
+     * test enable sdk not in main thread.
      *
      * @throws Exception exception
      */
     @Test
-    public void testEnable() throws Exception {
+    public void testEnableAndDisableSDKNotInMainThread() throws Exception {
+        Log log = mock(Log.class);
+        ReflectUtil.modifyFiled(plugin, "LOG", log);
+        new Thread(() -> {
+            ClickstreamAnalytics.disable();
+            ClickstreamAnalytics.enable();
+        }).start();
+        Thread.sleep(500);
+        verify(log, times(0)).debug("Clickstream SDK enabled");
+        verify(log, times(0)).debug("Clickstream SDK disabled");
+    }
+
+    /**
+     * test enable SDK twice.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testEnableSDKTwice() throws Exception {
         AutoEventSubmitter submitter = (AutoEventSubmitter) ReflectUtil.getFiled(plugin, "autoEventSubmitter");
         Log log = mock(Log.class);
         ReflectUtil.modifyFiled(submitter, "LOG", log);
-
         ClickstreamAnalytics.enable();
-        verify(log).debug("Auto submitting start");
+        ClickstreamAnalytics.enable();
+        verify(log, times(0)).debug("Auto submitting start");
+        ClickstreamAnalytics.recordEvent("testRecordEventWithName");
+        assertEquals(1, dbUtil.getTotalNumber());
     }
 
     /**
@@ -701,6 +722,7 @@ public class IntegrationTest {
         ClickstreamAnalytics.recordEvent("testRecordEventWithName");
         assertEquals(0, dbUtil.getTotalNumber());
         ClickstreamAnalytics.enable();
+        verify(log).debug("Auto submitting start");
         ClickstreamAnalytics.recordEvent("testRecordEventWithName");
         assertEquals(1, dbUtil.getTotalNumber());
     }
