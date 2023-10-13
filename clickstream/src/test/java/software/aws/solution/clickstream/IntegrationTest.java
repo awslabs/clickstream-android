@@ -133,6 +133,8 @@ public class IntegrationTest {
         executeBackground();
         ClickstreamAnalytics.recordEvent("testRecordEventWithName");
         assertEquals(1, dbUtil.getTotalNumber());
+        Thread.sleep(2500);
+        assertEquals(0, dbUtil.getTotalNumber());
     }
 
     /**
@@ -151,6 +153,8 @@ public class IntegrationTest {
             assertEquals(Event.PresetEvent.CLICKSTREAM_ERROR, jsonObject.getString("event_type"));
         }
         assertEquals(1, dbUtil.getTotalNumber());
+        Thread.sleep(1500);
+        assertEquals(0, dbUtil.getTotalNumber());
     }
 
     /**
@@ -174,62 +178,21 @@ public class IntegrationTest {
         ClickstreamAnalytics.recordEvent(event);
         assertEquals(1, dbUtil.getTotalNumber());
 
-        try (Cursor cursor = dbUtil.queryAllEvents()) {
-            cursor.moveToFirst();
-            String eventString = cursor.getString(2);
-            JSONObject jsonObject = new JSONObject(eventString);
-            JSONObject attribute = jsonObject.getJSONObject("attributes");
-            Assert.assertEquals("PasswordReset", jsonObject.getString("event_type"));
-            Assert.assertEquals("SMS", attribute.getString("Channel"));
-            Assert.assertTrue(attribute.getBoolean("Successful"));
-            Assert.assertEquals(792, attribute.getInt("ProcessDuration"));
-            Assert.assertEquals(120.3, attribute.getDouble("UserAge"), 0.01);
-            Assert.assertEquals(169823889238L, attribute.getLong("Timestamp"));
-        }
-    }
+        Cursor cursor = dbUtil.queryAllEvents();
+        cursor.moveToFirst();
+        String eventString = cursor.getString(2);
+        JSONObject jsonObject = new JSONObject(eventString);
+        JSONObject attribute = jsonObject.getJSONObject("attributes");
+        Assert.assertEquals("PasswordReset", jsonObject.getString("event_type"));
+        Assert.assertEquals("SMS", attribute.getString("Channel"));
+        Assert.assertTrue(attribute.getBoolean("Successful"));
+        Assert.assertEquals(792, attribute.getInt("ProcessDuration"));
+        Assert.assertEquals(120.3, attribute.getDouble("UserAge"), 0.01);
+        Assert.assertEquals(169823889238L, attribute.getLong("Timestamp"));
 
-    /**
-     * test add global attribute.
-     *
-     * @throws Exception exception
-     */
-    @Test
-    public void testAddGlobalAttribute() throws Exception {
-        long timestamp = System.currentTimeMillis();
-        ClickstreamAttribute globalAttribute = ClickstreamAttribute.builder()
-            .add("channel", "HUAWEI")
-            .add("level", 5.1)
-            .add("class", 6)
-            .add("timestamp", timestamp)
-            .add("isOpenNotification", true)
-            .build();
-        ClickstreamAnalytics.addGlobalAttributes(globalAttribute);
-        ClickstreamEvent event = ClickstreamEvent.builder()
-            .name("PasswordReset")
-            .add("Message", "SMS")
-            .add("Successful", true)
-            .add("ProcessDuration", 792)
-            .add("UserAge", 120.3)
-            .build();
-        ClickstreamAnalytics.recordEvent(event);
-        assertEquals(1, dbUtil.getTotalNumber());
-        try (Cursor cursor = dbUtil.queryAllEvents()) {
-            cursor.moveToFirst();
-            String eventString = cursor.getString(2);
-            JSONObject jsonObject = new JSONObject(eventString);
-            JSONObject attribute = jsonObject.getJSONObject("attributes");
-
-            Assert.assertEquals("HUAWEI", attribute.getString("channel"));
-            Assert.assertEquals(5.1, attribute.getDouble("level"), 0.01);
-            Assert.assertEquals(6, attribute.getInt("class"));
-            Assert.assertTrue(attribute.getBoolean("isOpenNotification"));
-            Assert.assertEquals(timestamp, attribute.getLong("timestamp"));
-
-            Assert.assertEquals("SMS", attribute.getString("Message"));
-            Assert.assertTrue(attribute.getBoolean("Successful"));
-            Assert.assertEquals(792, attribute.getInt("ProcessDuration"));
-            Assert.assertEquals(120.3, attribute.getDouble("UserAge"), 0.01);
-        }
+        Thread.sleep(2500);
+        assertEquals(0, dbUtil.getTotalNumber());
+        cursor.close();
     }
 
     /**
@@ -282,6 +245,54 @@ public class IntegrationTest {
             Assert.assertEquals(4999.9, itemObject.getDouble(ClickstreamAnalytics.Item.PRICE), 0.01);
             Assert.assertFalse(itemObject.getBoolean("is_new"));
         }
+    }
+
+    /**
+     * test add global attribute.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testAddGlobalAttribute() throws Exception {
+        long timestamp = System.currentTimeMillis();
+        ClickstreamAttribute globalAttribute = ClickstreamAttribute.builder()
+            .add("channel", "HUAWEI")
+            .add("level", 5.1)
+            .add("class", 6)
+            .add("timestamp", timestamp)
+            .add("isOpenNotification", true)
+            .build();
+        ClickstreamAnalytics.addGlobalAttributes(globalAttribute);
+        ClickstreamEvent event = ClickstreamEvent.builder()
+            .name("PasswordReset")
+            .add("Message", "SMS")
+            .add("Successful", true)
+            .add("ProcessDuration", 792)
+            .add("UserAge", 120.3)
+            .build();
+        ClickstreamAnalytics.recordEvent(event);
+        assertEquals(1, dbUtil.getTotalNumber());
+        Cursor cursor = dbUtil.queryAllEvents();
+        cursor.moveToFirst();
+        String eventString = cursor.getString(2);
+        JSONObject jsonObject = new JSONObject(eventString);
+        JSONObject attribute = jsonObject.getJSONObject("attributes");
+
+        Assert.assertEquals("HUAWEI", attribute.getString("channel"));
+        Assert.assertEquals(5.1, attribute.getDouble("level"), 0.01);
+        Assert.assertEquals(6, attribute.getInt("class"));
+        Assert.assertTrue(attribute.getBoolean("isOpenNotification"));
+        Assert.assertEquals(timestamp, attribute.getLong("timestamp"));
+
+        Assert.assertEquals("SMS", attribute.getString("Message"));
+        Assert.assertTrue(attribute.getBoolean("Successful"));
+        Assert.assertEquals(792, attribute.getInt("ProcessDuration"));
+        Assert.assertEquals(120.3, attribute.getDouble("UserAge"), 0.01);
+
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1000);
+        assertEquals(0, dbUtil.getTotalNumber());
+        cursor.close();
     }
 
 

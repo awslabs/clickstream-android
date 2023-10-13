@@ -113,10 +113,12 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
         final AnalyticsEvent clickstreamEvent =
             analyticsClient.createEvent(event.getName());
 
-        if (clickstreamEvent != null && analyticsEvent.getProperties() != null) {
-            for (Map.Entry<String, AnalyticsPropertyBehavior<?>> entry : analyticsEvent.getProperties()) {
-                AnalyticsPropertyBehavior<?> property = entry.getValue();
-                clickstreamEvent.addAttribute(entry.getKey(), property.getValue());
+        if (clickstreamEvent != null) {
+            if (analyticsEvent.getProperties() != null) {
+                for (Map.Entry<String, AnalyticsPropertyBehavior<?>> entry : analyticsEvent.getProperties()) {
+                    AnalyticsPropertyBehavior<?> property = entry.getValue();
+                    clickstreamEvent.addAttribute(entry.getKey(), property.getValue());
+                }
             }
             clickstreamEvent.addItems(event.getItems());
             analyticsClient.recordEvent(clickstreamEvent);
