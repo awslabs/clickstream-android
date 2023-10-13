@@ -19,6 +19,9 @@ import android.app.Application;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.Handler;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.LifecycleRegistry;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.Amplify;
@@ -60,6 +63,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -76,6 +80,7 @@ public class IntegrationTest {
     private ClickstreamDBUtil dbUtil;
     private AnalyticsClient analyticsClient;
     private EventRecorder eventRecorder;
+    private Application application;
 
     /**
      * beforeClass to init environment before all test case.
@@ -100,15 +105,16 @@ public class IntegrationTest {
      */
     @Before
     public void setup() throws Exception {
-        Context context = ApplicationProvider.getApplicationContext();
-        Application application = mock(Application.class);
-        plugin = new AWSClickstreamPlugin(application);
         Boolean isConfigured = (Boolean) ReflectUtil.invokeSuperMethod(Amplify.Analytics, "isConfigured");
         if (!isConfigured) {
+            Context context = ApplicationProvider.getApplicationContext();
+            application = mock(Application.class);
+            plugin = new AWSClickstreamPlugin(application);
             Amplify.addPlugin(plugin);
             Amplify.configure(context);
         } else {
             plugin = (AWSClickstreamPlugin) Amplify.Analytics.getPlugin("awsClickstreamPlugin");
+            application = (Application) ReflectUtil.getFiled(plugin, "context");
         }
         analyticsClient = plugin.getEscapeHatch();
         assert analyticsClient != null;
@@ -661,36 +667,96 @@ public class IntegrationTest {
     }
 
     /**
-     * test enable.
+     * test enable sdk not in main thread.
      *
      * @throws Exception exception
      */
     @Test
-    public void testEnable() throws Exception {
-        AutoEventSubmitter submitter = (AutoEventSubmitter) ReflectUtil.getFiled(plugin, "autoEventSubmitter");
+    public void testEnableAndDisableSDKNotInMainThread() throws Exception {
         Log log = mock(Log.class);
-        ReflectUtil.modifyFiled(submitter, "LOG", log);
-
-        Amplify.Analytics.enable();
-        verify(log).debug("Auto submitting start");
+        ReflectUtil.modifyFiled(plugin, "LOG", log);
+        new Thread(() -> {
+            ClickstreamAnalytics.disable();
+            ClickstreamAnalytics.enable();
+        }).start();
+        Thread.sleep(500);
+        verify(log, times(0)).debug("Clickstream SDK enabled");
+        verify(log, times(0)).debug("Clickstream SDK disabled");
     }
 
     /**
-     * test disable.
+     * test enable SDK twice.
      *
      * @throws Exception exception
      */
     @Test
-    public void testDisable() throws Exception {
+    public void testEnableSDKTwice() throws Exception {
+        AutoEventSubmitter submitter = (AutoEventSubmitter) ReflectUtil.getFiled(plugin, "autoEventSubmitter");
+        Log log = mock(Log.class);
+        ReflectUtil.modifyFiled(submitter, "LOG", log);
+        ClickstreamAnalytics.enable();
+        ClickstreamAnalytics.enable();
+        verify(log, times(0)).debug("Auto submitting start");
+        ClickstreamAnalytics.recordEvent("testRecordEventWithName");
+        assertEquals(1, dbUtil.getTotalNumber());
+    }
+
+    /**
+     * test enable after disable.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testEnableAfterDisable() throws Exception {
         AutoEventSubmitter submitter = (AutoEventSubmitter) ReflectUtil.getFiled(plugin, "autoEventSubmitter");
         Log log = mock(Log.class);
         ReflectUtil.modifyFiled(submitter, "LOG", log);
 
-        Amplify.Analytics.disable();
+        ClickstreamAnalytics.disable();
         verify(log).debug("Auto submitting stop");
         assertEquals(0, dbUtil.getTotalNumber());
         ClickstreamAnalytics.recordEvent("testRecordEventWithName");
         assertEquals(0, dbUtil.getTotalNumber());
+        ClickstreamAnalytics.enable();
+        verify(log).debug("Auto submitting start");
+        ClickstreamAnalytics.recordEvent("testRecordEventWithName");
+        assertEquals(1, dbUtil.getTotalNumber());
+    }
+
+    /**
+     * test disable track activity lifecycle.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testDisableActivityLifecycle() throws Exception {
+        ActivityLifecycleManager lifecycleManager =
+            (ActivityLifecycleManager) ReflectUtil.getFiled(plugin, "activityLifecycleManager");
+
+        ClickstreamAnalytics.disable();
+
+        verify(application).unregisterActivityLifecycleCallbacks(lifecycleManager);
+        ClickstreamAnalytics.enable();
+    }
+
+    /**
+     * test disable sdk and will not record app lifecycle events.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testDisableAppLifecycle() throws Exception {
+        ActivityLifecycleManager lifecycleManager =
+            (ActivityLifecycleManager) ReflectUtil.getFiled(plugin, "activityLifecycleManager");
+        LifecycleRegistry lifecycle = new LifecycleRegistry(mock(LifecycleOwner.class));
+        lifecycleManager.startLifecycleTracking(application, lifecycle);
+
+        ClickstreamAnalytics.disable();
+        lifecycleManager.stopLifecycleTracking(application, lifecycle);
+
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
+        assertEquals(0, dbUtil.getTotalNumber());
+        ClickstreamAnalytics.enable();
     }
 
     /**

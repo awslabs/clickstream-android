@@ -28,7 +28,6 @@ import org.robolectric.RobolectricTestRunner;
 import software.aws.solution.clickstream.client.ClickstreamManager;
 import software.aws.solution.clickstream.client.Event;
 import software.aws.solution.clickstream.client.db.ClickstreamDBUtil;
-import software.aws.solution.clickstream.util.ReflectUtil;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -41,6 +40,7 @@ import static org.junit.Assert.assertTrue;
 public class ExceptionHandlerTest {
 
     private ClickstreamDBUtil dbUtil;
+    private ClickstreamManager clickstreamManager;
 
     /**
      * prepare start up environment and context.
@@ -56,12 +56,10 @@ public class ExceptionHandlerTest {
 
         AWSClickstreamPluginConfiguration.Builder configurationBuilder = AWSClickstreamPluginConfiguration.builder();
         configurationBuilder.withAppId("demo-app")
+            .withTrackAppExceptionEvents(true)
             .withEndpoint("http://cs-se-serve-1qtj719j88vwn-1291141553.ap-southeast-1.elb.amazonaws.com/collect")
             .withSendEventsInterval(10000);
-        AWSClickstreamPluginConfiguration clickstreamPluginConfiguration = configurationBuilder.build();
-        ClickstreamManager clickstreamManager =
-            ClickstreamManagerFactory.create(context, clickstreamPluginConfiguration);
-        ReflectUtil.invokeMethod(clickstreamManager, "enableTrackAppException");
+        clickstreamManager = ClickstreamManagerFactory.create(context, configurationBuilder.build());
     }
 
     /**
@@ -97,6 +95,47 @@ public class ExceptionHandlerTest {
                 attributes.getString("exception_stack").contains("java.lang.IllegalArgumentException: test exception"));
             assertTrue(attributes.getString("exception_stack").contains("ExceptionHandlerTest.java:"));
         }
+    }
+
+    /**
+     * test disable exception record using configuration.
+     *
+     * @throws Exception                exception
+     * @throws IllegalArgumentException exception
+     */
+    @Test
+    public void testDisableExceptionRecordWithConfiguration() throws Exception {
+        clickstreamManager.getClickstreamContext().getClickstreamConfiguration()
+            .withTrackAppExceptionEvents(false);
+        Thread testThread = new Thread() {
+            public void run() {
+                throw new IllegalArgumentException("test exception");
+            }
+        };
+        testThread.start();
+        testThread.join();
+
+        assertEquals(0, dbUtil.getTotalNumber());
+    }
+
+    /**
+     * test disable exception record when sdk disabled.
+     *
+     * @throws Exception                exception
+     * @throws IllegalArgumentException exception
+     */
+    @Test
+    public void testTrackAppExceptionWhenSDKDisabled() throws Exception {
+        clickstreamManager.disableTrackAppException();
+        Thread testThread = new Thread() {
+            public void run() {
+                throw new IllegalArgumentException("test exception");
+            }
+        };
+        testThread.start();
+        testThread.join();
+
+        assertEquals(0, dbUtil.getTotalNumber());
     }
 
     /**

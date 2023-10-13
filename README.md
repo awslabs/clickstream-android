@@ -22,7 +22,7 @@ Add the following dependency to your `app` module's `build.gradle` file.
 
 ```groovy
 dependencies {
-    implementation 'software.aws.solution:clickstream:0.8.0'
+    implementation 'software.aws.solution:clickstream:0.9.0'
 }
 ```
 
@@ -62,7 +62,7 @@ Your `appId` and `endpoint` are already set up in it, here's an explanation of e
 
 **3.Initialize the SDK**
 
-Please Initialize the SDK in the Application `onCreate()` method.
+It is recommended that you initialize the SDK in the Application `onCreate()` method. Please note that the initialization code needs to run in the main thread.
 
 ```java
 import software.aws.solution.clickstream.ClickstreamAnalytics;
@@ -228,8 +228,24 @@ If you want to use custom DNS for network request, you can create your `CustomOk
 #### Send event immediately
 
 ```java
+import software.aws.solution.clickstream.ClickstreamAnalytics;
+
 // for send event immediately.
 ClickstreamAnalytics.flushEvent();
+```
+
+#### Disable SDK
+You can disable the SDK in the scenario you need. After disabling the SDK, the SDK will not handle the logging and sending of any events. Of course you can enable the SDK when you need to continue logging events.
+
+Please note that the disable and enable code needs to be run in the main thread.
+```java
+import software.aws.solution.clickstream.ClickstreamAnalytics;
+
+// disable SDK
+ClickstreamAnalytics.disable();
+
+// enable SDK
+ClickstreamAnalytics.enable();
 ```
 
 ## How to build locally

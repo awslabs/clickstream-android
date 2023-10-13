@@ -31,33 +31,39 @@ public final class ClickstreamExceptionHandler implements Thread.UncaughtExcepti
     private static final Log LOG = LogFactory.getLog(ClickstreamExceptionHandler.class);
     private static ClickstreamExceptionHandler handlerInstance;
     private static final int SLEEP_TIMEOUT_MS = 500;
-    private final Thread.UncaughtExceptionHandler defaultExceptionHandler;
-    private ClickstreamContext clickstreamContext;
+    private Thread.UncaughtExceptionHandler defaultExceptionHandler;
+    private final ClickstreamContext clickstreamContext;
 
-    private ClickstreamExceptionHandler() {
+    private ClickstreamExceptionHandler(ClickstreamContext context) {
+        this.clickstreamContext = context;
+    }
+
+    /**
+     * start listening the exception events.
+     */
+    public void startTrackException() {
         defaultExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler(this);
     }
 
     /**
-     * init static method for ClickstreamExceptionHandler.
-     *
-     * @return ClickstreamExceptionHandler the instance.
+     * stop listening the exception events.
      */
-    public static synchronized ClickstreamExceptionHandler init() {
-        if (handlerInstance == null) {
-            handlerInstance = new ClickstreamExceptionHandler();
-        }
-        return handlerInstance;
+    public void stopTackException() {
+        Thread.setDefaultUncaughtExceptionHandler(null);
     }
 
     /**
-     * setter for clickstreamContext.
+     * init static method for ClickstreamExceptionHandler.
      *
-     * @param context ClickstreamContext
+     * @param context the clickstream context for initial the ClickstreamExceptionHandler
+     * @return ClickstreamExceptionHandler the instance.
      */
-    public void setClickstreamContext(ClickstreamContext context) {
-        this.clickstreamContext = context;
+    public static synchronized ClickstreamExceptionHandler init(ClickstreamContext context) {
+        if (handlerInstance == null) {
+            handlerInstance = new ClickstreamExceptionHandler(context);
+        }
+        return handlerInstance;
     }
 
     /**
@@ -69,32 +75,35 @@ public final class ClickstreamExceptionHandler implements Thread.UncaughtExcepti
     @Override
     public void uncaughtException(@NonNull Thread thread, @NonNull Throwable throwable) {
         try {
-            String exceptionMessage = "";
-            String exceptionStack = "";
-            try {
-                if (throwable.getMessage() != null) {
-                    exceptionMessage = throwable.getMessage();
+            if (clickstreamContext.getClickstreamConfiguration().isTrackAppExceptionEvents()) {
+                String exceptionMessage = "";
+                String exceptionStack = "";
+                try {
+                    if (throwable.getMessage() != null) {
+                        exceptionMessage = throwable.getMessage();
+                    }
+                    final Writer writer = new StringWriter();
+                    PrintWriter printWriter = new PrintWriter(writer);
+                    throwable.printStackTrace(printWriter);
+                    Throwable cause = throwable.getCause();
+                    while (cause != null) {
+                        cause.printStackTrace(printWriter);
+                        cause = cause.getCause();
+                    }
+                    printWriter.close();
+                    exceptionStack = writer.toString();
+                } catch (Exception exception) {
+                    LOG.error("exception for get exception stack:", exception);
                 }
-                final Writer writer = new StringWriter();
-                PrintWriter printWriter = new PrintWriter(writer);
-                throwable.printStackTrace(printWriter);
-                Throwable cause = throwable.getCause();
-                while (cause != null) {
-                    cause.printStackTrace(printWriter);
-                    cause = cause.getCause();
-                }
-                printWriter.close();
-                exceptionStack = writer.toString();
-            } catch (Exception exception) {
-                LOG.error("exception for get exception stack:", exception);
+
+                final AnalyticsEvent event =
+                    this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.APP_EXCEPTION);
+                event.addInternalAttribute("exception_message", exceptionMessage);
+                event.addInternalAttribute("exception_stack", exceptionStack);
+                this.clickstreamContext.getAnalyticsClient().recordEvent(event);
             }
 
-            final AnalyticsEvent event =
-                this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.APP_EXCEPTION);
-            event.addInternalAttribute("exception_message", exceptionMessage);
-            event.addInternalAttribute("exception_stack", exceptionStack);
-            this.clickstreamContext.getAnalyticsClient().recordEvent(event);
-
+            this.clickstreamContext.getAnalyticsClient().submitEvents();
             try {
                 Thread.sleep(SLEEP_TIMEOUT_MS);
             } catch (InterruptedException exception) {
