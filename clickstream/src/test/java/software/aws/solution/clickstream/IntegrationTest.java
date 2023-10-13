@@ -232,43 +232,6 @@ public class IntegrationTest {
         }
     }
 
-
-    /**
-     * test add delete global attribute.
-     *
-     * @throws Exception exception
-     */
-    @Test
-    public void testDeleteGlobalAttribute() throws Exception {
-        ClickstreamAttribute globalAttribute = ClickstreamAttribute.builder()
-            .add("channel", "HUAWEI")
-            .add("level", 5.1)
-            .add("class", 6)
-            .add("isOpenNotification", true)
-            .build();
-        ClickstreamAnalytics.addGlobalAttributes(globalAttribute);
-        ClickstreamEvent event = ClickstreamEvent.builder()
-            .name("PasswordReset")
-            .add("Message", "SMS")
-            .add("Successful", true)
-            .add("ProcessDuration", 792)
-            .add("Number", 20.1)
-            .build();
-        ClickstreamAnalytics.deleteGlobalAttributes("level");
-        ClickstreamAnalytics.recordEvent(event);
-        assertEquals(1, dbUtil.getTotalNumber());
-        try (Cursor cursor = dbUtil.queryAllEvents()) {
-            cursor.moveToFirst();
-            String eventString = cursor.getString(2);
-            JSONObject jsonObject = new JSONObject(eventString);
-            JSONObject attribute = jsonObject.getJSONObject("attributes");
-
-            Assert.assertEquals("HUAWEI", attribute.getString("channel"));
-            Assert.assertFalse(attribute.has("level"));
-            Assert.assertTrue(attribute.getBoolean("isOpenNotification"));
-        }
-    }
-
     /**
      * test add items.
      *
@@ -321,6 +284,47 @@ public class IntegrationTest {
         }
     }
 
+
+    /**
+     * test add delete global attribute.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testDeleteGlobalAttribute() throws Exception {
+        ClickstreamAttribute globalAttribute = ClickstreamAttribute.builder()
+            .add("channel", "HUAWEI")
+            .add("level", 5.1)
+            .add("class", 6)
+            .add("isOpenNotification", true)
+            .build();
+        ClickstreamAnalytics.addGlobalAttributes(globalAttribute);
+        ClickstreamEvent event = ClickstreamEvent.builder()
+            .name("PasswordReset")
+            .add("Message", "SMS")
+            .add("Successful", true)
+            .add("ProcessDuration", 792)
+            .add("Number", 20.1)
+            .build();
+        ClickstreamAnalytics.deleteGlobalAttributes("level");
+        ClickstreamAnalytics.recordEvent(event);
+        assertEquals(1, dbUtil.getTotalNumber());
+        Cursor cursor = dbUtil.queryAllEvents();
+        cursor.moveToFirst();
+        String eventString = cursor.getString(2);
+        JSONObject jsonObject = new JSONObject(eventString);
+        JSONObject attribute = jsonObject.getJSONObject("attributes");
+
+        Assert.assertEquals("HUAWEI", attribute.getString("channel"));
+        Assert.assertFalse(attribute.has("level"));
+        Assert.assertTrue(attribute.getBoolean("isOpenNotification"));
+
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1000);
+        assertEquals(0, dbUtil.getTotalNumber());
+        cursor.close();
+    }
+
     /**
      * test add user attribute.
      *
@@ -348,22 +352,26 @@ public class IntegrationTest {
         ClickstreamAnalytics.recordEvent(event);
         assertEquals(3, dbUtil.getTotalNumber());
 
-        try (Cursor cursor = dbUtil.queryAllEvents()) {
-            cursor.moveToLast();
-            String eventString = cursor.getString(2);
-            JSONObject jsonObject = new JSONObject(eventString);
-            JSONObject attribute = jsonObject.getJSONObject("attributes");
-            JSONObject user = jsonObject.getJSONObject("user");
-            Assert.assertEquals("13212", ((JSONObject) user.get(Event.ReservedAttribute.USER_ID)).getString("value"));
-            Assert.assertEquals(21, ((JSONObject) user.get("_user_age")).getInt("value"));
-            Assert.assertTrue(((JSONObject) user.get("_user_age")).has("set_timestamp"));
-            Assert.assertEquals("carl", ((JSONObject) user.get("_user_name")).getString("value"));
-            Assert.assertTrue(((JSONObject) user.get("_user_name")).has("set_timestamp"));
-            Assert.assertEquals(timestamp, ((JSONObject) user.get("timestamp")).getLong("value"));
+        Cursor cursor = dbUtil.queryAllEvents();
+        cursor.moveToLast();
+        String eventString = cursor.getString(2);
+        JSONObject jsonObject = new JSONObject(eventString);
+        JSONObject attribute = jsonObject.getJSONObject("attributes");
+        JSONObject user = jsonObject.getJSONObject("user");
+        Assert.assertEquals("13212", ((JSONObject) user.get(Event.ReservedAttribute.USER_ID)).getString("value"));
+        Assert.assertEquals(21, ((JSONObject) user.get("_user_age")).getInt("value"));
+        Assert.assertTrue(((JSONObject) user.get("_user_age")).has("set_timestamp"));
+        Assert.assertEquals("carl", ((JSONObject) user.get("_user_name")).getString("value"));
+        Assert.assertTrue(((JSONObject) user.get("_user_name")).has("set_timestamp"));
+        Assert.assertEquals(timestamp, ((JSONObject) user.get("timestamp")).getLong("value"));
 
-            Assert.assertTrue(attribute.getBoolean("Successful"));
-            Assert.assertEquals("SMS", attribute.getString("Message"));
-        }
+        Assert.assertTrue(attribute.getBoolean("Successful"));
+        Assert.assertEquals("SMS", attribute.getString("Message"));
+
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1000);
+        assertEquals(0, dbUtil.getTotalNumber());
+        cursor.close();
     }
 
     /**
@@ -391,15 +399,20 @@ public class IntegrationTest {
         ClickstreamAnalytics.setUserId("12345");
         ClickstreamAnalytics.recordEvent(event);
         assertEquals(4, dbUtil.getTotalNumber());
-        try (Cursor cursor = dbUtil.queryAllEvents()) {
-            cursor.moveToLast();
-            String eventString = cursor.getString(2);
-            JSONObject jsonObject = new JSONObject(eventString);
-            JSONObject user = jsonObject.getJSONObject("user");
-            Assert.assertEquals("12345", ((JSONObject) user.get(Event.ReservedAttribute.USER_ID)).getString("value"));
-            Assert.assertFalse(user.has("_user_age"));
-            Assert.assertFalse(user.has("_user_name"));
-        }
+
+        Cursor cursor = dbUtil.queryAllEvents();
+        cursor.moveToLast();
+        String eventString = cursor.getString(2);
+        JSONObject jsonObject = new JSONObject(eventString);
+        JSONObject user = jsonObject.getJSONObject("user");
+        Assert.assertEquals("12345", ((JSONObject) user.get(Event.ReservedAttribute.USER_ID)).getString("value"));
+        Assert.assertFalse(user.has("_user_age"));
+        Assert.assertFalse(user.has("_user_name"));
+
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1000);
+        assertEquals(0, dbUtil.getTotalNumber());
+        cursor.close();
     }
 
     /**
@@ -428,15 +441,19 @@ public class IntegrationTest {
         ClickstreamAnalytics.recordEvent(event);
         assertEquals(4, dbUtil.getTotalNumber());
 
-        try (Cursor cursor = dbUtil.queryAllEvents()) {
-            cursor.moveToLast();
-            String eventString = cursor.getString(2);
-            JSONObject jsonObject = new JSONObject(eventString);
-            JSONObject user = jsonObject.getJSONObject("user");
-            Assert.assertFalse(user.has(Event.ReservedAttribute.USER_ID));
-            Assert.assertEquals(21, ((JSONObject) user.get("_user_age")).get("value"));
-            Assert.assertEquals("carl", ((JSONObject) user.get("_user_name")).get("value"));
-        }
+        Cursor cursor = dbUtil.queryAllEvents();
+        cursor.moveToLast();
+        String eventString = cursor.getString(2);
+        JSONObject jsonObject = new JSONObject(eventString);
+        JSONObject user = jsonObject.getJSONObject("user");
+        Assert.assertFalse(user.has(Event.ReservedAttribute.USER_ID));
+        Assert.assertEquals(21, ((JSONObject) user.get("_user_age")).get("value"));
+        Assert.assertEquals("carl", ((JSONObject) user.get("_user_name")).get("value"));
+
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1000);
+        assertEquals(0, dbUtil.getTotalNumber());
+        cursor.close();
     }
 
     /**
@@ -501,6 +518,8 @@ public class IntegrationTest {
             ClickstreamAnalytics.recordEvent(event);
         }
         assertEquals(20, dbUtil.getTotalNumber());
+        Thread.sleep(1000);
+        assertEquals(0, dbUtil.getTotalNumber());
     }
 
     /**
@@ -537,6 +556,10 @@ public class IntegrationTest {
             String appId = jsonObject.getString("app_id");
             assertEquals("23982", appId);
         }
+
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1500);
+        assertEquals(0, dbUtil.getTotalNumber());
     }
 
     /**
@@ -577,8 +600,15 @@ public class IntegrationTest {
         assertEquals(1, dbUtil.getTotalNumber());
         setHttpRequestTimeOut(1L);
         ClickstreamAnalytics.flushEvents();
-        Thread.sleep(1000);
+        Thread.sleep(2000);
         assertEquals(1, dbUtil.getTotalNumber());
+
+        dns.setDefaultIp("127.0.0.1");
+        setHttpRequestTimeOut(15L);
+        ClickstreamAnalytics.flushEvents();
+        // wait for success
+        Thread.sleep(1500);
+        assertEquals(0, dbUtil.getTotalNumber());
     }
 
     /**
@@ -599,8 +629,14 @@ public class IntegrationTest {
         ClickstreamAnalytics.recordEvent("testRecordEvent");
         assertEquals(1, dbUtil.getTotalNumber());
         ClickstreamAnalytics.flushEvents();
-        Thread.sleep(1000);
+        Thread.sleep(1500);
         assertEquals(1, dbUtil.getTotalNumber());
+
+        dns.setIsResolutionTimeout(false);
+        setHttpRequestTimeOut(15L);
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1000);
+        assertEquals(0, dbUtil.getTotalNumber());
     }
 
     /**
@@ -622,6 +658,11 @@ public class IntegrationTest {
         ClickstreamAnalytics.flushEvents();
         Thread.sleep(1000);
         assertEquals(1, dbUtil.getTotalNumber());
+
+        dns.setIsUnKnowHost(false);
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1000);
+        assertEquals(0, dbUtil.getTotalNumber());
     }
 
     /**
@@ -664,6 +705,11 @@ public class IntegrationTest {
         ClickstreamAnalytics.flushEvents();
         Thread.sleep(1000);
         assertEquals(1, dbUtil.getTotalNumber());
+
+        ClickstreamAnalytics.getClickStreamConfiguration().withAuthCookie("testCookie");
+        ClickstreamAnalytics.flushEvents();
+        Thread.sleep(1000);
+        assertEquals(0, dbUtil.getTotalNumber());
     }
 
     /**
