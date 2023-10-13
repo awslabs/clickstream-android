@@ -174,11 +174,10 @@ public class AnalyticsEventTest {
         }
         event.addItems(new ClickstreamItem[] {builder.build()});
         JSONObject attributes = event.getAttributes();
-        JSONObject eventItem = (JSONObject) event.getItems().get(0);
         Assert.assertEquals(Event.ErrorCode.ITEM_CUSTOM_ATTRIBUTE_SIZE_EXCEED,
             attributes.getInt(Event.ReservedAttribute.ERROR_CODE));
-        Assert.assertEquals(12, eventItem.length());
-        Assert.assertFalse(eventItem.has("custom_key_11"));
+        JSONArray eventItems = event.getItems();
+        Assert.assertEquals(0, eventItems.length());
     }
 
     /**
@@ -196,11 +195,10 @@ public class AnalyticsEventTest {
             .build();
         event.addItems(new ClickstreamItem[] {item});
         JSONObject attributes = event.getAttributes();
-        JSONObject eventItem = (JSONObject) event.getItems().get(0);
         Assert.assertEquals(Event.ErrorCode.ITEM_CUSTOM_ATTRIBUTE_KEY_LENGTH_EXCEED,
             attributes.getInt(Event.ReservedAttribute.ERROR_CODE));
-        Assert.assertEquals(123, eventItem.getInt(ClickstreamAnalytics.Item.ITEM_ID));
-        Assert.assertFalse(eventItem.has(exceedLengthName));
+        JSONArray eventItems = event.getItems();
+        Assert.assertEquals(0, eventItems.length());
     }
 
     /**
@@ -217,11 +215,10 @@ public class AnalyticsEventTest {
             .build();
         event.addItems(new ClickstreamItem[] {item});
         JSONObject attributes = event.getAttributes();
-        JSONObject eventItem = (JSONObject) event.getItems().get(0);
         Assert.assertEquals(Event.ErrorCode.ITEM_CUSTOM_ATTRIBUTE_KEY_INVALID,
             attributes.getInt(Event.ReservedAttribute.ERROR_CODE));
-        Assert.assertEquals(123, eventItem.getInt(ClickstreamAnalytics.Item.ITEM_ID));
-        Assert.assertFalse(eventItem.has("01test"));
+        JSONArray eventItems = event.getItems();
+        Assert.assertEquals(0, eventItems.length());
     }
 
 
@@ -246,51 +243,10 @@ public class AnalyticsEventTest {
             .build();
         event.addItems(new ClickstreamItem[] {item});
         JSONObject attributes = event.getAttributes();
-        JSONObject eventItem = (JSONObject) event.getItems().get(0);
         Assert.assertEquals(Event.ErrorCode.ITEM_ATTRIBUTE_VALUE_LENGTH_EXCEED,
             attributes.getInt(Event.ReservedAttribute.ERROR_CODE));
-        Assert.assertEquals(123, eventItem.getInt(ClickstreamAnalytics.Item.ITEM_ID));
-        Assert.assertFalse(eventItem.has("testKey"));
-        Assert.assertFalse(eventItem.has(ClickstreamAnalytics.Item.ITEM_NAME));
-    }
-
-
-    /**
-     * test add items with multiple errors in one item.
-     *
-     * @throws JSONException exception
-     */
-    @Test
-    public void testMultiErrorInOneItem() throws JSONException {
-        AnalyticsEvent event = analyticsClient.createEvent("testEvent");
-        String exceedLengthName = "abcdefghijabcdefghijabcdefghijabcdefghijabcdefghij1";
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 21; i++) {
-            sb.append(exceedLengthName);
-        }
-        String exceedLengthValue = sb.toString();
-        ClickstreamItem.Builder builder = new ClickstreamItem.Builder()
-            .add(ClickstreamAnalytics.Item.ITEM_ID, 123)
-            .add(ClickstreamAnalytics.Item.ITEM_NAME, exceedLengthValue)
-            .add("exceedValueLengthKey", exceedLengthValue)
-            .add("01test", "test_value")
-            .add(exceedLengthName, "test_value");
-
-        for (int i = 0; i < 8; i++) {
-            builder.add("custom_key_" + (i + 1), "custom_value");
-        }
-
-        event.addItems(new ClickstreamItem[] {builder.build()});
-        JSONObject attributes = event.getAttributes();
-        JSONObject eventItem = (JSONObject) event.getItems().get(0);
-        Assert.assertEquals(Event.ErrorCode.ITEM_ATTRIBUTE_VALUE_LENGTH_EXCEED,
-            attributes.getInt(Event.ReservedAttribute.ERROR_CODE));
-        Assert.assertEquals(123, eventItem.getInt(ClickstreamAnalytics.Item.ITEM_ID));
-        Assert.assertFalse(eventItem.has("testKey"));
-        Assert.assertFalse(eventItem.has("exceedValueLengthKey"));
-        Assert.assertFalse(eventItem.has("01test"));
-        Assert.assertFalse(eventItem.has(exceedLengthName));
-        Assert.assertFalse(eventItem.has("custom_key_8"));
+        JSONArray eventItems = event.getItems();
+        Assert.assertEquals(0, eventItems.length());
     }
 
 }

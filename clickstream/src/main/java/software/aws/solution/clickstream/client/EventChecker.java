@@ -183,10 +183,7 @@ public final class EventChecker {
                 Limit.MAX_LENGTH_OF_ERROR_VALUE, true));
         }
         int customKeyNumber = 0;
-        EventError error = null;
         Iterator<String> keys = item.getAttributes().keys();
-        ArrayList<String> invalidKeys = new ArrayList<>();
-
         while (keys.hasNext()) {
             String key = keys.next();
             String valueStr = "";
@@ -232,17 +229,8 @@ public final class EventChecker {
                         Limit.MAX_LENGTH_OF_ERROR_VALUE, true));
             }
             if (attributeError != null) {
-                invalidKeys.add(key);
-                if (error == null) {
-                    error = attributeError;
-                }
+                return attributeError;
             }
-        }
-        if (error != null) {
-            for (String key : invalidKeys) {
-                item.getAttributes().remove(key);
-            }
-            return error;
         }
         return new EventError(ErrorCode.NO_ERROR, "");
     }

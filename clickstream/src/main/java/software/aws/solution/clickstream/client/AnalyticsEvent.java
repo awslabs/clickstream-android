@@ -291,7 +291,7 @@ public class AnalyticsEvent implements JSONSerializable {
                     attributes.putOpt(Event.ReservedAttribute.ERROR_CODE, attributeError.getErrorCode());
                     attributes.putOpt(Event.ReservedAttribute.ERROR_MESSAGE, attributeError.getErrorMessage());
                 }
-                if (attributeError.getErrorCode() != Event.ErrorCode.ITEM_SIZE_EXCEED) {
+                if (attributeError.getErrorCode() == 0) {
                     eventItems.put(item.getAttributes());
                 }
             }
