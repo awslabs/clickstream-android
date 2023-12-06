@@ -615,6 +615,11 @@ public class AutoRecordEventClientTest {
         JSONObject jsonObject = new JSONObject(eventString);
         String eventType = jsonObject.getString("event_type");
         assertEquals(Event.PresetEvent.FIRST_OPEN, eventType);
+        JSONObject attributes = jsonObject.getJSONObject("attributes");
+        assertNotNull(attributes.getString("_session_id"));
+        assertNotNull(attributes.getString("_session_start_timestamp"));
+        assertNotNull(attributes.getString("_session_duration"));
+        assertNotNull(attributes.getString("_session_number"));
         cursor.close();
     }
 

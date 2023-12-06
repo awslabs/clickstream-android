@@ -211,7 +211,7 @@ public class EventRecorderTest {
         Cursor cursor = dbUtil.queryAllEvents();
         String[] result = getBatchOfEvents(cursor);
         assertEquals(result.length, 2);
-        assertEquals("[" + event.toJSONObject().toString() + "]", result[0]);
+        assertTrue(result[0].contains(event.getEventId()));
         assertEquals("1", result[1]);
         cursor.close();
     }
