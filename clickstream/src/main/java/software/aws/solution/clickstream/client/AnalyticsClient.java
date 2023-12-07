@@ -35,7 +35,8 @@ public class AnalyticsClient {
     private static final Log LOG = LogFactory.getLog(AnalyticsClient.class);
     private final ClickstreamContext context;
     private final Map<String, Object> globalAttributes = new ConcurrentHashMap<>();
-    private JSONObject userAttributes;
+    private JSONObject simpleUserAttributes;
+    private JSONObject allUserAttributes;
     private String userId;
     private String userUniqueId;
     private final EventRecorder eventRecorder;
@@ -51,7 +52,8 @@ public class AnalyticsClient {
         eventRecorder = EventRecorder.newInstance(context);
         userId = PreferencesUtil.getCurrentUserId(context.getSystem().getPreferences());
         userUniqueId = PreferencesUtil.getCurrentUserUniqueId(context.getSystem().getPreferences());
-        userAttributes = PreferencesUtil.getUserAttribute(context.getSystem().getPreferences());
+        allUserAttributes = PreferencesUtil.getUserAttribute(context.getSystem().getPreferences());
+        simpleUserAttributes = getSimpleUserAttribute();
     }
 
     /**
@@ -99,7 +101,7 @@ public class AnalyticsClient {
      */
     public void addUserAttribute(String name, Object value) {
         if (value != null) {
-            Event.EventError error = Event.checkUserAttribute(userAttributes.length(), name, value);
+            Event.EventError error = Event.checkUserAttribute(allUserAttributes.length(), name, value);
             if (error != null) {
                 final AnalyticsEvent event = createEvent(Event.PresetEvent.CLICKSTREAM_ERROR);
                 event.addAttribute(Event.ReservedAttribute.ERROR_CODE, error.getErrorCode());
@@ -112,12 +114,12 @@ public class AnalyticsClient {
                 JSONObject attribute = new JSONObject();
                 attribute.put("value", value);
                 attribute.put("set_timestamp", timeStamp);
-                userAttributes.put(name, attribute);
+                allUserAttributes.put(name, attribute);
             } catch (JSONException exception) {
                 LOG.error("format user attribute, error message:" + exception.getMessage());
             }
         } else {
-            userAttributes.remove(name);
+            allUserAttributes.remove(name);
         }
     }
 
@@ -131,7 +133,7 @@ public class AnalyticsClient {
             this.userId = userId;
             PreferencesUtil.setCurrentUserId(context.getSystem().getPreferences(), userId);
             if (!StringUtil.isNullOrEmpty(userId)) {
-                userAttributes = new JSONObject();
+                allUserAttributes = new JSONObject();
                 JSONObject userInfo = PreferencesUtil.getNewUserInfo(context.getSystem().getPreferences(), userId);
                 try {
                     userUniqueId = userInfo.getString("user_unique_id");
@@ -146,6 +148,7 @@ public class AnalyticsClient {
                 newUserId = null;
             }
             addUserAttribute(Event.ReservedAttribute.USER_ID, newUserId);
+            simpleUserAttributes = getSimpleUserAttribute();
         }
     }
 
@@ -153,7 +156,7 @@ public class AnalyticsClient {
      * update user attribute after user attribute changed.
      */
     public void updateUserAttribute() {
-        PreferencesUtil.updateUserAttribute(context.getSystem().getPreferences(), userAttributes);
+        PreferencesUtil.updateUserAttribute(context.getSystem().getPreferences(), allUserAttributes);
     }
 
     /**
@@ -181,7 +184,10 @@ public class AnalyticsClient {
 
     private AnalyticsEvent createAnalyticsEvent(String eventType) {
         long timestamp = System.currentTimeMillis();
-        AnalyticsEvent event = new AnalyticsEvent(eventType, globalAttributes, userAttributes, timestamp, userUniqueId);
+        JSONObject eventUserAttribute =
+            eventType.equals(Event.PresetEvent.PROFILE_SET) ? allUserAttributes : simpleUserAttributes;
+        AnalyticsEvent event =
+            new AnalyticsEvent(eventType, globalAttributes, eventUserAttribute, timestamp, userUniqueId);
         event.setDeviceId(this.context.getDeviceId());
         event.setAppId(context.getClickstreamConfiguration().getAppId());
         event.setSdkInfo(context.getSDKInfo());
@@ -234,5 +240,25 @@ public class AnalyticsClient {
      */
     public ClickstreamConfiguration getClickstreamConfiguration() {
         return this.context.getClickstreamConfiguration();
+    }
+
+    /**
+     * get simple user attribute from allUserAttributes.
+     *
+     * @return userAttribute
+     */
+    private JSONObject getSimpleUserAttribute() {
+        JSONObject userAttribute = new JSONObject();
+        try {
+            userAttribute.put(Event.ReservedAttribute.USER_FIRST_TOUCH_TIMESTAMP,
+                allUserAttributes.getString(Event.ReservedAttribute.USER_FIRST_TOUCH_TIMESTAMP));
+            if (allUserAttributes.has(Event.ReservedAttribute.USER_ID)) {
+                userAttribute.put(Event.ReservedAttribute.USER_ID,
+                    allUserAttributes.getString(Event.ReservedAttribute.USER_ID));
+            }
+        } catch (final JSONException jsonException) {
+            LOG.error("Could not create Json object of simpleUserAttribute. error: " + jsonException.getMessage());
+        }
+        return userAttribute;
     }
 }
