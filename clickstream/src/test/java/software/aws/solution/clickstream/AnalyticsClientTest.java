@@ -49,7 +49,7 @@ public class AnalyticsClientTest {
 
     private AnalyticsClient analyticsClient;
     private Map<String, Object> globalAttributes;
-    private JSONObject userAttributes;
+    private JSONObject allUserAttributes;
     private String exceedLengthName = "abcdefghijabcdefghijabcdefghijabcdefghijabcdefghij";
     private final String invalidName = "1_goods_expose";
     private String exceedLengthValue = "";
@@ -78,7 +78,7 @@ public class AnalyticsClientTest {
         analyticsClient = clickstreamManager.getAnalyticsClient();
 
         globalAttributes = (Map<String, Object>) ReflectUtil.getFiled(analyticsClient, "globalAttributes");
-        userAttributes = (JSONObject) ReflectUtil.getFiled(analyticsClient, "userAttributes");
+        allUserAttributes = (JSONObject) ReflectUtil.getFiled(analyticsClient, "allUserAttributes");
 
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 21; i++) {
@@ -201,10 +201,10 @@ public class AnalyticsClientTest {
     @Test
     public void testAddUserAttributeWhenSuccess() throws JSONException {
         analyticsClient.addUserAttribute("_user_age", 18);
-        Assert.assertTrue(userAttributes.has("_user_age"));
-        Assert.assertEquals(18, ((JSONObject) userAttributes.get("_user_age")).get("value"));
+        Assert.assertTrue(allUserAttributes.has("_user_age"));
+        Assert.assertEquals(18, ((JSONObject) allUserAttributes.get("_user_age")).get("value"));
         Assert.assertTrue(System.currentTimeMillis() -
-            (Long) (((JSONObject) userAttributes.get("_user_age")).get("set_timestamp")) < 1000);
+            (Long) (((JSONObject) allUserAttributes.get("_user_age")).get("set_timestamp")) < 1000);
     }
 
     /**
@@ -266,8 +266,8 @@ public class AnalyticsClientTest {
             mockAnalyticsClient.addUserAttribute("name", "value" + i);
         }
         verify(mockAnalyticsClient, never()).createEvent(anyString());
-        Assert.assertEquals(2, userAttributes.length());
-        Assert.assertEquals("value100", ((JSONObject) userAttributes.get("name")).get("value"));
+        Assert.assertEquals(2, allUserAttributes.length());
+        Assert.assertEquals("value100", ((JSONObject) allUserAttributes.get("name")).get("value"));
     }
 
     /**
@@ -287,9 +287,9 @@ public class AnalyticsClientTest {
     @Test
     public void testAddUserAttributeForNullValue() {
         analyticsClient.addUserAttribute("UserAge", 20);
-        Assert.assertTrue(userAttributes.has("UserAge"));
+        Assert.assertTrue(allUserAttributes.has("UserAge"));
         analyticsClient.addUserAttribute("UserAge", null);
-        Assert.assertFalse(userAttributes.has("UserAge"));
+        Assert.assertFalse(allUserAttributes.has("UserAge"));
     }
 
     /**
@@ -316,10 +316,10 @@ public class AnalyticsClientTest {
         for (int i = 0; i < 100; i++) {
             analyticsClient.addUserAttribute("name" + i, "value" + i);
         }
-        Assert.assertTrue(userAttributes.has("name0"));
+        Assert.assertTrue(allUserAttributes.has("name0"));
         analyticsClient.addUserAttribute("name0", null);
-        Assert.assertFalse(userAttributes.has("name0"));
-        Assert.assertEquals(99, userAttributes.length());
+        Assert.assertFalse(allUserAttributes.has("name0"));
+        Assert.assertEquals(99, allUserAttributes.length());
     }
 
     /**
@@ -343,7 +343,7 @@ public class AnalyticsClientTest {
             analyticsClient.addUserAttribute("name" + i, "value" + i);
         }
         analyticsClient.addUserAttribute("name1000", null);
-        Assert.assertEquals(100, userAttributes.length());
+        Assert.assertEquals(100, allUserAttributes.length());
     }
 
     /**
@@ -365,7 +365,7 @@ public class AnalyticsClientTest {
             ClickstreamManagerFactory.create(context, AWSClickstreamPluginConfiguration
                 .builder().withAppId("demo-app").withEndpoint("http://example.com/collect").build());
         JSONObject userAttributesFromStorage =
-            (JSONObject) ReflectUtil.getFiled(clickstreamManager.getAnalyticsClient(), "userAttributes");
+            (JSONObject) ReflectUtil.getFiled(clickstreamManager.getAnalyticsClient(), "allUserAttributes");
         Assert.assertEquals(6, userAttributesFromStorage.length());
         Assert.assertEquals("carl", ((JSONObject) userAttributesFromStorage.get("user_name")).getString("value"));
         Assert.assertEquals("10837409", ((JSONObject) userAttributesFromStorage.get("_user_id")).getString("value"));
@@ -390,8 +390,8 @@ public class AnalyticsClientTest {
         Assert.assertEquals("", userId);
         Assert.assertNotNull(userUniqueId);
 
-        userAttributes = (JSONObject) ReflectUtil.getFiled(analyticsClient, "userAttributes");
-        Assert.assertTrue(userAttributes.has(Event.ReservedAttribute.USER_FIRST_TOUCH_TIMESTAMP));
+        allUserAttributes = (JSONObject) ReflectUtil.getFiled(analyticsClient, "allUserAttributes");
+        Assert.assertTrue(allUserAttributes.has(Event.ReservedAttribute.USER_FIRST_TOUCH_TIMESTAMP));
     }
 
     /**
@@ -406,8 +406,8 @@ public class AnalyticsClientTest {
         analyticsClient.updateUserId(userIdForA);
         analyticsClient.addUserAttribute("user_age", 12);
         analyticsClient.updateUserId(userIdForA);
-        userAttributes = (JSONObject) ReflectUtil.getFiled(analyticsClient, "userAttributes");
-        Assert.assertTrue(userAttributes.has("user_age"));
+        allUserAttributes = (JSONObject) ReflectUtil.getFiled(analyticsClient, "allUserAttributes");
+        Assert.assertTrue(allUserAttributes.has("user_age"));
         Assert.assertEquals(userUniqueId, ReflectUtil.getFiled(analyticsClient, "userUniqueId"));
     }
 
@@ -424,8 +424,8 @@ public class AnalyticsClientTest {
         analyticsClient.updateUserId(userIdForA);
         analyticsClient.addUserAttribute("user_age", 12);
         analyticsClient.updateUserId(userIdForB);
-        userAttributes = (JSONObject) ReflectUtil.getFiled(analyticsClient, "userAttributes");
-        Assert.assertFalse(userAttributes.has("user_age"));
+        allUserAttributes = (JSONObject) ReflectUtil.getFiled(analyticsClient, "allUserAttributes");
+        Assert.assertFalse(allUserAttributes.has("user_age"));
         Assert.assertNotEquals(userUniqueId, ReflectUtil.getFiled(analyticsClient, "userUniqueId"));
     }
 
@@ -446,6 +446,26 @@ public class AnalyticsClientTest {
         Assert.assertEquals(userUniqueId, ReflectUtil.getFiled(analyticsClient, "userUniqueId"));
         analyticsClient.updateUserId(userIdForB);
         Assert.assertEquals(userUniqueIdForB, ReflectUtil.getFiled(analyticsClient, "userUniqueId"));
+    }
+
+
+    /**
+     * test create event without custom user attributes.
+     *
+     * @throws JSONException the json exception
+     */
+    @Test
+    public void testCreateEventWithoutCustomUserAttributes() throws JSONException {
+        analyticsClient.updateUserId("123");
+        analyticsClient.addUserAttribute("userName", "carl");
+        analyticsClient.addUserAttribute("userAge", 22);
+
+        AnalyticsEvent testEvent = analyticsClient.createEvent("testEvent");
+        JSONObject user = testEvent.toJSONObject().getJSONObject("user");
+        Assert.assertTrue(user.has(Event.ReservedAttribute.USER_ID));
+        Assert.assertTrue(user.has(Event.ReservedAttribute.USER_FIRST_TOUCH_TIMESTAMP));
+        Assert.assertFalse(user.has("userName"));
+        Assert.assertFalse(user.has("userAge"));
     }
 
     /**
