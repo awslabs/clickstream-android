@@ -101,7 +101,7 @@ public class AnalyticsClient {
      */
     public void addUserAttribute(String name, Object value) {
         if (value != null) {
-            Event.EventError error = EventChecker.checkUserAttribute(userAttributes.length(), name, value);
+            Event.EventError error = EventChecker.checkUserAttribute(allUserAttributes.length(), name, value);
             if (error.getErrorCode() > 0) {
                 final AnalyticsEvent event = createEvent(Event.PresetEvent.CLICKSTREAM_ERROR);
                 event.addAttribute(Event.ReservedAttribute.ERROR_CODE, error.getErrorCode());
