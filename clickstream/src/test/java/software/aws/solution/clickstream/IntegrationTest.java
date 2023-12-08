@@ -353,21 +353,14 @@ public class IntegrationTest {
             .add("_user_name", "carl")
             .build();
         ClickstreamAnalytics.addUserAttributes(clickstreamUserAttribute);
-        ClickstreamEvent event = ClickstreamEvent.builder()
-            .name("PasswordReset")
-            .add("Message", "SMS")
-            .add("Successful", true)
-            .add("ProcessDuration", 792)
-            .add("Number", 20.1)
-            .build();
-        ClickstreamAnalytics.recordEvent(event);
-        assertEquals(3, dbUtil.getTotalNumber());
+        assertEquals(2, dbUtil.getTotalNumber());
 
         Cursor cursor = dbUtil.queryAllEvents();
         cursor.moveToLast();
         String eventString = cursor.getString(2);
         JSONObject jsonObject = new JSONObject(eventString);
-        JSONObject attribute = jsonObject.getJSONObject("attributes");
+        String eventType = jsonObject.getString("event_type");
+        Assert.assertEquals(Event.PresetEvent.PROFILE_SET, eventType);
         JSONObject user = jsonObject.getJSONObject("user");
         Assert.assertEquals("13212", ((JSONObject) user.get(Event.ReservedAttribute.USER_ID)).getString("value"));
         Assert.assertEquals(21, ((JSONObject) user.get("_user_age")).getInt("value"));
@@ -375,9 +368,6 @@ public class IntegrationTest {
         Assert.assertEquals("carl", ((JSONObject) user.get("_user_name")).getString("value"));
         Assert.assertTrue(((JSONObject) user.get("_user_name")).has("set_timestamp"));
         Assert.assertEquals(timestamp, ((JSONObject) user.get("timestamp")).getLong("value"));
-
-        Assert.assertTrue(attribute.getBoolean("Successful"));
-        Assert.assertEquals("SMS", attribute.getString("Message"));
 
         ClickstreamAnalytics.flushEvents();
         Thread.sleep(1000);
@@ -400,16 +390,8 @@ public class IntegrationTest {
             .build();
         ClickstreamAnalytics.setUserId("13212");
         ClickstreamAnalytics.addUserAttributes(clickstreamUserAttribute);
-        ClickstreamEvent event = ClickstreamEvent.builder()
-            .name("PasswordReset")
-            .add("Message", "SMS")
-            .add("Successful", true)
-            .add("ProcessDuration", 792)
-            .add("Number", 20.1)
-            .build();
         ClickstreamAnalytics.setUserId("12345");
-        ClickstreamAnalytics.recordEvent(event);
-        assertEquals(4, dbUtil.getTotalNumber());
+        assertEquals(3, dbUtil.getTotalNumber());
 
         Cursor cursor = dbUtil.queryAllEvents();
         cursor.moveToLast();
@@ -458,8 +440,8 @@ public class IntegrationTest {
         JSONObject jsonObject = new JSONObject(eventString);
         JSONObject user = jsonObject.getJSONObject("user");
         Assert.assertFalse(user.has(Event.ReservedAttribute.USER_ID));
-        Assert.assertEquals(21, ((JSONObject) user.get("_user_age")).get("value"));
-        Assert.assertEquals("carl", ((JSONObject) user.get("_user_name")).get("value"));
+        Assert.assertFalse(user.has("_user_age"));
+        Assert.assertFalse(user.has("_user_name"));
 
         ClickstreamAnalytics.flushEvents();
         Thread.sleep(1000);
@@ -891,7 +873,8 @@ public class IntegrationTest {
         ClickstreamAnalytics.getClickStreamConfiguration().withCustomDns(null);
         Map<String, Object> globalAttribute =
             (Map<String, Object>) ReflectUtil.getFiled(analyticsClient, "globalAttributes");
-        ReflectUtil.modifyFiled(analyticsClient, "userAttributes", new JSONObject());
+        ReflectUtil.modifyFiled(analyticsClient, "simpleUserAttributes", new JSONObject());
+        ReflectUtil.modifyFiled(analyticsClient, "allUserAttributes", new JSONObject());
         globalAttribute.clear();
     }
 
