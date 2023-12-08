@@ -48,16 +48,18 @@ public final class EventChecker {
      * @return the EventError object
      */
     public static EventError checkEventName(String eventName) {
+        EventError error = new EventError();
+        error.setErrorCode(ErrorCode.NO_ERROR);
         if (!isValidName(eventName)) {
-            return new EventError(ErrorCode.EVENT_NAME_INVALID,
-                "Event name can only contains uppercase and lowercase letters, " +
-                    "underscores, number, and is not start with a number. event name: " + eventName);
+            error.setErrorCode(ErrorCode.EVENT_NAME_INVALID);
+            error.setErrorMessage("Event name can only contains uppercase and lowercase letters, " +
+                "underscores, number, and is not start with a number. event name: " + eventName);
         } else if (eventName.length() > Limit.MAX_LENGTH_OF_NAME) {
-            return new EventError(ErrorCode.EVENT_NAME_LENGTH_EXCEED,
-                "Event name is too long, the max event type length is " +
-                    Limit.MAX_LENGTH_OF_NAME + "characters. event name: " + eventName);
+            error.setErrorCode(ErrorCode.EVENT_NAME_LENGTH_EXCEED);
+            error.setErrorMessage("Event name is too long, the max event type length is " +
+                Limit.MAX_LENGTH_OF_NAME + "characters. event name: " + eventName);
         }
-        return new EventError(ErrorCode.NO_ERROR, "");
+        return error;
     }
 
     /**
@@ -81,41 +83,44 @@ public final class EventChecker {
      * @return the ErrorType
      */
     public static EventError checkAttribute(int currentNumber, String name, Object value) {
+        EventError error = new EventError();
+        error.setErrorCode(ErrorCode.NO_ERROR);
+        String errorMsg = null;
         if (currentNumber >= Limit.MAX_NUM_OF_ATTRIBUTES) {
-            LOG.error("reached the max number of attributes limit ("
-                + Limit.MAX_NUM_OF_ATTRIBUTES + "). and the attribute: " + name + " will not be recorded");
-            return new EventError(ErrorCode.ATTRIBUTE_SIZE_EXCEED,
+            errorMsg = "reached the max number of attributes limit ("
+                + Limit.MAX_NUM_OF_ATTRIBUTES + "). and the attribute: " + name + " will not be recorded";
+            error.setErrorCode(ErrorCode.ATTRIBUTE_SIZE_EXCEED);
+            error.setErrorMessage(
                 StringUtil.clipString("attribute name: " + name, Limit.MAX_LENGTH_OF_ERROR_VALUE, true));
-        }
-        if (name.length() > Limit.MAX_LENGTH_OF_NAME) {
-            LOG.error("attribute : " + name + ", reached the max length of attributes name limit("
+        } else if (name.length() > Limit.MAX_LENGTH_OF_NAME) {
+            errorMsg = "attribute : " + name + ", reached the max length of attributes name limit("
                 + Limit.MAX_LENGTH_OF_NAME + "). current length is:(" + name.length() +
-                ") and the attribute will not be recorded");
-            return new EventError(ErrorCode.ATTRIBUTE_NAME_LENGTH_EXCEED,
+                ") and the attribute will not be recorded";
+            error.setErrorCode(ErrorCode.ATTRIBUTE_NAME_LENGTH_EXCEED);
+            error.setErrorMessage(
                 StringUtil.clipString("attribute name length is:(" + name.length() + ") name is:" + name,
                     Limit.MAX_LENGTH_OF_ERROR_VALUE, true));
-        }
-        if (!isValidName(name)) {
-            LOG.error("attribute : " + name + ", was not valid, attribute name can only contains" +
+        } else if (!isValidName(name)) {
+            errorMsg = "attribute : " + name + ", was not valid, attribute name can only contains" +
                 " uppercase and lowercase letters, underscores, number, and is not start with a number." +
-                " so the attribute will not be recorded");
-            return new EventError(ErrorCode.ATTRIBUTE_NAME_INVALID,
-                StringUtil.clipString(name, Limit.MAX_LENGTH_OF_ERROR_VALUE, true));
-        }
-
-        if (value instanceof String) {
+                " so the attribute will not be recorded";
+            error.setErrorCode(ErrorCode.ATTRIBUTE_NAME_INVALID);
+            error.setErrorMessage(StringUtil.clipString(name, Limit.MAX_LENGTH_OF_ERROR_VALUE, true));
+        } else if (value instanceof String) {
             int valueLength = ((String) value).length();
             if (valueLength > Limit.MAX_LENGTH_OF_VALUE) {
-                LOG.error("attribute : " + name + ", reached the max length of attributes value limit ("
+                errorMsg = "attribute : " + name + ", reached the max length of attributes value limit ("
                     + Limit.MAX_LENGTH_OF_VALUE + "). current length is:(" + valueLength +
-                    "). and the attribute will not be recorded, attribute value:" + value);
-
-                return new EventError(ErrorCode.ATTRIBUTE_VALUE_LENGTH_EXCEED,
-                    StringUtil.clipString("attribute name:" + name + ", attribute value:" + value,
-                        Limit.MAX_LENGTH_OF_ERROR_VALUE, true));
+                    "). and the attribute will not be recorded, attribute value:" + value;
+                error.setErrorCode(ErrorCode.ATTRIBUTE_VALUE_LENGTH_EXCEED);
+                error.setErrorMessage(StringUtil.clipString("attribute name:" + name + ", attribute value:" + value,
+                    Limit.MAX_LENGTH_OF_ERROR_VALUE, true));
             }
         }
-        return new EventError(ErrorCode.NO_ERROR, "");
+        if (errorMsg != null) {
+            LOG.warn(errorMsg);
+        }
+        return error;
     }
 
     /**
@@ -127,39 +132,45 @@ public final class EventChecker {
      * @return the ErrorType
      */
     public static EventError checkUserAttribute(int currentNumber, String name, Object value) {
+        EventError error = new EventError();
+        error.setErrorCode(ErrorCode.NO_ERROR);
+        String errorMsg = null;
         if (currentNumber >= Limit.MAX_NUM_OF_USER_ATTRIBUTES) {
-            LOG.error("reached the max number of user attributes limit ("
-                + Limit.MAX_NUM_OF_USER_ATTRIBUTES + "). and the user attribute: " + name + " will not be recorded");
-            return new EventError(ErrorCode.USER_ATTRIBUTE_SIZE_EXCEED,
+            errorMsg = "reached the max number of user attributes limit ("
+                + Limit.MAX_NUM_OF_USER_ATTRIBUTES + "). and the user attribute: " + name + " will not be recorded";
+            error.setErrorCode(ErrorCode.USER_ATTRIBUTE_SIZE_EXCEED);
+            error.setErrorMessage(
                 StringUtil.clipString("attribute name: " + name, Limit.MAX_LENGTH_OF_ERROR_VALUE, true));
-        }
-        if (name.length() > Limit.MAX_LENGTH_OF_NAME) {
-            LOG.error("user attribute : " + name + ", reached the max length of attributes name limit("
+        } else if (name.length() > Limit.MAX_LENGTH_OF_NAME) {
+            errorMsg = "user attribute : " + name + ", reached the max length of attributes name limit("
                 + Limit.MAX_LENGTH_OF_NAME + "). current length is:(" + name.length() +
-                ") and the attribute will not be recorded");
-            return new EventError(ErrorCode.USER_ATTRIBUTE_NAME_LENGTH_EXCEED,
+                ") and the attribute will not be recorded";
+            error.setErrorCode(ErrorCode.USER_ATTRIBUTE_NAME_LENGTH_EXCEED);
+            error.setErrorMessage(
                 StringUtil.clipString("user attribute name length is:(" + name.length() + ") name is:" + name,
                     Limit.MAX_LENGTH_OF_ERROR_VALUE, true));
-        }
-        if (!isValidName(name)) {
-            LOG.error("user attribute : " + name + ", was not valid, user attribute name can only contains" +
+        } else if (!isValidName(name)) {
+            errorMsg = "user attribute : " + name + ", was not valid, user attribute name can only contains" +
                 " uppercase and lowercase letters, underscores, number, and is not start with a number." +
-                " so the attribute will not be recorded");
-            return new EventError(ErrorCode.USER_ATTRIBUTE_NAME_INVALID,
-                StringUtil.clipString(name, Limit.MAX_LENGTH_OF_ERROR_VALUE, true));
-        }
-        if (value instanceof String) {
+                " so the attribute will not be recorded";
+            error.setErrorCode(ErrorCode.USER_ATTRIBUTE_NAME_INVALID);
+            error.setErrorMessage(StringUtil.clipString(name, Limit.MAX_LENGTH_OF_ERROR_VALUE, true));
+        } else if (value instanceof String) {
             int valueLength = ((String) value).length();
             if (valueLength > Limit.MAX_LENGTH_OF_USER_VALUE) {
-                LOG.error("user attribute : " + name + ", reached the max length of attributes value limit ("
+                errorMsg = "user attribute : " + name + ", reached the max length of attributes value limit ("
                     + Limit.MAX_LENGTH_OF_USER_VALUE + "). current length is:(" + valueLength +
-                    "). and the attribute will not be recorded, attribute value:" + value);
-                return new EventError(ErrorCode.USER_ATTRIBUTE_VALUE_LENGTH_EXCEED,
+                    "). and the attribute will not be recorded, attribute value:" + value;
+                error.setErrorCode(ErrorCode.USER_ATTRIBUTE_VALUE_LENGTH_EXCEED);
+                error.setErrorMessage(
                     StringUtil.clipString("user attribute name:" + name + ", attribute value:" + value,
                         Limit.MAX_LENGTH_OF_ERROR_VALUE, true));
             }
         }
-        return new EventError(ErrorCode.NO_ERROR, "");
+        if (errorMsg != null) {
+            LOG.warn(errorMsg);
+        }
+        return error;
     }
 
     /**
@@ -177,61 +188,65 @@ public final class EventChecker {
             String itemKey = item.getAttributes().toString();
             String errorMsg = "reached the max number of items limit" + Event.Limit.MAX_NUM_OF_ITEMS +
                 ". and the item: " + itemKey + " will not be recorded";
-            LOG.error(errorMsg);
+            LOG.warn(errorMsg);
             return new EventError(ErrorCode.ITEM_SIZE_EXCEED, StringUtil.clipString(errorMsg,
                 Limit.MAX_LENGTH_OF_ERROR_VALUE, true));
         }
         int customKeyNumber = 0;
         Iterator<String> keys = item.getAttributes().keys();
+        EventError error = new EventError();
+        error.setErrorCode(ErrorCode.NO_ERROR);
+        String errorMsg = null;
         while (keys.hasNext()) {
             String key = keys.next();
             String valueStr = "";
             try {
                 valueStr = item.getAttributes().get(key).toString();
             } catch (JSONException exception) {
-                LOG.error("error getting item value for key: " + key + ", error message: " + exception.getMessage());
+                LOG.warn("error getting item value for key: " + key + ", error message: " + exception.getMessage());
             }
-            EventError attributeError = null;
             if (!itemKeySet.contains(key)) {
                 customKeyNumber += 1;
                 if (customKeyNumber > Limit.MAX_NUM_OF_CUSTOM_ITEM_ATTRIBUTE) {
-                    LOG.error("reached the max number of custom item attributes limit ("
+                    errorMsg = "reached the max number of custom item attributes limit ("
                         + Limit.MAX_NUM_OF_CUSTOM_ITEM_ATTRIBUTE + "). and the custom item attribute: " + key +
-                        " will not be recorded");
-                    attributeError = new EventError(ErrorCode.ITEM_CUSTOM_ATTRIBUTE_SIZE_EXCEED,
+                        " will not be recorded";
+                    error.setErrorCode(ErrorCode.ITEM_CUSTOM_ATTRIBUTE_SIZE_EXCEED);
+                    error.setErrorMessage(
                         StringUtil.clipString("item attribute key: " + key, Limit.MAX_LENGTH_OF_ERROR_VALUE, true));
                 } else if (key.length() > Limit.MAX_LENGTH_OF_NAME) {
-                    LOG.error("item attribute key: " + key + ", reached the max length of item attributes key limit("
+                    errorMsg = "item attribute key: " + key + ", reached the max length of item attributes key limit("
                         + Limit.MAX_LENGTH_OF_NAME + "). current length is:(" + key.length() +
-                        ") and the item attribute will not be recorded");
-                    attributeError = new EventError(ErrorCode.ITEM_CUSTOM_ATTRIBUTE_KEY_LENGTH_EXCEED,
+                        ") and the item attribute will not be recorded";
+                    error.setErrorCode(ErrorCode.ITEM_CUSTOM_ATTRIBUTE_KEY_LENGTH_EXCEED);
+                    error.setErrorMessage(
                         StringUtil.clipString("item attribute key length is:(" + key.length() + ") key is:" + key,
                             Limit.MAX_LENGTH_OF_ERROR_VALUE, true));
                 } else if (!isValidName(key)) {
-                    LOG.error("item attribute key: " + key + ", was not valid, item attribute key can only contains" +
+                    errorMsg = "item attribute key: " + key + ", was not valid, item attribute key can only contains" +
                         " uppercase and lowercase letters, underscores, number, and is not start with a number." +
-                        " so the item attribute will not be recorded");
-                    attributeError = new EventError(ErrorCode.ITEM_CUSTOM_ATTRIBUTE_KEY_INVALID,
-                        StringUtil.clipString(key, Limit.MAX_LENGTH_OF_ERROR_VALUE, true));
+                        " so the item attribute will not be recorded";
+                    error.setErrorCode(ErrorCode.ITEM_CUSTOM_ATTRIBUTE_KEY_INVALID);
+                    error.setErrorMessage(StringUtil.clipString(key, Limit.MAX_LENGTH_OF_ERROR_VALUE, true));
                 }
             }
-            if (attributeError == null && valueStr.length() > Limit.MAX_LENGTH_OF_ITEM_VALUE) {
-                String errorMsg =
+            if (error.getErrorCode() == ErrorCode.NO_ERROR && valueStr.length() > Limit.MAX_LENGTH_OF_ITEM_VALUE) {
+                errorMsg =
                     "item attribute : " + key + ", reached the max length of item attribute value limit (" +
                         Limit.MAX_LENGTH_OF_ITEM_VALUE + "). current length is: (" + valueStr.length() +
                         "). and the item attribute will not be recorded, attribute value: " + valueStr;
-                LOG.error(errorMsg);
                 String errorString =
                     "item attribute name: " + key + ", item attribute value: " + valueStr;
-                attributeError =
-                    new EventError(ErrorCode.ITEM_ATTRIBUTE_VALUE_LENGTH_EXCEED, StringUtil.clipString(errorString,
-                        Limit.MAX_LENGTH_OF_ERROR_VALUE, true));
+                error.setErrorCode(ErrorCode.ITEM_ATTRIBUTE_VALUE_LENGTH_EXCEED);
+                error.setErrorMessage(StringUtil.clipString(errorString,
+                    Limit.MAX_LENGTH_OF_ERROR_VALUE, true));
             }
-            if (attributeError != null) {
-                return attributeError;
+            if (error.getErrorCode() > 0) {
+                LOG.warn(errorMsg);
+                return error;
             }
         }
-        return new EventError(ErrorCode.NO_ERROR, "");
+        return error;
     }
 
     private static void initItemKeySet() {

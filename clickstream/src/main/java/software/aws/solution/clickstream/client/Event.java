@@ -152,8 +152,11 @@ public final class Event {
      * Event for return.
      */
     public static class EventError {
-        private final int errorCode;
-        private final String errorMessage;
+        private int errorCode;
+        private String errorMessage;
+
+        EventError() {
+        }
 
         EventError(int errorType, String errorMessage) {
             this.errorCode = errorType;
@@ -178,6 +181,23 @@ public final class Event {
             return errorMessage;
         }
 
+        /**
+         * set error code.
+         *
+         * @param errorCode the error code
+         */
+        public void setErrorCode(int errorCode) {
+            this.errorCode = errorCode;
+        }
+
+        /**
+         * set error message.
+         *
+         * @param errorMessage the error message
+         */
+        public void setErrorMessage(String errorMessage) {
+            this.errorMessage = errorMessage;
+        }
     }
 
     /**
