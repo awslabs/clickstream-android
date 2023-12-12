@@ -8,9 +8,11 @@ Clickstream Android SDK can help you easily collect and report in-app events fro
 
 The SDK relies on the Amplify for Android SDK Core Library and is developed according to the Amplify Android SDK plug-in specification. In addition, we've added features that automatically collect common user events and attributes (e.g., screen view, first open) to simplify data collection for users.
 
+Visit our [Documentation site](https://awslabs.github.io/clickstream-analytics-on-aws/en/latest/sdk-manual/android/) to learn more about Clickstream Android SDK.
+
 ### Platform Support
 
-The Clickstream SDK supports Android API level 16 (Android 4.1) and above.
+Clickstream Android SDK supports Android 4.1 (API level 16) and later.
 
 ## Integrate SDK
 
@@ -173,6 +175,32 @@ ClickstreamAnalytics.addUserAttributes(clickstreamUserAttribute);
 
 Current login user‘s attributes will be cached in disk, so the next time app launch you don't need to set all user's attribute again, of course you can update the current user's attribute when it changes.
 
+#### Record event with items
+
+You can add the following code to log an event with an item.
+
+```java
+import software.aws.solution.clickstream.ClickstreamAnalytcs;
+import software.aws.solution.clickstream.ClickstreamItem;
+
+ClickstreamItem item_book = ClickstreamItem.builder()
+     .add(ClickstreamAnalytics.Item.ITEM_ID, "123")
+     .add(ClickstreamAnalytics.Item.ITEM_NAME, "'Nature'")
+     .add(ClickstreamAnalytics.Item.ITEM_CATEGORY, "book")
+     .add(ClickstreamAnalytics.Item.PRICE, 99)
+     .build();
+
+ClickstreamEvent event = ClickstreamEvent.builder()
+     .name("view_item")
+     .add(ClickstreamAnalytics.Item.ITEM_ID, "123")
+     .add(ClickstreamAnalytics.Item.CURRENCY, "USD")
+     .add("event_category", "recommended")
+     .setItems(new ClickstreamItem[] {item_book})
+     .build();
+
+ClickstreamAnalytics.recordEvent(event);
+```
+
 #### Log the event json in debug mode
 
 ```java
@@ -195,7 +223,7 @@ ClickstreamAnalytics.getClickStreamConfiguration()
             .withCustomDns(CustomOkhttpDns.getInstance());
 ```
 
-If you want to use custom DNS for network request, you can create your `CustomOkhttpDns` which implementaion `okhttp3.Dns`, then config `.withCustomDns(CustomOkhttpDns.getInstance())` to make it works.
+If you want to use custom DNS for network request, you can create your `CustomOkhttpDns` which implementation `okhttp3.Dns`, then config `.withCustomDns(CustomOkhttpDns.getInstance())` to make it works.
 
 #### Send event immediately
 

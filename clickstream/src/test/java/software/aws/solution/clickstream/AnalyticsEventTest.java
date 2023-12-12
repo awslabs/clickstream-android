@@ -18,6 +18,7 @@ package software.aws.solution.clickstream;
 import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
@@ -62,11 +63,9 @@ public class AnalyticsEventTest {
 
     /**
      * test the analyticsClient with createEvent.
-     *
-     * @throws JSONException the json exception
      */
     @Test
-    public void createEvent() throws JSONException {
+    public void createEvent() {
         AnalyticsEvent event = analyticsClient.createEvent("testEvent");
         Assert.assertNotNull(event.getEventId());
         Assert.assertEquals(event.getEventType(), "testEvent");
@@ -137,4 +136,117 @@ public class AnalyticsEventTest {
             Assert.fail("Json parse err" + error.getMessage());
         }
     }
+
+    /**
+     * test add items reached the max number of items limit.
+     *
+     * @throws JSONException exception
+     */
+    @Test
+    public void testReachedTheMaxNumOfItems() throws JSONException {
+        AnalyticsEvent event = analyticsClient.createEvent("testEvent");
+        ClickstreamItem[] items = new ClickstreamItem[Event.Limit.MAX_NUM_OF_ITEMS + 1];
+        for (int i = 0; i < 101; i++) {
+            items[i] = new ClickstreamItem.Builder()
+                .add(ClickstreamAnalytics.Item.ITEM_ID, i)
+                .build();
+        }
+        event.addItems(items);
+        JSONObject attributes = event.getAttributes();
+        JSONArray eventItems = event.getItems();
+        Assert.assertEquals(Event.ErrorCode.ITEM_SIZE_EXCEED, attributes.getInt(Event.ReservedAttribute.ERROR_CODE));
+        Assert.assertEquals(Event.Limit.MAX_NUM_OF_ITEMS, eventItems.length());
+    }
+
+    /**
+     * test add items reached the max number of custom item attribute.
+     *
+     * @throws JSONException exception
+     */
+    @Test
+    public void testReachedTheMaxNumOfCustomItemAttribute() throws JSONException {
+        AnalyticsEvent event = analyticsClient.createEvent("testEvent");
+        ClickstreamItem.Builder builder = new ClickstreamItem.Builder()
+            .add(ClickstreamAnalytics.Item.ITEM_ID, 123)
+            .add(ClickstreamAnalytics.Item.ITEM_NAME, "custom_item");
+        for (int i = 0; i < Event.Limit.MAX_NUM_OF_CUSTOM_ITEM_ATTRIBUTE + 1; i++) {
+            builder.add("custom_key_" + (i + 1), "custom_value");
+        }
+        event.addItems(new ClickstreamItem[] {builder.build()});
+        JSONObject attributes = event.getAttributes();
+        Assert.assertEquals(Event.ErrorCode.ITEM_CUSTOM_ATTRIBUTE_SIZE_EXCEED,
+            attributes.getInt(Event.ReservedAttribute.ERROR_CODE));
+        JSONArray eventItems = event.getItems();
+        Assert.assertEquals(0, eventItems.length());
+    }
+
+    /**
+     * test add items with item attribute key exceed the max length.
+     *
+     * @throws JSONException exception
+     */
+    @Test
+    public void testReachedTheMaxLengthOfCustomItemAttributeKey() throws JSONException {
+        AnalyticsEvent event = analyticsClient.createEvent("testEvent");
+        String exceedLengthName = "abcdefghijabcdefghijabcdefghijabcdefghijabcdefghij1";
+        ClickstreamItem item = new ClickstreamItem.Builder()
+            .add(ClickstreamAnalytics.Item.ITEM_ID, 123)
+            .add(exceedLengthName, "test_value")
+            .build();
+        event.addItems(new ClickstreamItem[] {item});
+        JSONObject attributes = event.getAttributes();
+        Assert.assertEquals(Event.ErrorCode.ITEM_CUSTOM_ATTRIBUTE_KEY_LENGTH_EXCEED,
+            attributes.getInt(Event.ReservedAttribute.ERROR_CODE));
+        JSONArray eventItems = event.getItems();
+        Assert.assertEquals(0, eventItems.length());
+    }
+
+    /**
+     * test add items with invalid item attribute key.
+     *
+     * @throws JSONException exception
+     */
+    @Test
+    public void testAddInvalidCustomItemAttributeKey() throws JSONException {
+        AnalyticsEvent event = analyticsClient.createEvent("testEvent");
+        ClickstreamItem item = new ClickstreamItem.Builder()
+            .add(ClickstreamAnalytics.Item.ITEM_ID, 123)
+            .add("01test", "test_value")
+            .build();
+        event.addItems(new ClickstreamItem[] {item});
+        JSONObject attributes = event.getAttributes();
+        Assert.assertEquals(Event.ErrorCode.ITEM_CUSTOM_ATTRIBUTE_KEY_INVALID,
+            attributes.getInt(Event.ReservedAttribute.ERROR_CODE));
+        JSONArray eventItems = event.getItems();
+        Assert.assertEquals(0, eventItems.length());
+    }
+
+
+    /**
+     * test add items reached the max length of attribute value.
+     *
+     * @throws JSONException exception
+     */
+    @Test
+    public void testReachedTheMaxLengthOfCustomItemAttributeValue() throws JSONException {
+        AnalyticsEvent event = analyticsClient.createEvent("testEvent");
+        String str = "abcdefghijabcdefghijabcdefghijabcdefghijabcdefghij";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 21; i++) {
+            sb.append(str);
+        }
+        String exceedLengthValue = sb.toString();
+        ClickstreamItem item = new ClickstreamItem.Builder()
+            .add(ClickstreamAnalytics.Item.ITEM_ID, 123)
+            .add(ClickstreamAnalytics.Item.ITEM_NAME, exceedLengthValue)
+            .add("testKey", exceedLengthValue)
+            .build();
+        event.addItems(new ClickstreamItem[] {item});
+        JSONObject attributes = event.getAttributes();
+        Assert.assertEquals(Event.ErrorCode.ITEM_ATTRIBUTE_VALUE_LENGTH_EXCEED,
+            attributes.getInt(Event.ReservedAttribute.ERROR_CODE));
+        JSONArray eventItems = event.getItems();
+        Assert.assertEquals(0, eventItems.length());
+    }
+
 }

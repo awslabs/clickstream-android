@@ -151,4 +151,66 @@ public final class ClickstreamAnalytics {
         assert client != null;
         return client.getClickstreamConfiguration();
     }
+
+    /**
+     * Item attributes.
+     */
+    public static class Item {
+        /**
+         * key to item id.
+         */
+        public static final String ITEM_ID = "id";
+        /**
+         * key to item name.
+         */
+        public static final String ITEM_NAME = "name";
+        /**
+         * key to item location id.
+         */
+        public static final String LOCATION_ID = "location_id";
+        /**
+         * key to item brand.
+         */
+        public static final String ITEM_BRAND = "brand";
+        /**
+         * key to item currency.
+         */
+        public static final String CURRENCY = "currency";
+        /**
+         * key to item price.
+         */
+        public static final String PRICE = "price";
+        /**
+         * key to item quantity.
+         */
+        public static final String QUANTITY = "quantity";
+        /**
+         * key to item creative name.
+         */
+        public static final String CREATIVE_NAME = "creative_name";
+        /**
+         * key to item creative slot.
+         */
+        public static final String CREATIVE_SLOT = "creative_slot";
+        /**
+         * key to item category.
+         */
+        public static final String ITEM_CATEGORY = "item_category";
+        /**
+         * key to item category2.
+         */
+        public static final String ITEM_CATEGORY2 = "item_category2";
+        /**
+         * key to item category3.
+         */
+        public static final String ITEM_CATEGORY3 = "item_category3";
+        /**
+         * key to item category4.
+         */
+        public static final String ITEM_CATEGORY4 = "item_category4";
+        /**
+         * key to item category5.
+         */
+        public static final String ITEM_CATEGORY5 = "item_category5";
+    }
 }

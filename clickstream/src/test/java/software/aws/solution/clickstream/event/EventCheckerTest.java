@@ -19,32 +19,32 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-import software.aws.solution.clickstream.client.Event;
+import software.aws.solution.clickstream.client.EventChecker;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(manifest = Config.NONE, sdk = 23)
-public class EventTest {
+public class EventCheckerTest {
 
     /**
      * test the name is valid.
      */
     @Test
     public void tesIsValidName() {
-        assertFalse(Event.isValidName(""));
-        assertTrue(Event.isValidName("abc"));
-        assertFalse(Event.isValidName("123"));
-        assertTrue(Event.isValidName("AAA"));
-        assertTrue(Event.isValidName("a_ab"));
-        assertTrue(Event.isValidName("a_ab_1A"));
-        assertTrue(Event.isValidName("add_to_cart"));
-        assertTrue(Event.isValidName("Screen_view"));
-        assertFalse(Event.isValidName("0abc"));
-        assertFalse(Event.isValidName("1abc"));
-        assertFalse(Event.isValidName("9Abc"));
-        assertTrue(Event.isValidName("A9bc"));
-        assertFalse(Event.isValidName("A9bc-"));
+        assertFalse(EventChecker.isValidName(""));
+        assertTrue(EventChecker.isValidName("abc"));
+        assertFalse(EventChecker.isValidName("123"));
+        assertTrue(EventChecker.isValidName("AAA"));
+        assertTrue(EventChecker.isValidName("a_ab"));
+        assertTrue(EventChecker.isValidName("a_ab_1A"));
+        assertTrue(EventChecker.isValidName("add_to_cart"));
+        assertTrue(EventChecker.isValidName("Screen_view"));
+        assertFalse(EventChecker.isValidName("0abc"));
+        assertFalse(EventChecker.isValidName("1abc"));
+        assertFalse(EventChecker.isValidName("9Abc"));
+        assertTrue(EventChecker.isValidName("A9bc"));
+        assertFalse(EventChecker.isValidName("A9bc-"));
     }
 }

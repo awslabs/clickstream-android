@@ -66,8 +66,8 @@ public class AnalyticsClient {
      */
     public void addGlobalAttribute(String name, Object value) {
         if (value != null) {
-            Event.EventError error = Event.checkAttribute(globalAttributes.size(), name, value);
-            if (error != null) {
+            Event.EventError error = EventChecker.checkAttribute(globalAttributes.size(), name, value);
+            if (error.getErrorCode() > 0) {
                 final AnalyticsEvent event = createEvent(Event.PresetEvent.CLICKSTREAM_ERROR);
                 event.addAttribute(Event.ReservedAttribute.ERROR_CODE, error.getErrorCode());
                 event.addAttribute(Event.ReservedAttribute.ERROR_MESSAGE, error.getErrorMessage());
@@ -101,8 +101,8 @@ public class AnalyticsClient {
      */
     public void addUserAttribute(String name, Object value) {
         if (value != null) {
-            Event.EventError error = Event.checkUserAttribute(allUserAttributes.length(), name, value);
-            if (error != null) {
+            Event.EventError error = EventChecker.checkUserAttribute(allUserAttributes.length(), name, value);
+            if (error.getErrorCode() > 0) {
                 final AnalyticsEvent event = createEvent(Event.PresetEvent.CLICKSTREAM_ERROR);
                 event.addAttribute(Event.ReservedAttribute.ERROR_CODE, error.getErrorCode());
                 event.addAttribute(Event.ReservedAttribute.ERROR_MESSAGE, error.getErrorMessage());
@@ -170,8 +170,8 @@ public class AnalyticsClient {
      * @throws IllegalArgumentException throws when fail to check the argument.
      */
     public AnalyticsEvent createEvent(String eventType) {
-        Event.EventError error = Event.checkEventName(eventType);
-        if (error != null) {
+        Event.EventError error = EventChecker.checkEventName(eventType);
+        if (error.getErrorCode() > 0) {
             LOG.error(error.getErrorMessage());
             AnalyticsEvent event = createAnalyticsEvent(Event.PresetEvent.CLICKSTREAM_ERROR);
             event.addAttribute(Event.ReservedAttribute.ERROR_CODE, error.getErrorCode());

@@ -29,6 +29,7 @@ import com.amplifyframework.core.Amplify;
 import com.amazonaws.logging.Log;
 import com.github.dreamhead.moco.HttpServer;
 import com.github.dreamhead.moco.Runner;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -192,6 +193,58 @@ public class IntegrationTest {
         Thread.sleep(2500);
         assertEquals(0, dbUtil.getTotalNumber());
         cursor.close();
+    }
+
+    /**
+     * test add items.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testAddItem() throws Exception {
+        ClickstreamItem item1 = ClickstreamItem.builder()
+            .add(ClickstreamAnalytics.Item.ITEM_ID, 123)
+            .add(ClickstreamAnalytics.Item.ITEM_NAME, "Galaxy S10")
+            .add(ClickstreamAnalytics.Item.ITEM_CATEGORY, "phone")
+            .add(ClickstreamAnalytics.Item.ITEM_BRAND, "Sumsang")
+            .add(ClickstreamAnalytics.Item.PRICE, 4999.9)
+            .add(ClickstreamAnalytics.Item.QUANTITY, 25)
+            .add("is_new", false)
+            .build();
+
+        ClickstreamItem item2 = ClickstreamItem.builder()
+            .add(ClickstreamAnalytics.Item.ITEM_ID, 124)
+            .add(ClickstreamAnalytics.Item.ITEM_NAME, "Galaxy S20")
+            .add(ClickstreamAnalytics.Item.ITEM_CATEGORY, "phone")
+            .add(ClickstreamAnalytics.Item.ITEM_BRAND, "Sumsang")
+            .add(ClickstreamAnalytics.Item.PRICE, 5999.9)
+            .add(ClickstreamAnalytics.Item.QUANTITY, 35)
+            .add("is_new", true)
+            .build();
+
+        ClickstreamEvent event = ClickstreamEvent.builder()
+            .name("testItem")
+            .add(ClickstreamAnalytics.Item.ITEM_ID, 123)
+            .setItems(new ClickstreamItem[] {item1, item2})
+            .build();
+        ClickstreamAnalytics.recordEvent(event);
+        assertEquals(1, dbUtil.getTotalNumber());
+
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            cursor.moveToFirst();
+            String eventString = cursor.getString(2);
+            JSONObject jsonObject = new JSONObject(eventString);
+            JSONObject attribute = jsonObject.getJSONObject("attributes");
+            JSONArray itemArray = jsonObject.getJSONArray("items");
+            Assert.assertEquals(2, itemArray.length());
+            JSONObject itemObject = (JSONObject) itemArray.get(0);
+
+            Assert.assertEquals(123, attribute.getInt(ClickstreamAnalytics.Item.ITEM_ID));
+            Assert.assertEquals("Galaxy S10", itemObject.getString(ClickstreamAnalytics.Item.ITEM_NAME));
+            Assert.assertEquals(25, itemObject.getInt(ClickstreamAnalytics.Item.QUANTITY));
+            Assert.assertEquals(4999.9, itemObject.getDouble(ClickstreamAnalytics.Item.PRICE), 0.01);
+            Assert.assertFalse(itemObject.getBoolean("is_new"));
+        }
     }
 
     /**
