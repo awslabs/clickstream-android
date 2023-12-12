@@ -8,7 +8,7 @@ Clickstream Android SDK can help you easily collect and report in-app events fro
 
 The SDK relies on the Amplify for Android SDK Core Library and is developed according to the Amplify Android SDK plug-in specification. In addition, we've added features that automatically collect common user events and attributes (e.g., screen view, first open) to simplify data collection for users.
 
-Visit our [Documentation site](https://awslabs.github.io/clickstream-analytics-on-aws/en/sdk-manual/android/) to learn more about Clickstream Android SDK.
+Visit our [Documentation site](https://awslabs.github.io/clickstream-analytics-on-aws/en/latest/sdk-manual/android/) to learn more about Clickstream Android SDK.
 
 ### Platform Support
 
