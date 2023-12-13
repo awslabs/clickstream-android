@@ -251,10 +251,10 @@ public class AnalyticsClient {
         JSONObject userAttribute = new JSONObject();
         try {
             userAttribute.put(Event.ReservedAttribute.USER_FIRST_TOUCH_TIMESTAMP,
-                allUserAttributes.getString(Event.ReservedAttribute.USER_FIRST_TOUCH_TIMESTAMP));
+                allUserAttributes.getJSONObject(Event.ReservedAttribute.USER_FIRST_TOUCH_TIMESTAMP));
             if (allUserAttributes.has(Event.ReservedAttribute.USER_ID)) {
                 userAttribute.put(Event.ReservedAttribute.USER_ID,
-                    allUserAttributes.getString(Event.ReservedAttribute.USER_ID));
+                    allUserAttributes.getJSONObject(Event.ReservedAttribute.USER_ID));
             }
         } catch (final JSONException jsonException) {
             LOG.error("Could not create Json object of simpleUserAttribute. error: " + jsonException.getMessage());
