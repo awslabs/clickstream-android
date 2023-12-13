@@ -179,6 +179,8 @@ Current login user‘s attributes will be cached in disk, so the next time app l
 
 You can add the following code to log an event with an item.
 
+**Note: Only pipelines from version 1.1+ can handle items with custom attribute.**
+
 ```java
 import software.aws.solution.clickstream.ClickstreamAnalytcs;
 import software.aws.solution.clickstream.ClickstreamItem;
@@ -188,6 +190,7 @@ ClickstreamItem item_book = ClickstreamItem.builder()
      .add(ClickstreamAnalytics.Item.ITEM_NAME, "'Nature'")
      .add(ClickstreamAnalytics.Item.ITEM_CATEGORY, "book")
      .add(ClickstreamAnalytics.Item.PRICE, 99)
+     .add("book_publisher", "Nature Research")
      .build();
 
 ClickstreamEvent event = ClickstreamEvent.builder()
