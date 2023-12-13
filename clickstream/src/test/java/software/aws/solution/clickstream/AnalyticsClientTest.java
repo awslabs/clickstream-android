@@ -466,6 +466,8 @@ public class AnalyticsClientTest {
         Assert.assertTrue(user.has(Event.ReservedAttribute.USER_FIRST_TOUCH_TIMESTAMP));
         Assert.assertFalse(user.has("userName"));
         Assert.assertFalse(user.has("userAge"));
+        JSONObject userIdObject = user.getJSONObject(Event.ReservedAttribute.USER_ID);
+        Assert.assertEquals("123", userIdObject.getString("value"));
     }
 
     /**
