@@ -72,6 +72,9 @@ jobs:
           aws-region: us-west-2
       - name: Execute device farm test
         run: |
+          ls
+          cd integrationtest
+          ls
           pip install -r requirements.txt
           cd devicefarm
           cp ../../shopping-android/app/build/output/apk/debug/app-debug.apk ./
