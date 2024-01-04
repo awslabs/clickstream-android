@@ -78,4 +78,4 @@ jobs:
           cp ../../shopping-android/app/build/outputs/apk/debug/app-debug.apk ./
           cp ../workspace/test_bundle.zip ./
           ls
-          python -c "from automate_device_farm import upload_and_test_android; upload_and_test_android('app-debug.apk', 'test_bundle.zip', '${{ env.device_farm_project_arn }}', '${{ env.device_farm_test_spec_arn }}', '${{ env.device_farm_pool_arn }}')"
+          python -u -c "from automate_device_farm import upload_and_test_android; upload_and_test_android('app-debug.apk', 'test_bundle.zip', '${{ env.device_farm_project_arn }}', '${{ env.device_farm_test_spec_arn }}', '${{ env.device_farm_pool_arn }}')"
