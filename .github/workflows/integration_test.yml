@@ -32,15 +32,16 @@ jobs:
           java-version: '17'
           distribution: 'corretto'
           cache: gradle
-      - name: Build sample android app
-        run: |
-          ls
-          git clone https://github.com/zhu-xiaowei/shopping-android
-          cd shopping-android
-          ./gradlew assembleDebug
+#      - name: Build sample android app
+#        run: |
+#          git clone https://github.com/zhu-xiaowei/shopping-android
+#          cd shopping-android
+#          ./gradlew assembleDebug
       - name: Build device farm test file
         run: |
           cd integrationtest
+          pip install virtualenv
+          virtualenv --help
           virtualenv workspace
           cd workspace
           source bin/activate
