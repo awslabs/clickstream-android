@@ -31,17 +31,17 @@ jobs:
         run: chmod +x gradlew
       - name: build aar
         run: ./gradlew assembleRelease
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'corretto'
-          cache: gradle
-      - name: Build sample android app
-        run: |
-          git clone https://github.com/zhu-xiaowei/shopping-android
-          cd shopping-android
-          ./gradlew assembleDebug
+#      - name: Set up JDK 17
+#        uses: actions/setup-java@v4
+#        with:
+#          java-version: '17'
+#          distribution: 'corretto'
+#          cache: gradle
+#      - name: Build sample android app
+#        run: |
+#          git clone https://github.com/zhu-xiaowei/shopping-android
+#          cd shopping-android
+#          ./gradlew assembleDebug
       - name: Build device farm test file
         run: |
           cd integrationtest
@@ -63,9 +63,14 @@ jobs:
           pip freeze > requirements.txt
           zip -r test_bundle.zip tests/ requirements.txt
           ls
-          unzip -n test_bundle.zip
-          tree .
           cd ..
+      - name: Upload test bundle
+        uses: actions/upload-artifact@v3
+        if: success() || failure()
+        with:
+          name: test-bundle
+          path: |
+            integrationtest/workspace/
       - name: Configure AWS Credentials
         if: ${{ env.iam_role_to_assume != '' }}
         uses: aws-actions/configure-aws-credentials@v4
