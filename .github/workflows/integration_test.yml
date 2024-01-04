@@ -63,6 +63,8 @@ jobs:
           pip freeze > requirements.txt
           zip -r test_bundle.zip tests/ requirements.txt
           ls
+          unzip test_bundle.zip
+          tree .
           cd ..
       - name: Configure AWS Credentials
         if: ${{ env.iam_role_to_assume != '' }}
