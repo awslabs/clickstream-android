@@ -34,8 +34,8 @@ def upload_and_test_android(app_file_path, test_package, project_arn, test_spec_
         ''.join(random.sample(string.ascii_letters, 8)))
     print(f"The unique identifier for this run is going to be {unique} -- all uploads will be prefixed with this.")
 
-    our_upload_arn = upload_df_file(config, unique, "ANDROID_APP")
-    our_test_package_arn = upload_df_file(config, unique, 'APPIUM_PYTHON_TEST_PACKAGE')
+    our_upload_arn = upload_df_file(config, unique, config['appFilePath'], "ANDROID_APP")
+    our_test_package_arn = upload_df_file(config, unique, config['testPackage'], 'APPIUM_PYTHON_TEST_PACKAGE')
     print(our_upload_arn, our_test_package_arn)
     # Now that we have those out of the way, we can start the test run...
     response = client.schedule_run(
@@ -80,8 +80,7 @@ def upload_and_test_android(app_file_path, test_package, project_arn, test_spec_
     verify_logcat(logcat_paths)
 
 
-def upload_df_file(config, unique, type_, mime='application/octet-stream'):
-    filename = config['appFilePath']
+def upload_df_file(config, unique, filename, type_, mime='application/octet-stream'):
     response = client.create_upload(projectArn=config['projectArn'],
                                     name=unique + "_" + os.path.basename(filename),
                                     type=type_,
