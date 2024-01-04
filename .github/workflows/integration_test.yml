@@ -75,7 +75,6 @@ jobs:
           cd integrationtest
           pip install -r requirements.txt
           cd devicefarm
-#          cp ../../shopping-android/app/build/outputs/apk/debug/app-debug.apk ./
           cp ../workspace/test_bundle.zip ./
           ls
       - name: Upload test bundle
