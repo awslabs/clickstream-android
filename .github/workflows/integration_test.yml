@@ -63,7 +63,7 @@ jobs:
           pip freeze > requirements.txt
           zip -r test_bundle.zip tests/ requirements.txt
           ls
-          unzip test_bundle.zip
+          unzip -n test_bundle.zip
           tree .
           cd ..
       - name: Configure AWS Credentials
