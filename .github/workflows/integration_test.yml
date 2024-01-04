@@ -31,17 +31,17 @@ jobs:
         run: chmod +x gradlew
       - name: build aar
         run: ./gradlew assembleRelease
-#      - name: Set up JDK 17
-#        uses: actions/setup-java@v4
-#        with:
-#          java-version: '17'
-#          distribution: 'corretto'
-#          cache: gradle
-#      - name: Build sample android app
-#        run: |
-#          git clone https://github.com/zhu-xiaowei/shopping-android
-#          cd shopping-android
-#          ./gradlew assembleDebug
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+          cache: gradle
+      - name: Build sample android app
+        run: |
+          git clone https://github.com/zhu-xiaowei/shopping-android
+          cd shopping-android
+          ./gradlew assembleDebug
       - name: Build device farm test file
         run: |
           cd integrationtest
@@ -72,9 +72,7 @@ jobs:
           aws-region: us-west-2
       - name: Execute device farm test
         run: |
-          ls
           cd integrationtest
-          ls
           pip install -r requirements.txt
           cd devicefarm
           cp ../../shopping-android/app/build/output/apk/debug/app-debug.apk ./
