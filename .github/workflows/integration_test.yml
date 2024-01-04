@@ -9,6 +9,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      checks: write
+      pull-requests: write
+      id-token: write
     env:
       iam_role_to_assume: ${{ secrets.ROLE_ARN }}
       device_farm_project_arn: ${{ secrets.DEVICE_FARM_PROJECT_ARN }}
@@ -57,6 +62,7 @@ jobs:
           find . -name '*~' -exec rm -f {} +
           pip freeze > requirements.txt
           zip -r test_bundle.zip tests/ requirements.txt
+          ls
           cd ..
       - name: Configure AWS Credentials
         if: ${{ env.iam_role_to_assume != '' }}
