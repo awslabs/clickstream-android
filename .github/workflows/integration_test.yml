@@ -64,13 +64,6 @@ jobs:
           zip -r test_bundle.zip tests/ requirements.txt
           ls
           cd ..
-      - name: Upload test bundle
-        uses: actions/upload-artifact@v3
-        if: success() || failure()
-        with:
-          name: test-bundle
-          path: |
-            integrationtest/workspace/
       - name: Configure AWS Credentials
         if: ${{ env.iam_role_to_assume != '' }}
         uses: aws-actions/configure-aws-credentials@v4
@@ -82,7 +75,13 @@ jobs:
           cd integrationtest
           pip install -r requirements.txt
           cd devicefarm
-          cp ../../shopping-android/app/build/outputs/apk/debug/app-debug.apk ./
           cp ../workspace/test_bundle.zip ./
           ls
-          python -c "from automate_device_farm import upload_and_test_android; upload_and_test_android('app-debug.apk', 'test_bundle.zip', '${{ env.device_farm_project_arn }}', '${{ env.device_farm_test_spec_arn }}', '${{ env.device_farm_pool_arn }}')"
+      - name: Upload test bundle
+        uses: actions/upload-artifact@v3
+        if: success() || failure()
+        with:
+          name: test-bundle
+          path: |
+            integrationtest/devicefarm/
+#          python -c "from automate_device_farm import upload_and_test_android; upload_and_test_android('app-debug.apk', 'test_bundle.zip', '${{ env.device_farm_project_arn }}', '${{ env.device_farm_test_spec_arn }}', '${{ env.device_farm_pool_arn }}')"
