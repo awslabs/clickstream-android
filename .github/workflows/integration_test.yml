@@ -79,3 +79,15 @@ jobs:
           cp ../workspace/test_bundle.zip ./
           ls
           python -u -c "from automate_device_farm import upload_and_test_android; upload_and_test_android('app-debug.apk', 'test_bundle.zip', '${{ env.device_farm_project_arn }}', '${{ env.device_farm_test_spec_arn }}', '${{ env.device_farm_pool_arn }}')"
+      - name: Execute logcat test
+        run: |
+          cd integrationtest/devicefarm
+          pytest logcat_test.py --html=report/logcat_test_report.html
+      - name: Upload test result
+        uses: actions/upload-artifact@v4
+        if: success() || failure()
+        with:
+          name: test-result
+          path: |
+            integrationtest/devicefarm/report/
+            integrationtest/devicefarm/MyAndroidAppTest-*/**
