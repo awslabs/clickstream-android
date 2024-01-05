@@ -19,6 +19,8 @@ jobs:
       device_farm_project_arn: ${{ secrets.DEVICE_FARM_PROJECT_ARN }}
       device_farm_pool_arn: ${{ secrets.DEVICE_FARM_POOL_ARN }}
       device_farm_test_spec_arn: ${{ secrets.DEVICE_FARM_TEST_SPEC_ARN }}
+      clickstream_app_id: ${{ secrets.CLICKSTREAM_APP_ID }}
+      clickstream_endpoint: ${{ secrets.CLICKSTREAM_ENDPOINT }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 8
@@ -39,8 +41,12 @@ jobs:
           cache: gradle
       - name: Build sample android app
         run: |
-          git clone https://github.com/zhu-xiaowei/shopping-android
-          cd shopping-android
+          git clone -b android-local-aar https://github.com/aws-samples/clickstream-sdk-samples
+          cp -f clickstream/build/outputs/aar/clickstream-release.aar clickstream-sdk-samples/android/app/libs/
+          cd clickstream-sdk-samples/android
+          sed -i 's/"appId": "your appId"/"appId": "${{ env.clickstream_app_id }}"/' app/src/main/res/raw/amplifyconfiguration.json
+          sed -i 's/"endpoint": "your endpoint"/"endpoint": "${{ env.clickstream_endpoint }}"/' app/src/main/res/raw/amplifyconfiguration.json
+          cat app/src/main/res/raw/amplifyconfiguration.json
           ./gradlew assembleDebug
       - name: Build device farm test file
         run: |
@@ -75,7 +81,7 @@ jobs:
           cd integrationtest
           pip install -r requirements.txt
           cd devicefarm
-          cp ../../shopping-android/app/build/outputs/apk/debug/app-debug.apk ./
+          cp ../../clickstream-sdk-samples/android/app/build/outputs/apk/debug/app-debug.apk ./
           cp ../workspace/test_bundle.zip ./
           ls
           python -u -c "from automate_device_farm import upload_and_test_android; upload_and_test_android('app-debug.apk', 'test_bundle.zip', '${{ env.device_farm_project_arn }}', '${{ env.device_farm_test_spec_arn }}', '${{ env.device_farm_pool_arn }}')"
