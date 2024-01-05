@@ -1,13 +1,12 @@
 import datetime
-import json
 import os
 import random
-import re
 import string
 import time
 
 import boto3
 import requests
+import yaml
 
 # The following script runs a test through Device Farm
 client = boto3.client('devicefarm')
@@ -76,8 +75,8 @@ def upload_and_test_android(app_file_path, test_package, project_arn, test_spec_
     # Save the last run information
     logcat_paths = download_artifacts(jobs_response, save_path)
     # done
+    save_logcat_path(logcat_paths)
     print("Finished")
-    verify_logcat(logcat_paths)
 
 
 def upload_df_file(config, unique, filename, type_, mime='application/octet-stream'):
@@ -129,13 +128,13 @@ def download_artifacts(jobs_response, save_path):
                             arn=test['arn']
                         )['artifacts']
                         for artifact in artifacts:
-                            # We replace : because it has a special meaning in Windows & macos
                             path_to = os.path.join(save_path, job_name)
                             os.makedirs(path_to, exist_ok=True)
                             filename = artifact['type'] + "_" + artifact['name'] + "." + artifact['extension']
-                            if str(filename).endswith(".logcat"):
+                            if str(filename).endswith(".logcat") or str(filename).endswith(".zip"):
                                 artifact_save_path = os.path.join(path_to, filename)
-                                logcat_paths.append(artifact_save_path)
+                                if str(filename).endswith(".logcat"):
+                                    logcat_paths.append(artifact_save_path)
                                 print("Downloading " + artifact_save_path)
                                 with open(artifact_save_path, 'wb') as fn, \
                                         requests.get(artifact['url'], allow_redirects=True) as request:
@@ -143,90 +142,7 @@ def download_artifacts(jobs_response, save_path):
     return logcat_paths
 
 
-def get_submitted_events(path):
-    submitted_events = []
-    with open(path, 'r') as file:
-        pattern = re.compile(r'Submitted (\d+) events')
-        for line in file:
-            match = pattern.search(line)
-            if match:
-                submitted_events.append(int(match.group(1)))
-    return submitted_events
-
-
-def get_recorded_events(path):
-    with open(path, 'r') as file:
-        log_lines = file.readlines()
-    events = []
-    # 定义正则表达式模式
-    event_pattern = re.compile(r'save event: (\w+) success, event json:(.*)$')
-    json_pattern = re.compile(r'(?<=EventRecorder:)(.*)$')
-
-    current_event_name = ''
-    current_event_json = ''
-
-    for line in log_lines:
-        if current_event_name == '':
-            event_match = event_pattern.search(line)
-            if event_match:
-                current_event_name, _ = event_match.groups()
-            else:
-                continue
-        else:
-            json_match = json_pattern.search(line)
-            if json_match:
-                current_event_json += json_match.group()
-                if json_match.group() == ' }':
-                    events.append({
-                        'event_name': current_event_name,
-                        'event_json': json.loads(current_event_json)
-                    })
-                    current_event_name = ''
-                    current_event_json = ''
-            else:
-                continue
-    return events
-
-
-def verify_logcat(logcat_paths):
-    for path in logcat_paths:
-        print("Start verify: " + path)
-        submitted_events = get_submitted_events(path)
-        recorded_events = get_recorded_events(path)
-        # assert all record events are submitted.
-        assert sum(submitted_events) == len(recorded_events)
-
-        # assert launch events
-        assert recorded_events[0]['event_name'] == '_first_open'
-        assert recorded_events[1]['event_name'] == '_app_start'
-        assert recorded_events[2]['event_name'] == '_session_start'
-
-        # assert _screen_view
-        assert recorded_events[3]['event_name'] == '_screen_view'
-        screen_view_event = next((event for event in recorded_events if '_screen_view' in event.get('event_name', '')),
-                                 None)
-        assert screen_view_event['event_json']['attributes']['_entrances'] == 1
-        assert '_screen_id' in screen_view_event['event_json']['attributes']
-        assert '_screen_name' in screen_view_event['event_json']['attributes']
-        assert '_screen_unique_id' in screen_view_event['event_json']['attributes']
-
-        assert '_session_id' in screen_view_event['event_json']['attributes']
-        assert '_session_start_timestamp' in screen_view_event['event_json']['attributes']
-        assert '_session_duration' in screen_view_event['event_json']['attributes']
-        assert '_session_number' in screen_view_event['event_json']['attributes']
-
-        # assert _profile_set
-        profile_set_event = [event for event in recorded_events if '_profile_set' in event.get('event_name', '')]
-        assert '_user_id' not in profile_set_event[-1]['event_json']['user']
-        assert '_user_id' in profile_set_event[-2]['event_json']['user']
-
-        # assert _user_engagement
-        user_engagement_event = next(
-            (event for event in recorded_events if '_user_engagement' in event.get('event_name', '')),
-            None)
-        assert '_engagement_time_msec' in user_engagement_event['event_json']['attributes']
-        assert user_engagement_event['event_json']['attributes']['_engagement_time_msec'] > 1000
-
-        # assert _app_end
-        assert recorded_events[-1]['event_name'] == '_app_end'
-        print("Logcat verify success")
+def save_logcat_path(logcat_paths):
+    with open('path.yaml', 'w') as file:
+        yaml.dump(logcat_paths, file, default_flow_style=False)
+        print("Logcat paths successful saved")
