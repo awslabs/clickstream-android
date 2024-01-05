@@ -44,8 +44,8 @@ jobs:
           git clone -b android-local-aar https://github.com/aws-samples/clickstream-sdk-samples
           cp -f clickstream/build/outputs/aar/clickstream-release.aar clickstream-sdk-samples/android/app/libs/
           cd clickstream-sdk-samples/android
-          sed -i 's/"appId": "your appId"/"appId": "${{ env.clickstream_app_id }}"/' app/src/main/res/raw/amplifyconfiguration.json
-          sed -i 's/"endpoint": "your endpoint"/"endpoint": "${{ env.clickstream_endpoint }}"/' app/src/main/res/raw/amplifyconfiguration.json
+          sed -i "s/\"appId\": \"your appId\"/\"appId\": \"${{ env.clickstream_app_id }}\"/g" app/src/main/res/raw/amplifyconfiguration.json
+          sed -i "s/\"endpoint\": \"your endpoint\"/\"endpoint\": \"${{ env.clickstream_endpoint }}\"/g" app/src/main/res/raw/amplifyconfiguration.json
           cat app/src/main/res/raw/amplifyconfiguration.json
           ./gradlew assembleDebug
       - name: Build device farm test file
