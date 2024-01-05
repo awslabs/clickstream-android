@@ -82,7 +82,7 @@ jobs:
       - name: Execute logcat test
         run: |
           cd integrationtest/devicefarm
-          pytest logcat_test.py --junitxml=report/logcat_test_report.xml --html=report/logcat_test_report.html
+          pytest logcat_test.py -s --junitxml=report/logcat_test_report.xml --html=report/logcat_test_report.html
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@v4
         if: success() || failure()
