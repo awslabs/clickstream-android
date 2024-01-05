@@ -145,4 +145,4 @@ def download_artifacts(jobs_response, save_path):
 def save_logcat_path(logcat_paths):
     with open('path.yaml', 'w') as file:
         yaml.dump(logcat_paths, file, default_flow_style=False)
-        print("Logcat paths successful saved")
+        print("Logcat paths saved successful")
