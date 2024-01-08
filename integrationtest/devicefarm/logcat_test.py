@@ -44,6 +44,52 @@ class TestLogcat:
         assert '_user_id' in profile_set_event[-2]['event_json']['user']
         print("Verifying successful attributes of _profile_set events.")
 
+        # assert login
+        login_event = [event for event in recorded_events if 'login' in event.get('event_name', '')]
+        assert len(login_event) > 1
+        print("Verifying successful login events.")
+
+        # assert product_exposure
+        product_exposure = next(
+            (event for event in recorded_events if 'product_exposure' in event.get('event_name', '')),
+            None)
+        assert len(product_exposure['event_json']['items']) > 0
+        assert 'item_id' in product_exposure['event_json']['attributes']
+        print("Verifying successful attributes of product_exposure events.")
+
+        # assert add_to_cart
+        add_to_cart_event = [event for event in recorded_events if 'add_to_cart' in event.get('event_name', '')]
+        assert len(add_to_cart_event) > 3
+        assert len(add_to_cart_event[0]['event_json']['items']) > 0
+        assert 'product_id' in add_to_cart_event[0]['event_json']['attributes']
+        print("Verifying successful attributes of add_to_cart_event events.")
+
+        # assert view_home
+        view_home_event = [event for event in recorded_events if 'view_home' in event.get('event_name', '')]
+        assert len(view_home_event) > 1
+        print("Verifying successful view_home events.")
+
+        # assert view_wishlist
+        view_wishlist_event = [event for event in recorded_events if 'view_wishlist' in event.get('event_name', '')]
+        assert len(view_wishlist_event) > 1
+        print("Verifying successful view_wishlist events.")
+
+        # assert view_cart
+        view_cart_event = [event for event in recorded_events if 'view_cart' in event.get('event_name', '')]
+        assert len(view_cart_event) > 1
+        print("Verifying successful view_cart events.")
+
+        # assert view_account
+        view_account_event = [event for event in recorded_events if 'view_account' in event.get('event_name', '')]
+        assert len(view_account_event) > 1
+        print("Verifying successful view_account events.")
+
+        # assert check_out
+        check_out_event = [event for event in recorded_events if 'check_out' in event.get('event_name', '')]
+        assert len(check_out_event) > 1
+        assert len(check_out_event[0]['event_json']['items']) > 0
+        print("Verifying successful check_out events.")
+
         # assert _user_engagement
         user_engagement_event = next(
             (event for event in recorded_events if '_user_engagement' in event.get('event_name', '')),
