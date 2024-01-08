@@ -22,9 +22,10 @@ jobs:
           echo "${{ env.COMMIT_MESSAGE }}"
           version=$(echo "${{ env.COMMIT_MESSAGE }}" | grep -oP 'Android \K\d+\.\d+\.\d+')
           echo $version
+          echo v$version
 #          git config user.name '${{ vars.USER_NAME }}'
 #          git config user.email '${{ vars.USER_EMAIL }}'
-#          git tag v${{ env.NEW_VERSION }}
+#          git tag v$version
 #          git push origin v$version
 #      - name: Assemble release
 #        run: |
