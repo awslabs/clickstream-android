@@ -29,22 +29,23 @@ jobs:
       - name: Create Pull Request
         id: create-pr
         uses: peter-evans/create-pull-request@v5
-        token: ${{ secrets.PROJECT_TOKEN }}
-        commit-message: 'release: clickstream Android ${{ env.NEW_VERSION }}'
-        title: 'release: clickstream Android ${{ env.NEW_VERSION }}'
-        author: github-actions <github-actions@github.com>
-        committer: github-actions <github-actions@github.com>
-        signoff: true
-        body: |
-          - [x] PR title and description conform to [Pull Request](https://github.com/awslabs/clickstream-android/blob/main/CONTRIBUTING.md#pull-request-guidelines) guidelines.
-          
-          *Description of changes:*
-          1. 'release: clickstream Android ${{ env.NEW_VERSION }}'
-          
-          *Documentation update required?*
-          - [ ] No
-          - [x] Yes (Please include a PR link for the documentation update)
-
-          By submitting this pull request, I confirm that my contribution is made under the terms of the Apache 2.0 license.
-        labels: release
-        branch: release_${{ env.NEW_VERSION }}
+        with:
+          token: ${{ secrets.PROJECT_TOKEN }}
+          commit-message: 'release: clickstream Android ${{ env.NEW_VERSION }}'
+          title: 'release: clickstream Android ${{ env.NEW_VERSION }}'
+          author: github-actions <github-actions@github.com>
+          committer: github-actions <github-actions@github.com>
+          signoff: true
+          body: |
+            - [x] PR title and description conform to [Pull Request](https://github.com/awslabs/clickstream-android/blob/main/CONTRIBUTING.md#pull-request-guidelines) guidelines.
+            
+            *Description of changes:*
+            1. 'release: clickstream Android ${{ env.NEW_VERSION }}'
+            
+            *Documentation update required?*
+            - [ ] No
+            - [x] Yes (Please include a PR link for the documentation update)
+  
+            By submitting this pull request, I confirm that my contribution is made under the terms of the Apache 2.0 license.
+          labels: release
+          branch: release_${{ env.NEW_VERSION }}
