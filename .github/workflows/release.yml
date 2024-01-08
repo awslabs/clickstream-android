@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          ref: integration_test
           fetch-depth: 0
           token: ${{ secrets.PROJECT_TOKEN }}
       - name: Modify for next release
