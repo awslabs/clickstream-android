@@ -1,16 +1,14 @@
 name: Release Next Version
 on:
-  workflow_dispatch:
-    inputs:
-      release_tag:
-        description: 'Release Tag'
-        required: true
-        type: string
-env:
-  NEW_VERSION: ${{ github.event.inputs.release_tag }}
+  push:
+    branches: [ "*" ]
+
 jobs:
   release:
+    if: ${{ startsWith(github.event.head_commit.message, 'release:') }}
     runs-on: ubuntu-latest
+    env:
+      COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
     permissions:
       contents: write
     steps:
@@ -19,28 +17,24 @@ jobs:
           ref: main
           fetch-depth: 0
           token: ${{ secrets.PROJECT_TOKEN }}
-      - name: Modify for next release
+      - name: Create new tag
         run: |
-          chmod +x release.sh
-          ./release.sh ${{ env.NEW_VERSION }}
-          git diff
-          git config user.name '${{ vars.USER_NAME }}'
-          git config user.email '${{ vars.USER_EMAIL }}'
-          git add .
-          git commit -m 'release: clickstream Android ${{ env.NEW_VERSION }}'
-          git push
-          git tag v${{ env.NEW_VERSION }}
-          git push origin v${{ env.NEW_VERSION }}
-      - name: Assemble release
-        run: |
-          chmod +x gradlew
-          ./gradlew assembleRelease
-      - name: Create GitHub release
-        uses: softprops/action-gh-release@v1
-        with:
-          name: "Clickstream Android ${{ env.NEW_VERSION }}"
-          files: |
-            clickstream/build/outputs/aar/clickstream-release.aar
-          tag_name: "v${{ env.NEW_VERSION }}"
-          prerelease: true
-          generate_release_notes: true
+          version=$(echo "${{ env.COMMIT_MESSAGE }}" | grep -oP 'Android \K\d+\.\d+\.\d+')
+          echo $version
+#          git config user.name '${{ vars.USER_NAME }}'
+#          git config user.email '${{ vars.USER_EMAIL }}'
+#          git tag v${{ env.NEW_VERSION }}
+#          git push origin v$version
+#      - name: Assemble release
+#        run: |
+#          chmod +x gradlew
+#          ./gradlew assembleRelease
+#      - name: Create GitHub release
+#        uses: softprops/action-gh-release@v1
+#        with:
+#          name: "Clickstream Android ${{ env.NEW_VERSION }}"
+#          files: |
+#            clickstream/build/outputs/aar/clickstream-release.aar
+#          tag_name: "v${{ env.NEW_VERSION }}"
+#          prerelease: true
+#          generate_release_notes: true
