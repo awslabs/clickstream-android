@@ -5,7 +5,7 @@ on:
 
 jobs:
   release:
-    if: ${{ startsWith(github.event.head_commit.message, 'release:') }}
+#    if: ${{ startsWith(github.event.head_commit.message, 'release:') }}
     runs-on: ubuntu-latest
     env:
       COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
@@ -19,6 +19,7 @@ jobs:
           token: ${{ secrets.PROJECT_TOKEN }}
       - name: Create new tag
         run: |
+          echo "${{ env.COMMIT_MESSAGE }}"
           version=$(echo "${{ env.COMMIT_MESSAGE }}" | grep -oP 'Android \K\d+\.\d+\.\d+')
           echo $version
 #          git config user.name '${{ vars.USER_NAME }}'
