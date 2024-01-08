@@ -5,7 +5,7 @@ on:
 
 jobs:
   release:
-#    if: ${{ startsWith(github.event.head_commit.message, 'release:') }}
+    if: ${{ startsWith(github.event.head_commit.message, 'release:') }}
     runs-on: ubuntu-latest
     env:
       COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
