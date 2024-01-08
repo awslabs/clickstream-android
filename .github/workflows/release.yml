@@ -1,7 +1,7 @@
 name: Release Next Version
 on:
   push:
-    branches: [ "*" ]
+    branches: [ "main" ]
 
 jobs:
   release:
@@ -25,19 +25,18 @@ jobs:
           echo $version
           git config user.name '${{ vars.USER_NAME }}'
           git config user.email '${{ vars.USER_EMAIL }}'
-#          git tag v$version
-#          git push origin v$version
+          git tag v$version
+          git push origin v$version
       - name: Assemble release
         run: |
-          echo v$release_version
           chmod +x gradlew
           ./gradlew assembleRelease
-#      - name: Create GitHub release
-#        uses: softprops/action-gh-release@v1
-#        with:
-#          name: "Clickstream Android $release_version"
-#          files: |
-#            clickstream/build/outputs/aar/clickstream-release.aar
-#          tag_name: "v$release_version"
-#          prerelease: true
-#          generate_release_notes: true
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: "Clickstream Android $release_version"
+          files: |
+            clickstream/build/outputs/aar/clickstream-release.aar
+          tag_name: "v$release_version"
+          prerelease: true
+          generate_release_notes: true
