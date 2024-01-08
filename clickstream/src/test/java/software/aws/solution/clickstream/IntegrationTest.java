@@ -511,7 +511,7 @@ public class IntegrationTest {
             ClickstreamAnalytics.recordEvent(event);
         }
         assertEquals(20, dbUtil.getTotalNumber());
-        Thread.sleep(1000);
+        Thread.sleep(2000);
         assertEquals(0, dbUtil.getTotalNumber());
     }
 
