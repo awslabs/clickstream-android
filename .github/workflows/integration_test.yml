@@ -3,11 +3,10 @@ name: Integration Test
 on:
   pull_request:
     branches: [ "main" ]
-    paths:
-      - '*.properties'
 
 jobs:
   build:
+    if: ${{ startsWith(github.event.head_commit.message, 'release:') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
