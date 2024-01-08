@@ -1,13 +1,12 @@
 name: Integration Test
 
 on:
-  pull_request:
-    branches: [ "main" ]
-    paths:
-      - 'gradle.properties'
+  push:
+    branches: [ "*" ]
 
 jobs:
   build:
+    if: ${{ startsWith(github.event.head_commit.message, 'release:') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
