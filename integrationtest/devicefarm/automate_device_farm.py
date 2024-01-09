@@ -7,6 +7,8 @@ import time
 import boto3
 import requests
 import yaml
+import zipfile
+import shutil
 
 # The following script runs a test through Device Farm
 client = boto3.client('devicefarm')
@@ -139,6 +141,8 @@ def download_artifacts(jobs_response, save_path):
                                 with open(artifact_save_path, 'wb') as fn, \
                                         requests.get(artifact['url'], allow_redirects=True) as request:
                                     fn.write(request.content)
+                                if str(filename).endswith(".zip"):
+                                    unzip_and_copy(filename)
     return logcat_paths
 
 
@@ -146,3 +150,15 @@ def save_logcat_path(logcat_paths):
     with open('path.yaml', 'w') as file:
         yaml.dump(logcat_paths, file, default_flow_style=False)
         print("Logcat paths saved successful")
+
+
+def unzip_and_copy(zip_path):
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        zip_ref.extractall(os.path.dirname(zip_path))
+    origin_path = os.path.dirname(zip_path) + "/Host_Machine_Files/$DEVICEFARM_LOG_DIR/junitreport.xml"
+    rename_path = os.path.dirname(origin_path) + "/" + os.path.basename(
+        os.path.dirname(zip_path)) + " appium junitreport.xml"
+    os.rename(origin_path, rename_path)
+    report_path = os.path.dirname(os.path.dirname(os.path.dirname(zip_path))) + "/report/"
+    os.makedirs(report_path)
+    shutil.copy(rename_path, report_path)

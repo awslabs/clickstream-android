@@ -96,6 +96,12 @@ jobs:
         if: success() || failure()
         with:
           report_paths: 'integrationtest/devicefarm/report/*.xml'
+          require_tests: true
+          detailed_summary: true
+          update_check: true
+          include_passed: true
+          fail_on_failure: true
+          job_name: logcat test
       - name: Upload test result
         uses: actions/upload-artifact@v4
         if: success() || failure()
@@ -104,8 +110,3 @@ jobs:
           path: |
             integrationtest/devicefarm/report/
             integrationtest/devicefarm/MyAndroidAppTest-*/**
-          require_tests: true
-          detailed_summary: true
-          update_check: true
-          include_passed: true
-          fail_on_failure: true
