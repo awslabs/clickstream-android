@@ -178,7 +178,7 @@ def get_recorded_events(path):
     with open(path, 'r') as file:
         log_lines = file.readlines()
     events = []
-    # 定义正则表达式模式
+    # define patterns
     event_pattern = re.compile(r'save event: (\w+) success, event json:(.*)$')
     json_pattern = re.compile(r'(?<=EventRecorder:)(.*)$')
 
