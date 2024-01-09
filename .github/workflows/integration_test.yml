@@ -40,7 +40,7 @@ jobs:
           cache: gradle
       - name: Build sample android app
         run: |
-          git clone -b android-local-aar https://github.com/aws-samples/clickstream-sdk-samples
+          git clone -b integration_test https://github.com/aws-samples/clickstream-sdk-samples
           cp -f clickstream/build/outputs/aar/clickstream-release.aar clickstream-sdk-samples/android/app/libs/
           cd clickstream-sdk-samples/android
           sed -i "s#\"appId\": \"your appId\"#\"appId\": \"${{ env.clickstream_app_id }}\"#g" app/src/main/res/raw/amplifyconfiguration.json
