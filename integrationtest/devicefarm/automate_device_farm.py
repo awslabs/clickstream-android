@@ -9,6 +9,7 @@ import requests
 import yaml
 import zipfile
 import shutil
+import re
 
 # The following script runs a test through Device Farm
 client = boto3.client('devicefarm')
@@ -156,9 +157,16 @@ def unzip_and_copy(zip_path):
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         zip_ref.extractall(os.path.dirname(zip_path))
     origin_path = os.path.dirname(zip_path) + "/Host_Machine_Files/$DEVICEFARM_LOG_DIR/junitreport.xml"
-    rename_path = os.path.dirname(origin_path) + "/" + os.path.basename(
-        os.path.dirname(zip_path)) + " appium junitreport.xml"
+    device_name = os.path.basename(os.path.dirname(zip_path))
+    rename_path = os.path.dirname(origin_path) + "/" + device_name + " appium junitreport.xml"
     os.rename(origin_path, rename_path)
     report_path = os.path.dirname(os.path.dirname(os.path.dirname(zip_path))) + "/report/"
     os.makedirs(report_path, exist_ok=True)
-    shutil.copy(rename_path, report_path)
+    result_path = shutil.copy(rename_path, report_path)
+
+    # rename test name
+    with open(result_path, 'r', encoding='utf-8') as file:
+        content = file.read()
+    modified_content = re.sub(r'\bTestShopping\b', "AppiumTest " + device_name, content)
+    with open(result_path, 'w', encoding='utf-8') as file:
+        file.write(modified_content)
