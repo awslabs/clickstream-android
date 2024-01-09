@@ -40,12 +40,15 @@ jobs:
           cache: gradle
       - name: Build sample android app
         run: |
-          git clone -b integration_test https://github.com/aws-samples/clickstream-sdk-samples
+          git clone https://github.com/aws-samples/clickstream-sdk-samples
+          mkdir clickstream-sdk-samples/android/app/libs/
           cp -f clickstream/build/outputs/aar/clickstream-release.aar clickstream-sdk-samples/android/app/libs/
           cd clickstream-sdk-samples/android
           sed -i "s#\"appId\": \"your appId\"#\"appId\": \"${{ env.clickstream_app_id }}\"#g" app/src/main/res/raw/amplifyconfiguration.json
           sed -i "s#\"endpoint\": \"your endpoint\"#\"endpoint\": \"${{ env.clickstream_endpoint }}\"#g" app/src/main/res/raw/amplifyconfiguration.json
           cat app/src/main/res/raw/amplifyconfiguration.json
+          sed -i "s#implementation 'software.aws.solution:clickstream:0.10.0'#implementation(files(\"libs/clickstream-release.aar\"))\n    implementation(\"com.amplifyframework:core:1.37.2\")\n    implementation(\"com.amazonaws:aws-android-sdk-mobile-client:2.51.0\")\n    implementation(\"com.squareup.okhttp3:okhttp:4.9.1\")#g" app/build.gradle
+          cat app/build.gradle
           ./gradlew assembleDebug
       - name: Build Device Farm test file
         run: |
@@ -101,3 +104,8 @@ jobs:
           path: |
             integrationtest/devicefarm/report/
             integrationtest/devicefarm/MyAndroidAppTest-*/**
+          require_tests: true
+          detailed_summary: true
+          update_check: true
+          include_passed: true
+          fail_on_failure: true
