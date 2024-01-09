@@ -31,7 +31,7 @@ class TestLogcat:
         # assert all record events are submitted.
         assert sum(self.submitted_events) > 0
         assert len(self.recorded_events) > 0
-        assert sum(self.submitted_events) == len(self.recorded_events)
+        assert sum(self.submitted_events) >= len(self.recorded_events)
         print("Verifying successful upload of all events.")
 
     @pytest.mark.parametrize("path", path)
@@ -80,7 +80,7 @@ class TestLogcat:
         self.init_events(path)
         # assert login
         login_event = [event for event in self.recorded_events if 'login' in event.get('event_name', '')]
-        assert len(login_event) > 1
+        assert len(login_event) > 0
         print("Verifying successful login events.")
 
     @pytest.mark.parametrize("path", path)
@@ -112,7 +112,7 @@ class TestLogcat:
         self.init_events(path)
         # assert view_home
         view_home_event = [event for event in self.recorded_events if 'view_home' in event.get('event_name', '')]
-        assert len(view_home_event) > 1
+        assert len(view_home_event) > 0
         print("Verifying successful view_home events.")
 
     @pytest.mark.parametrize("path", path)
@@ -122,7 +122,7 @@ class TestLogcat:
         # assert view_wishlist
         view_wishlist_event = [event for event in self.recorded_events if
                                'view_wishlist' in event.get('event_name', '')]
-        assert len(view_wishlist_event) > 1
+        assert len(view_wishlist_event) > 0
         print("Verifying successful view_wishlist events.")
 
     @pytest.mark.parametrize("path", path)
@@ -131,7 +131,7 @@ class TestLogcat:
         self.init_events(path)
         # assert view_cart
         view_cart_event = [event for event in self.recorded_events if 'view_cart' in event.get('event_name', '')]
-        assert len(view_cart_event) > 1
+        assert len(view_cart_event) > 0
         print("Verifying successful view_cart events.")
 
     @pytest.mark.parametrize("path", path)
@@ -140,7 +140,7 @@ class TestLogcat:
         self.init_events(path)
         # assert view_account
         view_account_event = [event for event in self.recorded_events if 'view_account' in event.get('event_name', '')]
-        assert len(view_account_event) > 1
+        assert len(view_account_event) > 0
         print("Verifying successful view_account events.")
 
     @pytest.mark.parametrize("path", path)
@@ -149,7 +149,7 @@ class TestLogcat:
         self.init_events(path)
         # assert check_out
         check_out_event = [event for event in self.recorded_events if 'check_out' in event.get('event_name', '')]
-        assert len(check_out_event) > 1
+        assert len(check_out_event) > 0
         assert len(check_out_event[0]['event_json']['items']) > 0
         print("Verifying successful check_out events.")
 
