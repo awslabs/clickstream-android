@@ -142,7 +142,7 @@ def download_artifacts(jobs_response, save_path):
                                         requests.get(artifact['url'], allow_redirects=True) as request:
                                     fn.write(request.content)
                                 if str(filename).endswith(".zip"):
-                                    unzip_and_copy(filename)
+                                    unzip_and_copy(artifact_save_path)
     return logcat_paths
 
 
