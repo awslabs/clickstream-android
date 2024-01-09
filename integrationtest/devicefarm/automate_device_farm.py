@@ -160,5 +160,5 @@ def unzip_and_copy(zip_path):
         os.path.dirname(zip_path)) + " appium junitreport.xml"
     os.rename(origin_path, rename_path)
     report_path = os.path.dirname(os.path.dirname(os.path.dirname(zip_path))) + "/report/"
-    os.makedirs(report_path)
+    os.makedirs(report_path, exist_ok=True)
     shutil.copy(rename_path, report_path)
