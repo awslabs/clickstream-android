@@ -87,7 +87,7 @@ class TestShopping:
         sleep(1)
         sign_out_bt.click()
         self.driver.press_keycode(3)
-        sleep(2)
+        sleep(5)
 
     def find_element(self, name):
         return self.driver.find_element(AppiumBy.ANDROID_UIAUTOMATOR,
