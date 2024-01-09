@@ -14,6 +14,8 @@ class TestLogcat:
         submitted_events = get_submitted_events(path)
         recorded_events = get_recorded_events(path)
         # assert all record events are submitted.
+        assert sum(submitted_events) > 0
+        assert sum(recorded_events) > 0
         assert sum(submitted_events) == len(recorded_events)
         print("Verifying successful upload of all events.")
 
@@ -136,7 +138,10 @@ def get_recorded_events(path):
         else:
             json_match = json_pattern.search(line)
             if json_match:
-                current_event_json += json_match.group()
+                if json_match.group().startswith(" {") \
+                        or json_match.group().startswith("     ") \
+                        or json_match.group().startswith(" }"):
+                    current_event_json += json_match.group()
                 if json_match.group() == ' }':
                     events.append({
                         'event_name': current_event_name,
