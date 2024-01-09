@@ -15,7 +15,7 @@ class TestLogcat:
         recorded_events = get_recorded_events(path)
         # assert all record events are submitted.
         assert sum(submitted_events) > 0
-        assert sum(recorded_events) > 0
+        assert len(recorded_events) > 0
         assert sum(submitted_events) == len(recorded_events)
         print("Verifying successful upload of all events.")
 
