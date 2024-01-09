@@ -101,3 +101,7 @@ build-artifacts.tar.gz
 
 # add ignore for jenv
 .java-version
+
+# python
+venv
+*.idea

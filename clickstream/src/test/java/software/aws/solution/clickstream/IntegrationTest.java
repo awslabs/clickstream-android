@@ -502,7 +502,7 @@ public class IntegrationTest {
             .add("Successful", true)
             .add("ProcessDuration", 792)
             .add("UserAge", 120.3);
-        String longString = analyticsClient.createEvent("testEvent").toString();
+        String longString = analyticsClient.createEvent("testEvent").toString().substring(0, 1020);
         for (int i = 0; i < 80; i++) {
             builder.add("str" + i, longString);
         }

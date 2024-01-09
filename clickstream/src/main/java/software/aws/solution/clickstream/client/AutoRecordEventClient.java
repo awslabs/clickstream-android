@@ -147,6 +147,7 @@ public class AutoRecordEventClient {
      * the method for flush events when app move to background.
      */
     public void flushEvents() {
+        LOG.debug("App moves to background and start to flush events");
         this.clickstreamContext.getAnalyticsClient().submitEvents();
     }
 

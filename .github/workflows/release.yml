@@ -9,12 +9,12 @@ on:
 env:
   NEW_VERSION: ${{ github.event.inputs.release_tag }}
 jobs:
-  release:
+  release-pr:
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
@@ -24,23 +24,28 @@ jobs:
           chmod +x release.sh
           ./release.sh ${{ env.NEW_VERSION }}
           git diff
-          git config user.name '${{ vars.USER_NAME }}'
-          git config user.email '${{ vars.USER_EMAIL }}'
-          git add .
-          git commit -m 'release: clickstream Android ${{ env.NEW_VERSION }}'
-          git push
-          git tag v${{ env.NEW_VERSION }}
-          git push origin v${{ env.NEW_VERSION }}
-      - name: Assemble release
-        run: |
-          chmod +x gradlew
-          ./gradlew assembleRelease
-      - name: Create GitHub release
-        uses: softprops/action-gh-release@v1
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+      - name: Create Pull Request
+        id: create-pr
+        uses: peter-evans/create-pull-request@v5
         with:
-          name: "Clickstream Android ${{ env.NEW_VERSION }}"
-          files: |
-            clickstream/build/outputs/aar/clickstream-release.aar
-          tag_name: "v${{ env.NEW_VERSION }}"
-          prerelease: true
-          generate_release_notes: true
+          token: ${{ secrets.PROJECT_TOKEN }}
+          commit-message: 'release: clickstream Android ${{ env.NEW_VERSION }}'
+          title: 'release: clickstream Android ${{ env.NEW_VERSION }}'
+          author: github-actions <github-actions@github.com>
+          committer: github-actions <github-actions@github.com>
+          signoff: true
+          body: |
+            - [x] PR title and description conform to [Pull Request](https://github.com/awslabs/clickstream-android/blob/main/CONTRIBUTING.md#pull-request-guidelines) guidelines.
+            
+            *Description of changes:*
+            1. release: clickstream Android ${{ env.NEW_VERSION }}
+            
+            *Documentation update required?*
+            - [ ] No
+            - [x] Yes (Please include a PR link for the documentation update)
+  
+            By submitting this pull request, I confirm that my contribution is made under the terms of the Apache 2.0 license.
+          labels: release
+          branch: release_${{ env.NEW_VERSION }}
