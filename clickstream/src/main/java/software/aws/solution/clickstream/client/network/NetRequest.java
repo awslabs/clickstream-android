@@ -42,9 +42,9 @@ import okhttp3.ResponseBody;
 public final class NetRequest {
 
     private static final Log LOG = LogFactory.getLog(NetRequest.class);
-    private static final long HTTP_CONNECT_TIME_OUT = 3;
-    private static final long HTTP_READ_TIME_OUT = 3;
-    private static final long HTTP_WRITE_TIME_OUT = 3;
+    private static final long HTTP_CONNECT_TIME_OUT = 10;
+    private static final long HTTP_READ_TIME_OUT = 10;
+    private static final long HTTP_WRITE_TIME_OUT = 10;
 
     /**
      * Default constructor.
