@@ -58,8 +58,7 @@ jobs:
           virtualenv workspace
           cd workspace
           source bin/activate
-          pip install pytest
-          pip install Appium-Python-Client
+          pip install -r ../../requirements.txt
           mkdir tests
           cp ../appium/shopping_test.py tests/
           find tests/
