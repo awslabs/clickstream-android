@@ -34,9 +34,9 @@ jobs:
       - name: Create GitHub release
         uses: softprops/action-gh-release@v1
         with:
-          name: "Clickstream Android $release_version"
+          name: "Clickstream Android ${{ env.release_version }}"
           files: |
             clickstream/build/outputs/aar/clickstream-release.aar
-          tag_name: "v$release_version"
+          tag_name: "${{ env.release_version }}"
           prerelease: true
           generate_release_notes: true
