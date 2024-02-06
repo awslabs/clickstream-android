@@ -21,6 +21,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
+import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LifecycleRegistry;
@@ -35,6 +36,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import org.robolectric.util.ReflectionHelpers;
+import software.aws.solution.clickstream.client.AnalyticsEvent;
 import software.aws.solution.clickstream.client.AutoRecordEventClient;
 import software.aws.solution.clickstream.client.ClickstreamContext;
 import software.aws.solution.clickstream.client.ClickstreamManager;
@@ -488,6 +490,185 @@ public class AutoRecordEventClientTest {
     }
 
     /**
+     * test record screen view event manually without screen name.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testRecordScreenViewManuallyWithoutScreenName() throws Exception {
+        final AnalyticsEvent event = clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.SCREEN_VIEW);
+        client.recordViewScreenManually(event);
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            cursor.moveToLast();
+            String eventString = cursor.getString(2);
+            JSONObject jsonObject = new JSONObject(eventString);
+            String eventName = jsonObject.getString("event_type");
+            assertEquals(Event.PresetEvent.CLICKSTREAM_ERROR, eventName);
+            JSONObject attributes = jsonObject.getJSONObject("attributes");
+            Assert.assertEquals(Event.ErrorCode.SCREEN_VIEW_MISSING_SCREEN_NAME,
+                attributes.getInt(ReservedAttribute.ERROR_CODE));
+        }
+    }
+
+    /**
+     * test record screen view event manually without screen unique id and
+     * will add the current Activity's screen unique id.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testRecordScreenViewManuallyWithoutScreenUniqueId() throws Exception {
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
+        Activity activityA = mock(ActivityA.class);
+        Fragment fragmentA = mock(FragmentA.class);
+        Bundle bundle = mock(Bundle.class);
+        callbacks.onActivityCreated(activityA, bundle);
+        callbacks.onActivityStarted(activityA);
+        callbacks.onActivityResumed(activityA);
+        final AnalyticsEvent event = clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.SCREEN_VIEW);
+        event.addAttribute(ClickstreamAnalytics.Attr.SCREEN_NAME, fragmentA.getClass().getSimpleName());
+        client.recordViewScreenManually(event);
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            cursor.moveToLast();
+            String eventString = cursor.getString(2);
+            JSONObject jsonObject = new JSONObject(eventString);
+            String eventName = jsonObject.getString("event_type");
+            assertEquals(Event.PresetEvent.SCREEN_VIEW, eventName);
+            JSONObject attributes = jsonObject.getJSONObject("attributes");
+            Assert.assertEquals(fragmentA.getClass().getSimpleName(),
+                attributes.getString(ReservedAttribute.SCREEN_NAME));
+            Assert.assertEquals(String.valueOf(activityA.hashCode()),
+                attributes.getString(ReservedAttribute.SCREEN_UNIQUE_ID));
+        }
+    }
+
+
+    /**
+     * test record screen view event manually between two activity screen view.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testRecordCustomScreenViewBetweenActivityResume() throws Exception {
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
+        Activity activityA = mock(ActivityA.class);
+        Activity activityB = mock(ActivityB.class);
+        Bundle bundle = mock(Bundle.class);
+        // Record activityA screen view
+        callbacks.onActivityCreated(activityA, bundle);
+        callbacks.onActivityStarted(activityA);
+        callbacks.onActivityResumed(activityA);
+
+        // Record custom Fragment screen view
+        Fragment fragmentA = mock(FragmentA.class);
+        String uniqueIDOfFragmentA = String.valueOf(fragmentA.hashCode());
+        final AnalyticsEvent event = clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.SCREEN_VIEW);
+        event.addAttribute(ClickstreamAnalytics.Attr.SCREEN_NAME, fragmentA.getClass().getSimpleName());
+        event.addAttribute(ClickstreamAnalytics.Attr.SCREEN_UNIQUE_ID, uniqueIDOfFragmentA);
+        client.recordViewScreenManually(event);
+
+        // Record ActivityB Screen View
+        callbacks.onActivityPaused(activityA);
+        callbacks.onActivityCreated(activityB, bundle);
+        callbacks.onActivityStarted(activityB);
+        callbacks.onActivityResumed(activityB);
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            cursor.moveToLast();
+            // assert that ActivityB's screen view event previews screen is FragmentA
+            String eventString = cursor.getString(2);
+            JSONObject jsonObject = new JSONObject(eventString);
+            String eventName = jsonObject.getString("event_type");
+            assertEquals(Event.PresetEvent.SCREEN_VIEW, eventName);
+            JSONObject attributes = jsonObject.getJSONObject("attributes");
+            Assert.assertEquals(activityB.getClass().getSimpleName(),
+                attributes.getString(ReservedAttribute.SCREEN_NAME));
+            Assert.assertEquals(fragmentA.getClass().getSimpleName(),
+                attributes.getString(ReservedAttribute.PREVIOUS_SCREEN_NAME));
+            Assert.assertEquals(uniqueIDOfFragmentA,
+                attributes.getString(ReservedAttribute.PREVIOUS_SCREEN_UNIQUE_ID));
+
+            // assert that FragmentA's attribute contains ActivityA's screen attributes
+            cursor.moveToPrevious();
+            String eventString2 = cursor.getString(2);
+            JSONObject jsonObject2 = new JSONObject(eventString2);
+            String eventName2 = jsonObject2.getString("event_type");
+            assertEquals(Event.PresetEvent.SCREEN_VIEW, eventName2);
+            JSONObject attributes2 = jsonObject2.getJSONObject("attributes");
+            Assert.assertEquals(fragmentA.getClass().getSimpleName(),
+                attributes2.getString(ReservedAttribute.SCREEN_NAME));
+            Assert.assertEquals(uniqueIDOfFragmentA,
+                attributes2.getString(ReservedAttribute.SCREEN_UNIQUE_ID));
+            Assert.assertEquals(activityA.getClass().getSimpleName(),
+                attributes2.getString(ReservedAttribute.PREVIOUS_SCREEN_NAME));
+            Assert.assertEquals(String.valueOf(activityA.hashCode()),
+                attributes2.getString(ReservedAttribute.PREVIOUS_SCREEN_UNIQUE_ID));
+        }
+    }
+
+    /**
+     * test record two screen view event manually when automatic tracking is disabled.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testRecordTwoScreenViewWhenAutoTrackIsDisabled() throws Exception {
+        clickstreamContext.getClickstreamConfiguration().withTrackScreenViewEvents(false);
+        Fragment fragmentA = mock(FragmentA.class);
+        String uniqueIDOfFragmentA = String.valueOf(fragmentA.hashCode());
+        Fragment fragmentB = mock(FragmentB.class);
+        String uniqueIDOfFragmentB = String.valueOf(fragmentB.hashCode());
+        final AnalyticsEvent eventA =
+            clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.SCREEN_VIEW);
+        eventA.addAttribute(ClickstreamAnalytics.Attr.SCREEN_NAME, fragmentA.getClass().getSimpleName());
+        eventA.addAttribute(ClickstreamAnalytics.Attr.SCREEN_UNIQUE_ID, uniqueIDOfFragmentA);
+        client.recordViewScreenManually(eventA);
+        Thread.sleep(1100);
+        final AnalyticsEvent eventB =
+            clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.SCREEN_VIEW);
+        eventB.addAttribute(ClickstreamAnalytics.Attr.SCREEN_NAME, fragmentB.getClass().getSimpleName());
+        eventB.addAttribute(ClickstreamAnalytics.Attr.SCREEN_UNIQUE_ID, uniqueIDOfFragmentB);
+        client.recordViewScreenManually(eventB);
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            // assert last screen view
+            cursor.moveToLast();
+            String eventString = cursor.getString(2);
+            JSONObject jsonObject = new JSONObject(eventString);
+            String eventName = jsonObject.getString("event_type");
+            assertEquals(Event.PresetEvent.SCREEN_VIEW, eventName);
+            JSONObject attributes = jsonObject.getJSONObject("attributes");
+            Assert.assertEquals(fragmentB.getClass().getSimpleName(),
+                attributes.getString(ReservedAttribute.SCREEN_NAME));
+            Assert.assertEquals(uniqueIDOfFragmentB, attributes.getString(ReservedAttribute.SCREEN_UNIQUE_ID));
+            Assert.assertEquals(fragmentA.getClass().getSimpleName(),
+                attributes.getString(ReservedAttribute.PREVIOUS_SCREEN_NAME));
+            Assert.assertEquals(uniqueIDOfFragmentA, attributes.getString(ReservedAttribute.PREVIOUS_SCREEN_UNIQUE_ID));
+            // assert user engagement of fragmentA
+            cursor.moveToPrevious();
+            String eventString1 = cursor.getString(2);
+            JSONObject jsonObject1 = new JSONObject(eventString1);
+            String eventName1 = jsonObject1.getString("event_type");
+            assertEquals(Event.PresetEvent.USER_ENGAGEMENT, eventName1);
+            JSONObject attributes1 = jsonObject1.getJSONObject("attributes");
+            Assert.assertTrue(attributes1.getLong(ReservedAttribute.ENGAGEMENT_TIMESTAMP) > 1100);
+            Assert.assertEquals(fragmentA.getClass().getSimpleName(),
+                attributes1.getString(ReservedAttribute.SCREEN_NAME));
+            Assert.assertEquals(uniqueIDOfFragmentA, attributes1.getString(ReservedAttribute.SCREEN_UNIQUE_ID));
+            // assert screen view of fragmentA
+            cursor.moveToPrevious();
+            String eventString2 = cursor.getString(2);
+            JSONObject jsonObject2 = new JSONObject(eventString2);
+            String eventName2 = jsonObject2.getString("event_type");
+            assertEquals(Event.PresetEvent.SCREEN_VIEW, eventName2);
+            JSONObject attributes2 = jsonObject2.getJSONObject("attributes");
+            Assert.assertEquals(fragmentA.getClass().getSimpleName(),
+                attributes2.getString(ReservedAttribute.SCREEN_NAME));
+            Assert.assertEquals(uniqueIDOfFragmentA, attributes2.getString(ReservedAttribute.SCREEN_UNIQUE_ID));
+            Assert.assertFalse(attributes2.has(ReservedAttribute.PREVIOUS_SCREEN_NAME));
+            Assert.assertFalse(attributes2.has(ReservedAttribute.PREVIOUS_SCREEN_UNIQUE_ID));
+        }
+    }
+
+    /**
      * test app version not update.
      *
      * @throws Exception exception
@@ -753,5 +934,11 @@ public class AutoRecordEventClientTest {
     }
 
     static class ActivityB extends Activity {
+    }
+
+    static class FragmentA extends Fragment {
+    }
+
+    static class FragmentB extends Fragment {
     }
 }

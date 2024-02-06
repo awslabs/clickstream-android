@@ -26,6 +26,7 @@ import androidx.lifecycle.LifecycleOwner;
 
 import com.amazonaws.logging.Log;
 import com.amazonaws.logging.LogFactory;
+import software.aws.solution.clickstream.client.AnalyticsEvent;
 import software.aws.solution.clickstream.client.AutoRecordEventClient;
 import software.aws.solution.clickstream.client.ClickstreamManager;
 import software.aws.solution.clickstream.client.ScreenRefererTool;
@@ -92,8 +93,16 @@ final class ActivityLifecycleManager implements Application.ActivityLifecycleCal
                 autoRecordEventClient.resetLastEngageTime();
             }
         }
-        autoRecordEventClient.recordViewScreen(activity);
+        autoRecordEventClient.recordViewScreenAutomatically(activity);
         isFromForeground = false;
+    }
+
+    /**
+     * Handle Screen View triggered manually.
+     * @param event the screen view event
+     */
+    public void onScreenViewManually(AnalyticsEvent event) {
+        autoRecordEventClient.recordViewScreenManually(event);
     }
 
     @Override

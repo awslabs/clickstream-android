@@ -25,7 +25,8 @@ import com.amazonaws.logging.Log;
 import com.amazonaws.logging.LogFactory;
 import software.aws.solution.clickstream.client.AnalyticsClient;
 import software.aws.solution.clickstream.client.ClickstreamConfiguration;
-import software.aws.solution.clickstream.client.Event;
+import software.aws.solution.clickstream.client.Event.PresetEvent;
+import software.aws.solution.clickstream.client.Event.ReservedAttribute;
 import software.aws.solution.clickstream.client.util.ThreadUtil;
 
 /**
@@ -101,7 +102,7 @@ public final class ClickstreamAnalytics {
      * @param userProfile user
      */
     public static void addUserAttributes(ClickstreamUserAttribute userProfile) {
-        Amplify.Analytics.identifyUser(Event.ReservedAttribute.USER_ID_UNSET, userProfile);
+        Amplify.Analytics.identifyUser(ReservedAttribute.USER_ID_UNSET, userProfile);
     }
 
     /**
@@ -212,5 +213,32 @@ public final class ClickstreamAnalytics {
          * key to item category5.
          */
         public static final String ITEM_CATEGORY5 = "item_category5";
+    }
+
+    /**
+     * Preset Event.
+     */
+    public static class Event {
+
+        /**
+         * screen view.
+         */
+        public static final String SCREEN_VIEW = PresetEvent.SCREEN_VIEW;
+    }
+
+    /**
+     * Preset Attributes.
+     */
+    public static class Attr {
+
+        /**
+         * screen name.
+         */
+        public static final String SCREEN_NAME = ReservedAttribute.SCREEN_NAME;
+
+        /**
+         * screen unique id.
+         */
+        public static final String SCREEN_UNIQUE_ID = ReservedAttribute.SCREEN_UNIQUE_ID;
     }
 }

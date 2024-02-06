@@ -150,6 +150,6 @@ public final class ActivityLifecycleManagerUnitTest {
         callbacks.onActivityCreated(activity, bundle);
         callbacks.onActivityStarted(activity);
         callbacks.onActivityResumed(activity);
-        verify(autoRecordEventClient).recordViewScreen(activity);
+        verify(autoRecordEventClient).recordViewScreenAutomatically(activity);
     }
 }
