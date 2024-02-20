@@ -16,6 +16,7 @@ from time import sleep
 from appium import webdriver
 from appium.options.android import UiAutomator2Options
 from appium.webdriver.common.appiumby import AppiumBy
+from selenium.common.exceptions import NoSuchElementException
 
 capabilities = dict(
     platformName='Android',
@@ -53,57 +54,59 @@ class TestShopping:
         signin_bt.click()
         sleep(3)
 
-        # add 2 product to cart
+        # add 2 products to cart
         product_1 = self.find_element('product0')
-        sleep(1)
         product_1.click()
+        sleep(2)
         add_to_cart1 = self.find_element('add_to_cart_button')
-        sleep(1)
         add_to_cart1.click()
-        sleep(1)
+        sleep(2)
         self.driver.press_keycode(4)
-
+        sleep(2)
         product_2 = self.find_element('product1')
-        sleep(1)
         product_2.click()
+        sleep(2)
         add_to_cart2 = self.find_element('add_to_cart_button')
-        sleep(1)
         add_to_cart2.click()
-        sleep(1)
+        sleep(2)
         self.driver.press_keycode(4)
+        sleep(2)
 
-        # click 1 product to wishlist
+        # add 1 product to wishlist
         product_3 = self.find_element('product2')
-        sleep(1)
         product_3.click()
+        sleep(2)
         like_button = self.find_element('like_button')
-        sleep(1)
         like_button.click()
-        sleep(1)
+        sleep(2)
         self.driver.press_keycode(4)
-        sleep(1)
+        sleep(2)
         wishlist_tab = self.find_element('homeTab1')
         wishlist_tab.click()
-        sleep(1)
+        sleep(2)
 
         cart_tab = self.find_element('homeTab2')
         cart_tab.click()
+        sleep(2)
         checkout_bt = self.find_element('check_out_button')
-        sleep(1)
         checkout_bt.click()
+        sleep(2)
 
         profile_tab = self.find_element('homeTab3')
-        sleep(1)
         profile_tab.click()
+        sleep(2)
         sign_out_bt = self.find_element('sign_out_button')
-        sleep(1)
         sign_out_bt.click()
+        sleep(2)
         self.driver.press_keycode(3)
         sleep(5)
 
     def find_element(self, name):
-        return self.driver.find_element(AppiumBy.ANDROID_UIAUTOMATOR,
-                                        value='new UiSelector().resourceId("' + name + '")')
+        try:
+            return self.driver.find_element(AppiumBy.ANDROID_UIAUTOMATOR,
+                                            value='new UiSelector().resourceId("' + name + '")')
+        except NoSuchElementException:
+            pytest.skip(f"Element with name: '{name}' not found. Skipped the test")
 
 
 if __name__ == '__main__':

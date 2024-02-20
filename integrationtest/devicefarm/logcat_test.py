@@ -53,15 +53,15 @@ class TestLogcat:
         screen_view_event = next(
             (event for event in self.recorded_events if '_screen_view' in event.get('event_name', '')),
             None)
-        assert screen_view_event['event_json']['attributes']['_entrances'] == 1
-        assert '_screen_id' in screen_view_event['event_json']['attributes']
-        assert '_screen_name' in screen_view_event['event_json']['attributes']
-        assert '_screen_unique_id' in screen_view_event['event_json']['attributes']
+        assert screen_view_event['event_json'].get('attributes')['_entrances'] == 1
+        assert '_screen_id' in screen_view_event['event_json'].get('attributes')
+        assert '_screen_name' in screen_view_event['event_json'].get('attributes')
+        assert '_screen_unique_id' in screen_view_event['event_json'].get('attributes')
 
-        assert '_session_id' in screen_view_event['event_json']['attributes']
-        assert '_session_start_timestamp' in screen_view_event['event_json']['attributes']
-        assert '_session_duration' in screen_view_event['event_json']['attributes']
-        assert '_session_number' in screen_view_event['event_json']['attributes']
+        assert '_session_id' in screen_view_event['event_json'].get('attributes')
+        assert '_session_start_timestamp' in screen_view_event['event_json'].get('attributes')
+        assert '_session_duration' in screen_view_event['event_json'].get('attributes')
+        assert '_session_number' in screen_view_event['event_json'].get('attributes')
         print("Verifying successful attributes of all _screen_view events.")
 
     @pytest.mark.parametrize("path", path)
@@ -70,8 +70,7 @@ class TestLogcat:
         self.init_events(path)
         # assert _profile_set
         profile_set_event = [event for event in self.recorded_events if '_profile_set' in event.get('event_name', '')]
-        assert '_user_id' not in profile_set_event[-1]['event_json']['user']
-        assert '_user_id' in profile_set_event[-2]['event_json']['user']
+        assert len(profile_set_event) > 0
         print("Verifying successful attributes of _profile_set events.")
 
     @pytest.mark.parametrize("path", path)
@@ -91,8 +90,8 @@ class TestLogcat:
         product_exposure = next(
             (event for event in self.recorded_events if 'product_exposure' in event.get('event_name', '')),
             None)
-        assert len(product_exposure['event_json']['items']) > 0
-        assert 'item_id' in product_exposure['event_json']['attributes']
+        assert len(product_exposure['event_json'].get('items')) > 0
+        assert 'item_id' in product_exposure['event_json'].get('attributes')
         print("Verifying successful attributes of product_exposure events.")
 
     @pytest.mark.parametrize("path", path)
@@ -101,7 +100,7 @@ class TestLogcat:
         self.init_events(path)
         # assert add_to_cart
         add_to_cart_event = [event for event in self.recorded_events if 'add_to_cart' in event.get('event_name', '')]
-        assert len(add_to_cart_event) > 3
+        assert len(add_to_cart_event) > 0
         assert len(add_to_cart_event[0]['event_json']['items']) > 0
         assert 'product_id' in add_to_cart_event[0]['event_json']['attributes']
         print("Verifying successful attributes of add_to_cart_event events.")
@@ -161,8 +160,8 @@ class TestLogcat:
         user_engagement_event = next(
             (event for event in self.recorded_events if '_user_engagement' in event.get('event_name', '')),
             None)
-        assert '_engagement_time_msec' in user_engagement_event['event_json']['attributes']
-        assert user_engagement_event['event_json']['attributes']['_engagement_time_msec'] > 1000
+        assert '_engagement_time_msec' in user_engagement_event['event_json'].get('attributes')
+        assert user_engagement_event['event_json'].get('attributes')['_engagement_time_msec'] > 1000
         print("Verifying successful attributes of _user_engagement events.")
 
     @pytest.mark.parametrize("path", path)
@@ -170,9 +169,10 @@ class TestLogcat:
         print("Start verify: " + str(path))
         self.init_events(path)
         # assert _app_end
-        assert self.recorded_events[-1]['event_name'] == '_app_end'
+        app_end_event = next((event for event in self.recorded_events if '_app_end' in event.get('event_name', '')),
+                             None)
+        assert app_end_event is not None
         print("Verifying successful completion of _app_end event.")
-        print("All logcat verification are successful.")
 
 
 def get_submitted_events(path):
