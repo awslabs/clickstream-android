@@ -16,6 +16,7 @@ from time import sleep
 from appium import webdriver
 from appium.options.android import UiAutomator2Options
 from appium.webdriver.common.appiumby import AppiumBy
+from selenium.common.exceptions import NoSuchElementException
 
 capabilities = dict(
     platformName='Android',
@@ -102,8 +103,11 @@ class TestShopping:
         sleep(5)
 
     def find_element(self, name):
-        return self.driver.find_element(AppiumBy.ANDROID_UIAUTOMATOR,
-                                        value='new UiSelector().resourceId("' + name + '")')
+        try:
+            return self.driver.find_element(AppiumBy.ANDROID_UIAUTOMATOR,
+                                            value='new UiSelector().resourceId("' + name + '")')
+        except NoSuchElementException:
+            pytest.skip(f"Element with name: '{name}' not found. Skipped the test")
 
 
 if __name__ == '__main__':

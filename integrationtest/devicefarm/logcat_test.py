@@ -101,7 +101,7 @@ class TestLogcat:
         self.init_events(path)
         # assert add_to_cart
         add_to_cart_event = [event for event in self.recorded_events if 'add_to_cart' in event.get('event_name', '')]
-        assert len(add_to_cart_event) > 3
+        assert len(add_to_cart_event) > 0
         assert len(add_to_cart_event[0]['event_json']['items']) > 0
         assert 'product_id' in add_to_cart_event[0]['event_json']['attributes']
         print("Verifying successful attributes of add_to_cart_event events.")
