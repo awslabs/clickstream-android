@@ -54,31 +54,29 @@ class TestShopping:
         signin_bt.click()
         sleep(3)
 
-        # add 2 product to cart
+        # add 2 products to cart
         product_1 = self.find_element('product0')
-        sleep(2)
         product_1.click()
-        add_to_cart1 = self.find_element('add_to_cart_button')
         sleep(2)
+        add_to_cart1 = self.find_element('add_to_cart_button')
         add_to_cart1.click()
         sleep(2)
         self.driver.press_keycode(4)
-
+        sleep(2)
         product_2 = self.find_element('product1')
-        sleep(2)
         product_2.click()
-        add_to_cart2 = self.find_element('add_to_cart_button')
         sleep(2)
+        add_to_cart2 = self.find_element('add_to_cart_button')
         add_to_cart2.click()
         sleep(2)
         self.driver.press_keycode(4)
+        sleep(2)
 
-        # click 1 product to wishlist
+        # add 1 product to wishlist
         product_3 = self.find_element('product2')
-        sleep(2)
         product_3.click()
-        like_button = self.find_element('like_button')
         sleep(2)
+        like_button = self.find_element('like_button')
         like_button.click()
         sleep(2)
         self.driver.press_keycode(4)
@@ -89,16 +87,17 @@ class TestShopping:
 
         cart_tab = self.find_element('homeTab2')
         cart_tab.click()
-        checkout_bt = self.find_element('check_out_button')
         sleep(2)
+        checkout_bt = self.find_element('check_out_button')
         checkout_bt.click()
+        sleep(2)
 
         profile_tab = self.find_element('homeTab3')
-        sleep(2)
         profile_tab.click()
-        sign_out_bt = self.find_element('sign_out_button')
         sleep(2)
+        sign_out_bt = self.find_element('sign_out_button')
         sign_out_bt.click()
+        sleep(2)
         self.driver.press_keycode(3)
         sleep(5)
 
