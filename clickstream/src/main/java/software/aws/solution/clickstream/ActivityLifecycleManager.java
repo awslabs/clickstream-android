@@ -83,9 +83,8 @@ final class ActivityLifecycleManager implements Application.ActivityLifecycleCal
         // An activity came to foreground. Application potentially entered foreground as well
         // if there were no other activities in the foreground.
         LOG.debug("Activity resumed: " + activity.getLocalClassName());
-        boolean isSameScreen =
-            ScreenRefererTool.isSameScreen(activity.getClass().getCanonicalName(), activity.getClass().getSimpleName(),
-                autoRecordEventClient.getScreenUniqueId(activity));
+        boolean isSameScreen = ScreenRefererTool.isSameScreen(activity.getClass().getSimpleName(),
+            autoRecordEventClient.getScreenUniqueId(activity));
         if (ScreenRefererTool.getCurrentScreenName() != null && !isSameScreen) {
             if (!isFromForeground) {
                 autoRecordEventClient.recordUserEngagement();
@@ -99,6 +98,7 @@ final class ActivityLifecycleManager implements Application.ActivityLifecycleCal
 
     /**
      * Handle Screen View triggered manually.
+     *
      * @param event the screen view event
      */
     public void onScreenViewManually(AnalyticsEvent event) {
