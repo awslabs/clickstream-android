@@ -148,14 +148,15 @@ def download_artifacts(jobs_response, save_path):
                             filename = artifact['type'] + "_" + artifact['name'] + "." + artifact['extension']
                             if str(filename).endswith(".logcat") or str(filename).endswith(".zip"):
                                 artifact_save_path = os.path.join(path_to, filename)
-                                if str(filename).endswith(".logcat"):
-                                    logcat_paths.append(artifact_save_path)
                                 print("Downloading " + artifact_save_path)
                                 with open(artifact_save_path, 'wb') as fn, \
                                         requests.get(artifact['url'], allow_redirects=True) as request:
                                     fn.write(request.content)
                                 if str(filename).endswith(".zip"):
-                                    unzip_and_copy(artifact_save_path)
+                                    result = unzip_and_copy(artifact_save_path)
+                                    if result and str(filename).endswith(".logcat"):
+                                        logcat_paths.append(artifact_save_path)
+
     return logcat_paths
 
 
@@ -182,3 +183,6 @@ def unzip_and_copy(zip_path):
     modified_content = re.sub(r'\bTestShopping\b', "AppiumTest " + device_name, content)
     with open(result_path, 'w', encoding='utf-8') as file:
         file.write(modified_content)
+    if content.__contains__("skipped=\"2\""):
+        return False
+    return True
