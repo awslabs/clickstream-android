@@ -142,20 +142,21 @@ def download_artifacts(jobs_response, save_path):
                             type=artifact_type,
                             arn=test['arn']
                         )['artifacts']
+                        is_valid_test = True
                         for artifact in artifacts:
                             path_to = os.path.join(save_path, job_name)
                             os.makedirs(path_to, exist_ok=True)
                             filename = artifact['type'] + "_" + artifact['name'] + "." + artifact['extension']
                             if str(filename).endswith(".logcat") or str(filename).endswith(".zip"):
                                 artifact_save_path = os.path.join(path_to, filename)
+                                if is_valid_test and str(filename).endswith(".logcat"):
+                                    logcat_paths.append(artifact_save_path)
                                 print("Downloading " + artifact_save_path)
                                 with open(artifact_save_path, 'wb') as fn, \
                                         requests.get(artifact['url'], allow_redirects=True) as request:
                                     fn.write(request.content)
                                 if str(filename).endswith(".zip"):
-                                    result = unzip_and_copy(artifact_save_path)
-                                    if result and str(filename).endswith(".logcat"):
-                                        logcat_paths.append(artifact_save_path)
+                                    is_valid_test = unzip_and_copy(artifact_save_path)
 
     return logcat_paths
 
