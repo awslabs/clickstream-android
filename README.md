@@ -204,6 +204,27 @@ ClickstreamEvent event = ClickstreamEvent.builder()
 ClickstreamAnalytics.recordEvent(event);
 ```
 
+#### Record Screen View events manually
+
+By default, SDK will automatically track the preset `_screen_view` event when Activity triggers `onResume`.
+
+You can also manually record screen view events whether or not automatic screen view tracking is enabled, add the following code to record a screen view event with two attributes.
+
+* `SCREEN_NAME` Required. Your screen's name.
+* `SCREEN_UNIQUE_ID` Optional. Set the hashcode of your Activity, Fragment, or View. If you do not set, SDK will set a default value based on the current Activity's hashcode.
+
+```java
+import software.aws.solution.clickstream.ClickstreamAnalytcs;
+
+ClickstreamEvent event = ClickstreamEvent.builder()
+     .name(ClickstreamAnalytics.Event.SCREEN_VIEW)
+     .add(ClickstreamAnalytics.Attr.SCREEN_NAME, "HomeFragment")
+     .add(ClickstreamAnalytics.Attr.SCREEN_UNIQUE_ID, String.valueOf(HomeFragment.hashCode()))
+     .build();
+
+ClickstreamAnalytics.recordEvent(event);
+```
+
 #### Log the event json in debug mode
 
 ```java

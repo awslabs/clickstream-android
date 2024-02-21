@@ -78,7 +78,7 @@ public class AutoRecordEventClient {
      *
      * @param activity the activity to record.
      */
-    public void recordViewScreen(Activity activity) {
+    public void recordViewScreenAutomatically(Activity activity) {
         if (!clickstreamContext.getClickstreamConfiguration().isTrackScreenViewEvents()) {
             return;
         }
@@ -93,6 +93,39 @@ public class AutoRecordEventClient {
         ScreenRefererTool.setCurrentScreenUniqueId(screenUniqueId);
         final AnalyticsEvent event =
             this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.SCREEN_VIEW);
+        recordScreenViewEvent(event);
+    }
+
+    /**
+     * record view screen event manually.
+     *
+     * @param event the screen view event to be recorded.
+     */
+    public void recordViewScreenManually(AnalyticsEvent event) {
+        String screenName = event.getStringAttribute(Event.ReservedAttribute.SCREEN_NAME);
+        if (screenName != null) {
+            if (ScreenRefererTool.getCurrentScreenName() != null) {
+                recordUserEngagement();
+            }
+            ScreenRefererTool.setCurrentScreenName(screenName);
+            String screenUniqueId = event.getStringAttribute(Event.ReservedAttribute.SCREEN_UNIQUE_ID);
+            if (screenUniqueId != null) {
+                ScreenRefererTool.setCurrentScreenUniqueId(screenUniqueId);
+            }
+            recordScreenViewEvent(event);
+        } else {
+            LOG.error("record an _screen_view event without the required screen name attribute");
+            final AnalyticsEvent errorEvent =
+                this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.CLICKSTREAM_ERROR);
+            errorEvent.addAttribute(Event.ReservedAttribute.ERROR_CODE,
+                Event.ErrorCode.SCREEN_VIEW_MISSING_SCREEN_NAME);
+            errorEvent.addAttribute(Event.ReservedAttribute.ERROR_MESSAGE,
+                "record an _screen_view event without the required screen name attribute");
+            this.clickstreamContext.getAnalyticsClient().recordEvent(errorEvent);
+        }
+    }
+
+    private void recordScreenViewEvent(AnalyticsEvent event) {
         long currentTimestamp = event.getEventTimestamp();
         startEngageTimestamp = currentTimestamp;
         event.addAttribute(Event.ReservedAttribute.SCREEN_ID, ScreenRefererTool.getCurrentScreenId());
@@ -111,8 +144,6 @@ public class AutoRecordEventClient {
         this.clickstreamContext.getAnalyticsClient().recordEvent(event);
         PreferencesUtil.savePreviousScreenViewTimestamp(preferences, currentTimestamp);
         isEntrances = false;
-        LOG.debug("record an _screen_view event, screenId:" + screenId + "lastScreenId:" +
-            ScreenRefererTool.getPreviousScreenId());
     }
 
     /**

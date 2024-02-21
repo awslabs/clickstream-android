@@ -196,6 +196,36 @@ public class IntegrationTest {
     }
 
     /**
+     * test record Screen View Event manually.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testRecordScreenViewEvent() throws Exception {
+        executeBackground();
+        ClickstreamEvent event =
+            ClickstreamEvent.builder()
+                .name(ClickstreamAnalytics.Event.SCREEN_VIEW)
+                .add(ClickstreamAnalytics.Attr.SCREEN_NAME, "HomeFragment")
+                .add(ClickstreamAnalytics.Attr.SCREEN_UNIQUE_ID, "23ac31df")
+                .build();
+        ClickstreamAnalytics.recordEvent(event);
+        assertEquals(1, dbUtil.getTotalNumber());
+
+        Cursor cursor = dbUtil.queryAllEvents();
+        cursor.moveToFirst();
+        String eventString = cursor.getString(2);
+        JSONObject jsonObject = new JSONObject(eventString);
+        JSONObject attribute = jsonObject.getJSONObject("attributes");
+        Assert.assertEquals(ClickstreamAnalytics.Event.SCREEN_VIEW, jsonObject.getString("event_type"));
+        Assert.assertEquals("HomeFragment", attribute.getString(ClickstreamAnalytics.Attr.SCREEN_NAME));
+        Assert.assertEquals(0, attribute.getInt(Event.ReservedAttribute.ENTRANCES));
+        Thread.sleep(1500);
+        assertEquals(0, dbUtil.getTotalNumber());
+        cursor.close();
+    }
+
+    /**
      * test add items.
      *
      * @throws Exception exception

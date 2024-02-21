@@ -103,7 +103,7 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
     public void recordEvent(@NonNull String eventName) {
         final AnalyticsEvent event = analyticsClient.createEvent(eventName);
         if (event != null) {
-            analyticsClient.recordEvent(event);
+            recordAnalyticsEvent(event);
         }
     }
 
@@ -121,7 +121,15 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
                 }
             }
             clickstreamEvent.addItems(event.getItems());
-            analyticsClient.recordEvent(clickstreamEvent);
+            recordAnalyticsEvent(clickstreamEvent);
+        }
+    }
+
+    private void recordAnalyticsEvent(AnalyticsEvent event) {
+        if (event.getEventType().equals(Event.PresetEvent.SCREEN_VIEW)) {
+            activityLifecycleManager.onScreenViewManually(event);
+        } else {
+            analyticsClient.recordEvent(event);
         }
     }
 

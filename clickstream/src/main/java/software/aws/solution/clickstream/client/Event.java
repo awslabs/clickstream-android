@@ -144,6 +144,11 @@ public final class Event {
          */
         public static final int ITEM_CUSTOM_ATTRIBUTE_KEY_INVALID = 4005;
 
+        /**
+         * screen view event missing screen name attribute.
+         */
+        public static final int SCREEN_VIEW_MISSING_SCREEN_NAME = 5001;
+
         private ErrorCode() {
         }
     }
