@@ -85,7 +85,7 @@ public class AutoRecordEventClient {
         String screenId = activity.getClass().getCanonicalName();
         String screenName = activity.getClass().getSimpleName();
         String screenUniqueId = getScreenUniqueId(activity);
-        if (ScreenRefererTool.isSameScreen(screenId, screenName, screenUniqueId)) {
+        if (ScreenRefererTool.isSameScreen(screenName, screenUniqueId)) {
             return;
         }
         ScreenRefererTool.setCurrentScreenId(screenId);
@@ -104,11 +104,14 @@ public class AutoRecordEventClient {
     public void recordViewScreenManually(AnalyticsEvent event) {
         String screenName = event.getStringAttribute(Event.ReservedAttribute.SCREEN_NAME);
         if (screenName != null) {
+            String screenUniqueId = event.getStringAttribute(Event.ReservedAttribute.SCREEN_UNIQUE_ID);
+            if (ScreenRefererTool.isSameScreen(screenName, screenUniqueId)) {
+                return;
+            }
             if (ScreenRefererTool.getCurrentScreenName() != null) {
                 recordUserEngagement();
             }
             ScreenRefererTool.setCurrentScreenName(screenName);
-            String screenUniqueId = event.getStringAttribute(Event.ReservedAttribute.SCREEN_UNIQUE_ID);
             if (screenUniqueId != null) {
                 ScreenRefererTool.setCurrentScreenUniqueId(screenUniqueId);
             }

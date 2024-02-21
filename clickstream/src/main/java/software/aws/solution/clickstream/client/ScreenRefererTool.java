@@ -117,16 +117,13 @@ public final class ScreenRefererTool {
     /**
      * Judging that the current screen is the same as the previous screen.
      *
-     * @param screenId       current screen id
      * @param screenName     current screen name
      * @param screenUniqueId current screen unique id
      * @return the boolean value for is the same screen
      */
-    public static boolean isSameScreen(String screenId, String screenName, String screenUniqueId) {
-        return mCurrentScreenId != null
-            && mCurrentScreenName != null
-            && mCurrentScreenId.equals(screenId)
-            && mCurrentScreenName.equals(screenName)
-            && mCurrentScreenUniqueId.equals(screenUniqueId);
+    public static boolean isSameScreen(String screenName, String screenUniqueId) {
+        return mCurrentScreenName != null &&
+            mCurrentScreenName.equals(screenName) &&
+            (mCurrentScreenUniqueId == null || mCurrentScreenUniqueId.equals(screenUniqueId));
     }
 }

@@ -54,6 +54,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -665,6 +666,44 @@ public class AutoRecordEventClientTest {
             Assert.assertEquals(uniqueIDOfFragmentA, attributes2.getString(ReservedAttribute.SCREEN_UNIQUE_ID));
             Assert.assertFalse(attributes2.has(ReservedAttribute.PREVIOUS_SCREEN_NAME));
             Assert.assertFalse(attributes2.has(ReservedAttribute.PREVIOUS_SCREEN_UNIQUE_ID));
+        }
+    }
+
+    /**
+     * test record two same screen view event manually and will not record the last screen view event.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testRecordTwoSameScreenViewManually() throws Exception {
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
+        Fragment fragmentA = mock(FragmentA.class);
+        final AnalyticsEvent event1 =
+            clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.SCREEN_VIEW);
+        event1.addAttribute(ClickstreamAnalytics.Attr.SCREEN_NAME, fragmentA.getClass().getSimpleName());
+        event1.addAttribute(ClickstreamAnalytics.Attr.SCREEN_UNIQUE_ID, fragmentA.hashCode());
+        client.recordViewScreenManually(event1);
+
+        final AnalyticsEvent event2 =
+            clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.SCREEN_VIEW);
+        event2.addAttribute(ClickstreamAnalytics.Attr.SCREEN_NAME, fragmentA.getClass().getSimpleName());
+        event2.addAttribute(ClickstreamAnalytics.Attr.SCREEN_UNIQUE_ID, fragmentA.hashCode());
+        client.recordViewScreenManually(event2);
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            cursor.moveToLast();
+            String eventString = cursor.getString(2);
+            JSONObject jsonObject = new JSONObject(eventString);
+            String eventName = jsonObject.getString("event_type");
+            assertEquals(Event.PresetEvent.SCREEN_VIEW, eventName);
+            JSONObject attributes = jsonObject.getJSONObject("attributes");
+            Assert.assertEquals(fragmentA.getClass().getSimpleName(),
+                attributes.getString(ReservedAttribute.SCREEN_NAME));
+
+            cursor.moveToPrevious();
+            String eventString2 = cursor.getString(2);
+            JSONObject jsonObject2 = new JSONObject(eventString2);
+            String eventName2 = jsonObject2.getString("event_type");
+            assertNotEquals(Event.PresetEvent.SCREEN_VIEW, eventName2);
         }
     }
 
