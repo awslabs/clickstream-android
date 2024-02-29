@@ -946,6 +946,45 @@ public class AutoRecordEventClientTest {
         assertEquals(1, ((ThreadPoolExecutor) executorService).getActiveCount());
     }
 
+
+    /**
+     * test hide page and reopen page after session timeout and will record page view event.
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testSessionTimeoutAfterReopenTheApp() throws Exception {
+        clickstreamContext.getClickstreamConfiguration().withSessionTimeoutDuration(0);
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
+        Activity activityA = mock(ActivityA.class);
+        Bundle bundle = mock(Bundle.class);
+        // Record activityA screen view
+        callbacks.onActivityCreated(activityA, bundle);
+        callbacks.onActivityStarted(activityA);
+        callbacks.onActivityResumed(activityA);
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_STOP);
+        Thread.sleep(100);
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            cursor.moveToLast();
+            String eventString = cursor.getString(2);
+            JSONObject jsonObject = new JSONObject(eventString);
+            String eventType = jsonObject.getString("event_type");
+            JSONObject attributes = jsonObject.getJSONObject("attributes");
+            assertEquals(Event.PresetEvent.SCREEN_VIEW, eventType);
+            assertTrue(attributes.has(ReservedAttribute.SCREEN_NAME));
+            assertTrue(attributes.has(ReservedAttribute.SCREEN_UNIQUE_ID));
+            assertFalse(attributes.has(ReservedAttribute.PREVIOUS_SCREEN_NAME));
+            assertFalse(attributes.has(ReservedAttribute.PREVIOUS_SCREEN_UNIQUE_ID));
+
+            cursor.moveToPrevious();
+            String eventString2 = cursor.getString(2);
+            JSONObject jsonObject2 = new JSONObject(eventString2);
+            String eventName2 = jsonObject2.getString("event_type");
+            assertEquals(Event.PresetEvent.SESSION_START, eventName2);
+        }
+    }
+
     /**
      * test init autoRecordEventClient with null analyticsClient.
      */
@@ -960,12 +999,7 @@ public class AutoRecordEventClientTest {
      */
     @After
     public void tearDown() {
-        ScreenRefererTool.setCurrentScreenName(null);
-        ScreenRefererTool.setCurrentScreenName(null);
-        ScreenRefererTool.setCurrentScreenId(null);
-        ScreenRefererTool.setCurrentScreenId(null);
-        ScreenRefererTool.setCurrentScreenUniqueId(null);
-        ScreenRefererTool.setCurrentScreenUniqueId(null);
+        ScreenRefererTool.clear();
         dbUtil.closeDB();
     }
 

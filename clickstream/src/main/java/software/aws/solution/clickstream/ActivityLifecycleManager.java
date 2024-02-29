@@ -26,11 +26,14 @@ import androidx.lifecycle.LifecycleOwner;
 
 import com.amazonaws.logging.Log;
 import com.amazonaws.logging.LogFactory;
+import software.aws.solution.clickstream.client.AnalyticsClient;
 import software.aws.solution.clickstream.client.AnalyticsEvent;
 import software.aws.solution.clickstream.client.AutoRecordEventClient;
 import software.aws.solution.clickstream.client.ClickstreamManager;
+import software.aws.solution.clickstream.client.Event;
 import software.aws.solution.clickstream.client.ScreenRefererTool;
 import software.aws.solution.clickstream.client.SessionClient;
+import software.aws.solution.clickstream.client.util.StringUtil;
 
 /**
  * Tracks when the host application enters or leaves foreground.
@@ -41,6 +44,7 @@ final class ActivityLifecycleManager implements Application.ActivityLifecycleCal
     private static boolean isFromForeground;
     private final SessionClient sessionClient;
     private final AutoRecordEventClient autoRecordEventClient;
+    private final AnalyticsClient analyticsClient;
 
     /**
      * Constructor. Registers to receive activity lifecycle events.
@@ -49,6 +53,7 @@ final class ActivityLifecycleManager implements Application.ActivityLifecycleCal
      */
     ActivityLifecycleManager(final ClickstreamManager clickstreamManager) {
         this.sessionClient = clickstreamManager.getSessionClient();
+        this.analyticsClient = clickstreamManager.getAnalyticsClient();
         this.autoRecordEventClient = clickstreamManager.getAutoRecordEventClient();
     }
 
@@ -148,8 +153,24 @@ final class ActivityLifecycleManager implements Application.ActivityLifecycleCal
             boolean isNewSession = sessionClient.initialSession();
             if (isNewSession) {
                 autoRecordEventClient.setIsEntrances();
+                recordScreenViewAfterSessionStart();
             }
             autoRecordEventClient.updateStartEngageTimestamp();
+        }
+    }
+
+    private void recordScreenViewAfterSessionStart() {
+        if (!StringUtil.isNullOrEmpty(ScreenRefererTool.getCurrentScreenName())) {
+            String screenName = ScreenRefererTool.getCurrentScreenName();
+            String screenId = ScreenRefererTool.getCurrentScreenId();
+            String screenUniqueId = ScreenRefererTool.getCurrentScreenUniqueId();
+            ScreenRefererTool.clear();
+            AnalyticsEvent clickstreamEvent =
+                analyticsClient.createEvent(Event.PresetEvent.SCREEN_VIEW);
+            clickstreamEvent.addAttribute(Event.ReservedAttribute.SCREEN_NAME, screenName);
+            clickstreamEvent.addAttribute(Event.ReservedAttribute.SCREEN_ID, screenId);
+            clickstreamEvent.addAttribute(Event.ReservedAttribute.SCREEN_UNIQUE_ID, screenUniqueId);
+            autoRecordEventClient.recordViewScreenManually(clickstreamEvent);
         }
     }
 }

@@ -126,4 +126,16 @@ public final class ScreenRefererTool {
             mCurrentScreenName.equals(screenName) &&
             (mCurrentScreenUniqueId == null || mCurrentScreenUniqueId.equals(screenUniqueId));
     }
+
+    /**
+     * method for clear cached screen information.
+     */
+    public static void clear() {
+        mCurrentScreenId = null;
+        mCurrentScreenName = null;
+        mCurrentScreenUniqueId = null;
+        mPreviousScreenId = null;
+        mPreviousScreenName = null;
+        mPreviousScreenUniqueId = null;
+    }
 }
