@@ -113,7 +113,7 @@ public final class PreferencesUtil {
                 userInfo.put("user_first_touch_timestamp", getCurrentUserFirstTouchTimestamp(preferences));
                 userUniqueIdObject.put(userId, userInfo);
                 preferences.putString(USER_UNIQUE_ID_MAP, userUniqueIdObject.toString());
-            } else if (userUniqueIdJsonString.contains(userId)) {
+            } else if (userUniqueIdObject.has(userId)) {
                 // switch to old user.
                 userInfo = userUniqueIdObject.getJSONObject(userId);
                 setCurrentUserUniqueId(preferences, userInfo.getString("user_unique_id"));

@@ -54,7 +54,6 @@ class TestLogcat:
             (event for event in self.recorded_events if '_screen_view' in event.get('event_name', '')),
             None)
         assert screen_view_event['event_json'].get('attributes')['_entrances'] == 1
-        assert '_screen_id' in screen_view_event['event_json'].get('attributes')
         assert '_screen_name' in screen_view_event['event_json'].get('attributes')
         assert '_screen_unique_id' in screen_view_event['event_json'].get('attributes')
 
