@@ -976,6 +976,7 @@ public class AutoRecordEventClientTest {
             assertTrue(attributes.has(ReservedAttribute.SCREEN_UNIQUE_ID));
             assertFalse(attributes.has(ReservedAttribute.PREVIOUS_SCREEN_NAME));
             assertFalse(attributes.has(ReservedAttribute.PREVIOUS_SCREEN_UNIQUE_ID));
+            assertEquals(1, attributes.getInt(ReservedAttribute.ENTRANCES));
 
             cursor.moveToPrevious();
             String eventString2 = cursor.getString(2);

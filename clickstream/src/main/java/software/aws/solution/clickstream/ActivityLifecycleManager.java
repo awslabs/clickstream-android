@@ -150,12 +150,12 @@ final class ActivityLifecycleManager implements Application.ActivityLifecycleCal
             LOG.debug("Application entered the foreground.");
             isFromForeground = true;
             autoRecordEventClient.handleAppStart();
+            autoRecordEventClient.updateStartEngageTimestamp();
             boolean isNewSession = sessionClient.initialSession();
             if (isNewSession) {
                 autoRecordEventClient.setIsEntrances();
                 recordScreenViewAfterSessionStart();
             }
-            autoRecordEventClient.updateStartEngageTimestamp();
         }
     }
 
