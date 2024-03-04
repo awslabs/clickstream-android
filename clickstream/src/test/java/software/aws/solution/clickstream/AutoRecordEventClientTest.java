@@ -48,7 +48,9 @@ import software.aws.solution.clickstream.client.util.StringUtil;
 import software.aws.solution.clickstream.util.ReflectUtil;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -128,6 +130,40 @@ public class AutoRecordEventClientTest {
             assertEquals(Event.PresetEvent.SESSION_START, eventList.get(2));
             assertEquals(Event.PresetEvent.USER_ENGAGEMENT, eventList.get(3));
             assertEquals(Event.PresetEvent.APP_END, eventList.get(4));
+        }
+    }
+
+
+    /**
+     * test first open screen view and session start events will have the same sessionId.
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testEventsHaveSameSessionId() throws Exception {
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
+        Activity activity = mock(Activity.class);
+        Bundle bundle = mock(Bundle.class);
+        callbacks.onActivityCreated(activity, bundle);
+        callbacks.onActivityStarted(activity);
+        callbacks.onActivityResumed(activity);
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_STOP);
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            List<String> eventList = new ArrayList<>();
+            Set<String> sessionIdSet = new HashSet<>();
+            while (cursor.moveToNext()) {
+                String eventString = cursor.getString(2);
+                JSONObject jsonObject = new JSONObject(eventString);
+                String eventName = jsonObject.getString("event_type");
+                eventList.add(eventName);
+                sessionIdSet.add(jsonObject.getJSONObject("attributes").getString("_session_id"));
+            }
+            assertEquals(Event.PresetEvent.FIRST_OPEN, eventList.get(0));
+            assertEquals(Event.PresetEvent.APP_START, eventList.get(1));
+            assertEquals(Event.PresetEvent.SESSION_START, eventList.get(2));
+            assertEquals(Event.PresetEvent.SCREEN_VIEW, eventList.get(3));
+            assertEquals(Event.PresetEvent.APP_END, eventList.get(4));
+            assertEquals(1, sessionIdSet.size());
         }
     }
 

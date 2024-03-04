@@ -116,8 +116,9 @@ public class DBUtilTest {
     @Test
     public void testGetTotalDbSize() {
         AnalyticsEvent analyticsEvent = AnalyticsEventTest.getAnalyticsClient().createEvent("testEvent");
-        int eventLength = analyticsEvent.toJSONObject().toString().length();
+        int eventLength1 = analyticsEvent.toJSONObject().toString().length();
         Uri uri1 = dbUtil.saveEvent(analyticsEvent);
+        int eventLength2 = analyticsEvent.toJSONObject().toString().length();
         Uri uri2 = dbUtil.saveEvent(analyticsEvent);
         int idInserted1 = Integer.parseInt(uri1.getLastPathSegment());
         int idInserted2 = Integer.parseInt(uri2.getLastPathSegment());
@@ -127,7 +128,7 @@ public class DBUtilTest {
         assertNotNull(c);
         assertEquals(c.getCount(), 2);
         c.close();
-        Assert.assertEquals(dbUtil.getTotalSize(), eventLength * 2);
+        Assert.assertEquals(dbUtil.getTotalSize(), eventLength1 + eventLength2);
     }
 
     /**
