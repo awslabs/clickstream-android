@@ -96,22 +96,26 @@ public final class Session {
      * Get the session object from preferences, if exists and not expired return it.
      * otherwise create a new session.
      *
-     * @param context The {@link ClickstreamContext}.
+     * @param context         The {@link ClickstreamContext}.
+     * @param previousSession The previous session for check whether is new session.
      * @return new Session object.
      */
-    public static Session getInstance(final ClickstreamContext context) {
-        // get session from preference
-        Session storedSession = PreferencesUtil.getSession(context.getSystem().getPreferences());
-        int sessionIndex = 1;
-        if (storedSession != null) {
-            if (System.currentTimeMillis() - storedSession.getPauseTime() <
-                context.getClickstreamConfiguration().getSessionTimeoutDuration()) {
-                return storedSession;
-            } else {
-                sessionIndex = storedSession.sessionIndex + 1;
-            }
+    public static Session getInstance(final ClickstreamContext context, Session previousSession) {
+        Session session = previousSession;
+        if (session == null) {
+            session = PreferencesUtil.getSession(context.getSystem().getPreferences());
         }
-        return new Session(context, sessionIndex);
+        if (session != null) {
+            if (session.getPauseTime() == null ||
+                System.currentTimeMillis() - session.getPauseTime() <
+                    context.getClickstreamConfiguration().getSessionTimeoutDuration()) {
+                return session;
+            } else {
+                return new Session(context, session.getSessionIndex() + 1);
+            }
+        } else {
+            return new Session(context, 1);
+        }
     }
 
     /**

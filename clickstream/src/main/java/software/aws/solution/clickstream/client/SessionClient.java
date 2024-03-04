@@ -46,7 +46,7 @@ public class SessionClient {
             throw new IllegalArgumentException("A valid AnalyticsClient must be provided!");
         }
         this.clickstreamContext = clickstreamContext;
-        session = Session.getInstance(clickstreamContext);
+        session = Session.getInstance(clickstreamContext, null);
         this.clickstreamContext.getAnalyticsClient().setSession(session);
     }
 
@@ -58,7 +58,7 @@ public class SessionClient {
      * @return is new session.
      */
     public synchronized boolean initialSession() {
-        session = Session.getInstance(clickstreamContext);
+        session = Session.getInstance(clickstreamContext, session);
         this.clickstreamContext.getAnalyticsClient().setSession(session);
         if (session.isNewSession()) {
             final AnalyticsEvent event =
