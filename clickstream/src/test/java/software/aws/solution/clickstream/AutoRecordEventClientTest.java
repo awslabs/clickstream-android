@@ -1019,6 +1019,15 @@ public class AutoRecordEventClientTest {
             JSONObject jsonObject2 = new JSONObject(eventString2);
             String eventName2 = jsonObject2.getString("event_type");
             assertEquals(Event.PresetEvent.SESSION_START, eventName2);
+
+            // assert that the second app start event will have the same session id
+            cursor.moveToPrevious();
+            String eventString3 = cursor.getString(2);
+            JSONObject jsonObject3 = new JSONObject(eventString3);
+            String eventName3 = jsonObject3.getString("event_type");
+            assertEquals(Event.PresetEvent.APP_START, eventName3);
+            assertEquals(jsonObject3.getJSONObject("attributes").getString("_session_id"),
+                jsonObject2.getJSONObject("attributes").getString("_session_id"));
         }
     }
 

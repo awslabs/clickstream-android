@@ -29,7 +29,6 @@ jobs:
           cache: gradle
       - name: Build SDK release aar file
         run: |
-          echo ${{ github.event.pull_request.title }}
           chmod +x gradlew
           ./gradlew assembleRelease
       - name: Set up JDK 17

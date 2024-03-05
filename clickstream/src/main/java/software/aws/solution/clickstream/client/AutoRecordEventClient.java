@@ -260,6 +260,15 @@ public class AutoRecordEventClient {
     }
 
     /**
+     * handle session start events.
+     */
+    public void handleSessionStart() {
+        final AnalyticsEvent event =
+            this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.SESSION_START);
+        this.clickstreamContext.getAnalyticsClient().recordEvent(event);
+    }
+
+    /**
      * handle the app end event.
      */
     public void handleAppEnd() {
