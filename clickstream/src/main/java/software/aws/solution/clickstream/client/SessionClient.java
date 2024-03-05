@@ -60,11 +60,6 @@ public class SessionClient {
     public synchronized boolean initialSession() {
         session = Session.getInstance(clickstreamContext, session);
         this.clickstreamContext.getAnalyticsClient().setSession(session);
-        if (session.isNewSession()) {
-            final AnalyticsEvent event =
-                this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.SESSION_START);
-            this.clickstreamContext.getAnalyticsClient().recordEvent(event);
-        }
         return session.isNewSession();
     }
 
