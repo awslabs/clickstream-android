@@ -110,6 +110,7 @@ public final class NetRequest {
             .addQueryParameter("appId", appId)
             .addQueryParameter("hashCode", StringUtil.getHashCode(curStr))
             .addQueryParameter("event_bundle_sequence_id", String.valueOf(bundleSequenceId))
+            .addQueryParameter("upload_timestamp", String.valueOf(System.currentTimeMillis()))
             .addQueryParameter("compression", compression)
             .build();
         Request.Builder builder = request.newBuilder().url(url).post(body);

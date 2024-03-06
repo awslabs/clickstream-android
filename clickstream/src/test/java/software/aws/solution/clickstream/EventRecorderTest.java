@@ -55,6 +55,7 @@ import java.util.concurrent.TimeUnit;
 import static com.github.dreamhead.moco.Moco.and;
 import static com.github.dreamhead.moco.Moco.by;
 import static com.github.dreamhead.moco.Moco.eq;
+import static com.github.dreamhead.moco.Moco.exist;
 import static com.github.dreamhead.moco.Moco.httpServer;
 import static com.github.dreamhead.moco.Moco.query;
 import static com.github.dreamhead.moco.Moco.status;
@@ -76,6 +77,7 @@ public class EventRecorderTest {
     private static final String COLLECT_SUCCESS = "/collect/success";
     private static final String COLLECT_FAIL = "/collect/fail";
     private static final String COLLECT_FOR_VERIFY_HASH_CODE = "/collect/hashcode";
+    private static final String COLLECT_FOR_VERIFY_UPLOAD_TIMESTAMP = "/collect/timestamp";
     private static Runner runner;
     private static String jsonString;
     private static HttpServer server;
@@ -550,6 +552,21 @@ public class EventRecorderTest {
         server.request(and(by(uri(COLLECT_FOR_VERIFY_HASH_CODE)), eq(query("hashCode"), eventHashCode)))
             .response(status(200), text("success"));
         boolean requestResult = NetRequest.uploadEvents(eventJson, clickstreamContext.getClickstreamConfiguration(), 1);
+        assertTrue(requestResult);
+    }
+
+    /**
+     * test record event with request parameter upload timestamp.
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testRecordEventRequestUploadTimestamp() throws Exception {
+        setRequestPath(COLLECT_FOR_VERIFY_UPLOAD_TIMESTAMP);
+        server.request(
+                and(by(uri(COLLECT_FOR_VERIFY_UPLOAD_TIMESTAMP)), exist(query("upload_timestamp"))))
+            .response(status(200), text("success"));
+        boolean requestResult = NetRequest.uploadEvents("[]", clickstreamContext.getClickstreamConfiguration(), 1);
         assertTrue(requestResult);
     }
 
