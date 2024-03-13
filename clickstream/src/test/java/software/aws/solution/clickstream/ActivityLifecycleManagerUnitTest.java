@@ -124,7 +124,10 @@ public final class ActivityLifecycleManagerUnitTest {
     @Test
     public void testOnAppForegrounded() {
         assertNotNull(lifecycleOwner);
+        LifecycleRegistry lifecycle = new LifecycleRegistry(lifecycleOwner);
+        lifecycleManager.startLifecycleTracking(ApplicationProvider.getApplicationContext(), lifecycle);
         when(sessionClient.initialSession()).thenReturn(true);
+        assertNotNull(lifecycle);
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
         verify(autoRecordEventClient).updateStartEngageTimestamp();
         verify(autoRecordEventClient).handleAppStart();
