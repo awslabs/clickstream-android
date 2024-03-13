@@ -73,7 +73,7 @@ public class AutoRecordEventClientTest {
     private ClickstreamContext clickstreamContext;
     private AutoRecordEventClient client;
     private LifecycleRegistry lifecycle;
-    private LifecycleOwner owner;
+    private LifecycleOwner lifecycleOwner;
 
     /**
      * prepare AutoRecordEventClient and context.
@@ -96,8 +96,8 @@ public class AutoRecordEventClientTest {
         callbacks = new ActivityLifecycleManager(clickstreamManager);
 
         ActivityLifecycleManager lifecycleManager = new ActivityLifecycleManager(clickstreamManager);
-        owner = mock(LifecycleOwner.class);
-        lifecycle = new LifecycleRegistry(owner);
+        lifecycleOwner = mock(LifecycleOwner.class);
+        lifecycle = new LifecycleRegistry(lifecycleOwner);
         lifecycleManager.startLifecycleTracking(ApplicationProvider.getApplicationContext(), lifecycle);
     }
 
@@ -195,6 +195,7 @@ public class AutoRecordEventClientTest {
         callbacks.onActivityCreated(activity, bundle);
         callbacks.onActivityStarted(activity);
         callbacks.onActivityResumed(activity);
+        assertNotNull(lifecycleOwner);
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_STOP);
         try (Cursor cursor = dbUtil.queryAllEvents()) {
             List<String> eventList = new ArrayList<>();

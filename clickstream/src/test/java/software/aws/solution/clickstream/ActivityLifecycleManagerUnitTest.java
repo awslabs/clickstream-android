@@ -33,6 +33,7 @@ import software.aws.solution.clickstream.client.ClickstreamManager;
 import software.aws.solution.clickstream.client.SessionClient;
 import software.aws.solution.clickstream.util.ReflectUtil;
 
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -47,7 +48,7 @@ public final class ActivityLifecycleManagerUnitTest {
     private Application.ActivityLifecycleCallbacks callbacks;
     private Log log;
     private LifecycleRegistry lifecycle;
-    private LifecycleOwner owner;
+    private LifecycleOwner lifecycleOwner;
     private ActivityLifecycleManager lifecycleManager;
 
     /**
@@ -66,8 +67,8 @@ public final class ActivityLifecycleManagerUnitTest {
         this.callbacks = lifecycleManager;
         log = mock(Log.class);
         ReflectUtil.modifyFiled(this.callbacks, "LOG", log);
-        owner = mock(LifecycleOwner.class);
-        lifecycle = new LifecycleRegistry(owner);
+        lifecycleOwner = mock(LifecycleOwner.class);
+        lifecycle = new LifecycleRegistry(lifecycleOwner);
         lifecycleManager.startLifecycleTracking(ApplicationProvider.getApplicationContext(), lifecycle);
     }
 
@@ -122,8 +123,7 @@ public final class ActivityLifecycleManagerUnitTest {
      */
     @Test
     public void testOnAppForegrounded() {
-        LifecycleRegistry lifecycle = new LifecycleRegistry(mock(LifecycleOwner.class));
-        lifecycleManager.startLifecycleTracking(ApplicationProvider.getApplicationContext(), lifecycle);
+        assertNotNull(lifecycleOwner);
         when(sessionClient.initialSession()).thenReturn(true);
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
         verify(autoRecordEventClient).updateStartEngageTimestamp();
