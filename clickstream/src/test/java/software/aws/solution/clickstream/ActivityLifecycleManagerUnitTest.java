@@ -121,7 +121,7 @@ public final class ActivityLifecycleManagerUnitTest {
      */
     @Test
     public void testOnAppForegrounded() {
-        lifecycle = new LifecycleRegistry(mock(LifecycleOwner.class));
+        LifecycleRegistry lifecycle = new LifecycleRegistry(mock(LifecycleOwner.class));
         lifecycleManager.startLifecycleTracking(ApplicationProvider.getApplicationContext(), lifecycle);
         when(sessionClient.initialSession()).thenReturn(true);
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
