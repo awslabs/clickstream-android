@@ -63,10 +63,24 @@ public class ClickstreamManager {
             }
             LOG.debug(String.format(Locale.US,
                 "Clickstream SDK(%s) initialization successfully completed", BuildConfig.VERSION_NAME));
+            this.autoRecordEventClient.handleAppStart();
+            handleSessionStart();
         } catch (final RuntimeException runtimeException) {
             LOG.error(String.format(Locale.US,
                 "Cannot initialize Clickstream SDK %s", runtimeException.getMessage()));
             throw new AmazonClientException(runtimeException.getLocalizedMessage());
+        }
+    }
+
+    /**
+     * handle session start after SDK initialize.
+     */
+    private void handleSessionStart() {
+        boolean isNewSession = sessionClient.initialSession();
+        if (isNewSession) {
+            autoRecordEventClient.handleSessionStart();
+            autoRecordEventClient.setIsEntrances();
+            sessionClient.startSession();
         }
     }
 

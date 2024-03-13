@@ -57,9 +57,10 @@ public class ExceptionHandlerTest {
         AWSClickstreamPluginConfiguration.Builder configurationBuilder = AWSClickstreamPluginConfiguration.builder();
         configurationBuilder.withAppId("demo-app")
             .withTrackAppExceptionEvents(true)
-            .withEndpoint("http://cs-se-serve-1qtj719j88vwn-1291141553.ap-southeast-1.elb.amazonaws.com/collect")
+            .withEndpoint("http://example.com/collect")
             .withSendEventsInterval(10000);
         clickstreamManager = ClickstreamManagerFactory.create(context, configurationBuilder.build());
+        dbUtil.deleteBatchEvents(3);
     }
 
     /**

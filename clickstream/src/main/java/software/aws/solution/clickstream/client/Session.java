@@ -58,6 +58,8 @@ public final class Session {
     private Long pauseTime;
     private final int sessionIndex;
 
+    private boolean isStarted;
+
     /**
      * CONSTRUCTOR - ACTUAL Used by SessionClient.
      *
@@ -116,6 +118,22 @@ public final class Session {
         } else {
             return new Session(context, 1);
         }
+    }
+
+    /**
+     * function for get session whether is started.
+     *
+     * @return session whether is started.
+     */
+    public boolean isStarted() {
+        return this.isStarted;
+    }
+
+    /**
+     * function for flag the session is started.
+     */
+    public void start() {
+        this.isStarted = true;
     }
 
     /**

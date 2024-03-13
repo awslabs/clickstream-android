@@ -30,6 +30,8 @@ import software.aws.solution.clickstream.AnalyticsEventTest;
 import software.aws.solution.clickstream.client.AnalyticsEvent;
 import software.aws.solution.clickstream.client.db.ClickstreamDBUtil;
 
+import java.util.Objects;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -39,6 +41,7 @@ import static org.junit.Assert.assertNotNull;
 public class DBUtilTest {
 
     private ClickstreamDBUtil dbUtil;
+    private AnalyticsEvent analyticsEvent;
 
     /**
      * prepare dbUtil and context.
@@ -46,6 +49,8 @@ public class DBUtilTest {
     @Before
     public void setup() {
         dbUtil = new ClickstreamDBUtil(ApplicationProvider.getApplicationContext());
+        analyticsEvent = AnalyticsEventTest.getAnalyticsClient().createEvent("testEvent");
+        dbUtil.deleteBatchEvents(3);
     }
 
     /**
@@ -53,9 +58,8 @@ public class DBUtilTest {
      */
     @Test
     public void testInsertSingleEvent() {
-        AnalyticsEvent analyticsEvent = AnalyticsEventTest.getAnalyticsClient().createEvent("testEvent");
         Uri uri = dbUtil.saveEvent(analyticsEvent);
-        int idInserted = Integer.parseInt(uri.getLastPathSegment());
+        int idInserted = Integer.parseInt(Objects.requireNonNull(uri.getLastPathSegment()));
         assertNotEquals(idInserted, 0);
     }
 
@@ -64,11 +68,10 @@ public class DBUtilTest {
      */
     @Test
     public void testQueryAll() {
-        AnalyticsEvent analyticsEvent = AnalyticsEventTest.getAnalyticsClient().createEvent("testEvent");
         Uri uri1 = dbUtil.saveEvent(analyticsEvent);
         Uri uri2 = dbUtil.saveEvent(analyticsEvent);
-        int idInserted1 = Integer.parseInt(uri1.getLastPathSegment());
-        int idInserted2 = Integer.parseInt(uri2.getLastPathSegment());
+        int idInserted1 = Integer.parseInt(Objects.requireNonNull(uri1.getLastPathSegment()));
+        int idInserted2 = Integer.parseInt(Objects.requireNonNull(uri2.getLastPathSegment()));
         assertNotEquals(idInserted1, 0);
         assertNotEquals(idInserted2, 0);
         Cursor c = dbUtil.queryAllEvents();
@@ -83,11 +86,10 @@ public class DBUtilTest {
      */
     @Test
     public void testDelete() {
-        AnalyticsEvent analyticsEvent = AnalyticsEventTest.getAnalyticsClient().createEvent("testEvent");
         Uri uri1 = dbUtil.saveEvent(analyticsEvent);
         Uri uri2 = dbUtil.saveEvent(analyticsEvent);
-        int idInserted1 = Integer.parseInt(uri1.getLastPathSegment());
-        int idInserted2 = Integer.parseInt(uri2.getLastPathSegment());
+        int idInserted1 = Integer.parseInt(Objects.requireNonNull(uri1.getLastPathSegment()));
+        int idInserted2 = Integer.parseInt(Objects.requireNonNull(uri2.getLastPathSegment()));
         assertNotEquals(idInserted1, 0);
         assertNotEquals(idInserted2, 0);
         Cursor c = dbUtil.queryAllEvents();
@@ -115,13 +117,12 @@ public class DBUtilTest {
      */
     @Test
     public void testGetTotalDbSize() {
-        AnalyticsEvent analyticsEvent = AnalyticsEventTest.getAnalyticsClient().createEvent("testEvent");
         int eventLength1 = analyticsEvent.toJSONObject().toString().length();
         Uri uri1 = dbUtil.saveEvent(analyticsEvent);
         int eventLength2 = analyticsEvent.toJSONObject().toString().length();
         Uri uri2 = dbUtil.saveEvent(analyticsEvent);
-        int idInserted1 = Integer.parseInt(uri1.getLastPathSegment());
-        int idInserted2 = Integer.parseInt(uri2.getLastPathSegment());
+        int idInserted1 = Integer.parseInt(Objects.requireNonNull(uri1.getLastPathSegment()));
+        int idInserted2 = Integer.parseInt(Objects.requireNonNull(uri2.getLastPathSegment()));
         assertNotEquals(idInserted1, 0);
         assertNotEquals(idInserted2, 0);
         Cursor c = dbUtil.queryAllEvents();
@@ -136,11 +137,10 @@ public class DBUtilTest {
      */
     @Test
     public void testGetTotalDbNumber() {
-        AnalyticsEvent analyticsEvent = AnalyticsEventTest.getAnalyticsClient().createEvent("testEvent");
         Uri uri1 = dbUtil.saveEvent(analyticsEvent);
         Uri uri2 = dbUtil.saveEvent(analyticsEvent);
-        int idInserted1 = Integer.parseInt(uri1.getLastPathSegment());
-        int idInserted2 = Integer.parseInt(uri2.getLastPathSegment());
+        int idInserted1 = Integer.parseInt(Objects.requireNonNull(uri1.getLastPathSegment()));
+        int idInserted2 = Integer.parseInt(Objects.requireNonNull(uri2.getLastPathSegment()));
         assertNotEquals(idInserted1, 0);
         assertNotEquals(idInserted2, 0);
         assertEquals(dbUtil.getTotalNumber(), 2);
