@@ -30,6 +30,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import software.aws.solution.clickstream.client.AutoRecordEventClient;
 import software.aws.solution.clickstream.client.ClickstreamManager;
+import software.aws.solution.clickstream.client.ScreenRefererTool;
 import software.aws.solution.clickstream.client.SessionClient;
 import software.aws.solution.clickstream.util.ReflectUtil;
 
@@ -70,6 +71,7 @@ public final class ActivityLifecycleManagerUnitTest {
         lifecycleOwner = mock(LifecycleOwner.class);
         lifecycle = new LifecycleRegistry(lifecycleOwner);
         lifecycleManager.startLifecycleTracking(ApplicationProvider.getApplicationContext(), lifecycle);
+        ScreenRefererTool.clear();
     }
 
     /**
@@ -124,10 +126,7 @@ public final class ActivityLifecycleManagerUnitTest {
     @Test
     public void testOnAppForegrounded() {
         assertNotNull(lifecycleOwner);
-        LifecycleRegistry lifecycle = new LifecycleRegistry(lifecycleOwner);
-        lifecycleManager.startLifecycleTracking(ApplicationProvider.getApplicationContext(), lifecycle);
         when(sessionClient.initialSession()).thenReturn(true);
-        assertNotNull(lifecycle);
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
         verify(autoRecordEventClient).updateStartEngageTimestamp();
         verify(autoRecordEventClient).handleAppStart();
