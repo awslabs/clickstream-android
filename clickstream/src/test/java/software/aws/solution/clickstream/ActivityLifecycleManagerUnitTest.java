@@ -47,6 +47,7 @@ public final class ActivityLifecycleManagerUnitTest {
     private Application.ActivityLifecycleCallbacks callbacks;
     private Log log;
     private LifecycleRegistry lifecycle;
+    private LifecycleOwner owner;
     private ActivityLifecycleManager lifecycleManager;
 
     /**
@@ -65,8 +66,8 @@ public final class ActivityLifecycleManagerUnitTest {
         this.callbacks = lifecycleManager;
         log = mock(Log.class);
         ReflectUtil.modifyFiled(this.callbacks, "LOG", log);
-
-        lifecycle = new LifecycleRegistry(mock(LifecycleOwner.class));
+        owner = mock(LifecycleOwner.class);
+        lifecycle = new LifecycleRegistry(owner);
         lifecycleManager.startLifecycleTracking(ApplicationProvider.getApplicationContext(), lifecycle);
     }
 

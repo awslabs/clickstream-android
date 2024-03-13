@@ -73,6 +73,7 @@ public class AutoRecordEventClientTest {
     private ClickstreamContext clickstreamContext;
     private AutoRecordEventClient client;
     private LifecycleRegistry lifecycle;
+    private LifecycleOwner owner;
 
     /**
      * prepare AutoRecordEventClient and context.
@@ -95,7 +96,8 @@ public class AutoRecordEventClientTest {
         callbacks = new ActivityLifecycleManager(clickstreamManager);
 
         ActivityLifecycleManager lifecycleManager = new ActivityLifecycleManager(clickstreamManager);
-        lifecycle = new LifecycleRegistry(mock(LifecycleOwner.class));
+        owner = mock(LifecycleOwner.class);
+        lifecycle = new LifecycleRegistry(owner);
         lifecycleManager.startLifecycleTracking(ApplicationProvider.getApplicationContext(), lifecycle);
     }
 
