@@ -74,6 +74,7 @@ public class AutoRecordEventClientTest {
     private AutoRecordEventClient client;
     private LifecycleRegistry lifecycle;
     private LifecycleOwner lifecycleOwner;
+    private ClickstreamManager clickstreamManager;
 
     /**
      * prepare AutoRecordEventClient and context.
@@ -89,8 +90,7 @@ public class AutoRecordEventClientTest {
             .withTrackScreenViewEvents(true)
             .withTrackUserEngagementEvents(true);
         AWSClickstreamPluginConfiguration clickstreamPluginConfiguration = configurationBuilder.build();
-        ClickstreamManager clickstreamManager =
-            ClickstreamManagerFactory.create(context, clickstreamPluginConfiguration);
+        clickstreamManager = ClickstreamManagerFactory.create(context, clickstreamPluginConfiguration);
         client = clickstreamManager.getAutoRecordEventClient();
         clickstreamContext = clickstreamManager.getClickstreamContext();
         callbacks = new ActivityLifecycleManager(clickstreamManager);
@@ -108,6 +108,29 @@ public class AutoRecordEventClientTest {
      */
     @Test
     public void testSDKInitializationEvents() throws Exception {
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            List<String> eventList = new ArrayList<>();
+            while (cursor.moveToNext()) {
+                String eventString = cursor.getString(2);
+                JSONObject jsonObject = new JSONObject(eventString);
+                String eventName = jsonObject.getString("event_type");
+                eventList.add(eventName);
+            }
+            assertEquals(3, eventList.size());
+            assertEquals(Event.PresetEvent.FIRST_OPEN, eventList.get(0));
+            assertEquals(Event.PresetEvent.APP_START, eventList.get(1));
+            assertEquals(Event.PresetEvent.SESSION_START, eventList.get(2));
+        }
+    }
+
+    /**
+     * test SDK initialize with stored session.
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testSDKInitializeWithStoredSession() throws Exception {
+        ReflectUtil.invokeMethod(clickstreamManager, "handleSessionStart");
         try (Cursor cursor = dbUtil.queryAllEvents()) {
             List<String> eventList = new ArrayList<>();
             while (cursor.moveToNext()) {
