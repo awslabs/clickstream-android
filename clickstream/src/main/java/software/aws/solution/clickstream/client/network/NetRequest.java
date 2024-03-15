@@ -21,7 +21,7 @@ import com.amplifyframework.util.UserAgent;
 
 import com.amazonaws.logging.Log;
 import com.amazonaws.logging.LogFactory;
-import software.aws.solution.clickstream.client.ClickstreamConfiguration;
+import software.aws.solution.clickstream.ClickstreamConfiguration;
 import software.aws.solution.clickstream.client.util.StringUtil;
 
 import java.io.IOException;

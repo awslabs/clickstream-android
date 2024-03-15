@@ -68,13 +68,11 @@ public class AnalyticsClientTest {
     @Before
     public void setup() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
-        AWSClickstreamPluginConfiguration.Builder configurationBuilder = AWSClickstreamPluginConfiguration.builder();
-        configurationBuilder.withAppId("demo-app")
+        ClickstreamConfiguration configuration = ClickstreamConfiguration.getDefaultConfiguration()
+            .withAppId("demo-app")
             .withEndpoint("http://cs-se-serve-1qtj719j88vwn-1291141553.ap-southeast-1.elb.amazonaws.com/collect")
             .withSendEventsInterval(10000);
-        AWSClickstreamPluginConfiguration clickstreamPluginConfiguration = configurationBuilder.build();
-        ClickstreamManager clickstreamManager =
-            ClickstreamManagerFactory.create(context, clickstreamPluginConfiguration);
+        ClickstreamManager clickstreamManager = new ClickstreamManager(context, configuration);
         analyticsClient = clickstreamManager.getAnalyticsClient();
 
         globalAttributes = (Map<String, Object>) ReflectUtil.getFiled(analyticsClient, "globalAttributes");
@@ -361,9 +359,11 @@ public class AnalyticsClientTest {
         analyticsClient.updateUserAttribute();
         Context context = ApplicationProvider.getApplicationContext();
 
-        ClickstreamManager clickstreamManager =
-            ClickstreamManagerFactory.create(context, AWSClickstreamPluginConfiguration
-                .builder().withAppId("demo-app").withEndpoint("http://example.com/collect").build());
+        ClickstreamManager clickstreamManager = new ClickstreamManager(context,
+            ClickstreamConfiguration.getDefaultConfiguration()
+                .withAppId("demo-app")
+                .withEndpoint("http://example.com/collect")
+        );
         JSONObject userAttributesFromStorage =
             (JSONObject) ReflectUtil.getFiled(clickstreamManager.getAnalyticsClient(), "allUserAttributes");
         Assert.assertEquals(6, userAttributesFromStorage.length());

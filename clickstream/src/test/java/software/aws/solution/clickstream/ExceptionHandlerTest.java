@@ -54,12 +54,12 @@ public class ExceptionHandlerTest {
         });
         dbUtil = new ClickstreamDBUtil(context);
 
-        AWSClickstreamPluginConfiguration.Builder configurationBuilder = AWSClickstreamPluginConfiguration.builder();
-        configurationBuilder.withAppId("demo-app")
+        ClickstreamConfiguration configuration = ClickstreamConfiguration.getDefaultConfiguration()
+            .withAppId("demo-app")
             .withTrackAppExceptionEvents(true)
             .withEndpoint("http://cs-se-serve-1qtj719j88vwn-1291141553.ap-southeast-1.elb.amazonaws.com/collect")
             .withSendEventsInterval(10000);
-        clickstreamManager = ClickstreamManagerFactory.create(context, configurationBuilder.build());
+        clickstreamManager = new ClickstreamManager(context, configuration);
     }
 
     /**

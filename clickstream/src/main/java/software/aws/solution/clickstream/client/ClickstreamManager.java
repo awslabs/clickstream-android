@@ -18,13 +18,17 @@ package software.aws.solution.clickstream.client;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.analytics.AnalyticsPropertyBehavior;
+
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.logging.Log;
 import com.amazonaws.logging.LogFactory;
 import software.aws.solution.clickstream.AWSClickstreamPlugin;
 import software.aws.solution.clickstream.BuildConfig;
+import software.aws.solution.clickstream.ClickstreamConfiguration;
 
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * Clickstream Manager.
@@ -44,13 +48,12 @@ public class ClickstreamManager {
     /**
      * Constructor.
      *
-     * @param config {@link ClickstreamConfiguration} object.
+     * @param config     {@link Context} object.
+     * @param appContext {@link ClickstreamConfiguration} object.
      * @throws AmazonClientException When RuntimeException occur.
-     * @throws NullPointerException  When the config or appId is null.
      */
-    public ClickstreamManager(@NonNull final ClickstreamConfiguration config) {
+    public ClickstreamManager(@NonNull Context appContext, @NonNull final ClickstreamConfiguration config) {
         try {
-            final Context appContext = config.getAppContext();
             this.clickstreamContext = new ClickstreamContext(appContext, SDK_INFO, config);
             this.analyticsClient = new AnalyticsClient(this.clickstreamContext);
             this.clickstreamContext.setAnalyticsClient(this.analyticsClient);
@@ -61,12 +64,24 @@ public class ClickstreamManager {
                 exceptionHandler = ClickstreamExceptionHandler.init(this.clickstreamContext);
                 enableTrackAppException();
             }
+            setInitialGlobalAttributes(this.analyticsClient, config);
             LOG.debug(String.format(Locale.US,
                 "Clickstream SDK(%s) initialization successfully completed", BuildConfig.VERSION_NAME));
         } catch (final RuntimeException runtimeException) {
             LOG.error(String.format(Locale.US,
                 "Cannot initialize Clickstream SDK %s", runtimeException.getMessage()));
             throw new AmazonClientException(runtimeException.getLocalizedMessage());
+        }
+    }
+
+    private void setInitialGlobalAttributes(AnalyticsClient analyticsClient, ClickstreamConfiguration config) {
+        if (config.getInitialGlobalAttributes() != null) {
+            for (Map.Entry<String, AnalyticsPropertyBehavior<?>> entry : config.getInitialGlobalAttributes()
+                .getAttributes()) {
+                AnalyticsPropertyBehavior<?> property = entry.getValue();
+                analyticsClient.addGlobalAttribute(entry.getKey(), property.getValue());
+            }
+            config.withInitialGlobalAttributes(null);
         }
     }
 
