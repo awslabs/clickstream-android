@@ -34,18 +34,17 @@ import static org.mockito.Mockito.mock;
 
 @RunWith(RobolectricTestRunner.class)
 public class InitClientTest {
-    private AWSClickstreamPluginConfiguration clickstreamPluginConfiguration = null;
+    private ClickstreamConfiguration clickstreamPluginConfiguration = null;
 
     /**
      * init the clickstreamPluginConfiguration.
      */
     @Before
     public void init() {
-        AWSClickstreamPluginConfiguration.Builder configurationBuilder = AWSClickstreamPluginConfiguration.builder();
-        configurationBuilder.withEndpoint(
+        clickstreamPluginConfiguration = ClickstreamConfiguration.getDefaultConfiguration();
+        clickstreamPluginConfiguration.withEndpoint(
                 "http://click-serve-HCJIDWGD3S9F-1166279006.ap-southeast-1.elb.amazonaws.com/collect")
             .withSendEventsInterval(15000);
-        clickstreamPluginConfiguration = configurationBuilder.build();
     }
 
     /**
@@ -55,8 +54,7 @@ public class InitClientTest {
     @Test
     public void initClientParam() {
         Context context = ApplicationProvider.getApplicationContext();
-        ClickstreamManager clickstreamManager =
-            ClickstreamManagerFactory.create(context, clickstreamPluginConfiguration);
+        ClickstreamManager clickstreamManager = new ClickstreamManager(context, clickstreamPluginConfiguration);
         AnalyticsClient analyticsClient = clickstreamManager.getAnalyticsClient();
         ClickstreamContext clickstreamContext = clickstreamManager.getClickstreamContext();
 
@@ -75,22 +73,53 @@ public class InitClientTest {
     }
 
     /**
-     * Attempting to call {@link ClickstreamAnalytics#init(android.app.Application)}
-     * without a generated configuration file throws an AmplifyException.
+     * Attempting to call {@link ClickstreamAnalytics#init(Context)}
+     * without a null Context throws an NullPointerException.
      *
      * @throws Exception if the premise of the test is incorrect
      */
-    @Test(expected = AmplifyException.class)
-    public void testMissingConfigurationFileThrowsAmplifyException() throws Exception {
+    @Test(expected = NullPointerException.class)
+    public void testContextIsNullWhenInitialize() throws Exception {
         Activity activity = mock(Activity.class);
         ClickstreamAnalytics.init(activity.getApplication());
     }
 
     /**
-     * test init SDK not in main thread.
+     * Attempting to call {@link ClickstreamAnalytics#init(Context, ClickstreamConfiguration)}
+     * without ClickstreamConfigurations.
      */
     @Test
-    public void testInitSDKNotInMainThreadThrowsAmplifyException() {
+    public void testInitSDKWithConfigurations() {
+        ClickstreamAttribute attribute = ClickstreamAttribute.builder()
+            .add("testKey", "testValue")
+            .add("intKey", 12)
+            .add("boolKey", true)
+            .add("doubleKey", 23.22)
+            .build();
+        ClickstreamConfiguration configuration = new ClickstreamConfiguration()
+            .withAppId("test123")
+            .withEndpoint("http://example.com/collect123")
+            .withLogEvents(true)
+            .withCompressEvents(false)
+            .withTrackAppExceptionEvents(true)
+            .withTrackUserEngagementEvents(false)
+            .withTrackScreenViewEvents(false)
+            .withSendEventsInterval(12000)
+            .withInitialGlobalAttributes(attribute);
+        try {
+            ClickstreamAnalytics.init(ApplicationProvider.getApplicationContext(), configuration);
+        } catch (AmplifyException exception) {
+            Assert.fail();
+        }
+    }
+
+    /**
+     * test init SDK not in main thread.
+     *
+     * @throws Exception Exception for thread sleep.
+     */
+    @Test
+    public void testInitSDKNotInMainThreadThrowsAmplifyException() throws Exception {
         new Thread(() -> {
             Activity activity = mock(Activity.class);
             try {
@@ -101,5 +130,6 @@ public class InitClientTest {
                 Assert.assertEquals("Please initialize in the main thread", exception.getRecoverySuggestion());
             }
         }).start();
+        Thread.sleep(500);
     }
 }

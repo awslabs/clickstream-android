@@ -17,6 +17,7 @@ package software.aws.solution.clickstream.client;
 
 import android.content.Context;
 
+import software.aws.solution.clickstream.ClickstreamConfiguration;
 import software.aws.solution.clickstream.client.system.AndroidSystem;
 import software.aws.solution.clickstream.client.uniqueid.SharedPrefsDeviceIdService;
 

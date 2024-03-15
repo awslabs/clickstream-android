@@ -48,14 +48,12 @@ public class SessionClientTest {
     public void setup() {
         Context context = ApplicationProvider.getApplicationContext();
 
-        AWSClickstreamPluginConfiguration.Builder configurationBuilder = AWSClickstreamPluginConfiguration.builder();
-        configurationBuilder.withAppId("demo-app")
+        ClickstreamConfiguration configuration = ClickstreamConfiguration.getDefaultConfiguration()
+            .withAppId("demo-app")
             .withEndpoint("http://example.com/collect")
             .withSendEventsInterval(10000)
-            .withSessionTimeOut(1800000L);
-        AWSClickstreamPluginConfiguration clickstreamPluginConfiguration = configurationBuilder.build();
-        ClickstreamManager clickstreamManager =
-            ClickstreamManagerFactory.create(context, clickstreamPluginConfiguration);
+            .withSessionTimeoutDuration(1800000L);
+        ClickstreamManager clickstreamManager = new ClickstreamManager(context, configuration);
         clickstreamContext = clickstreamManager.getClickstreamContext();
         analyticsClient = clickstreamManager.getAnalyticsClient();
         client = new SessionClient(clickstreamContext);

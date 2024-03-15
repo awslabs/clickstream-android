@@ -42,7 +42,7 @@ import java.util.Map;
  * The plugin implementation for Clickstream in Analytics category.
  */
 public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
-
+    static final String PLUGIN_KEY = "awsClickstreamPlugin";
     private static final Log LOG = LogFactory.getLog(AWSClickstreamPlugin.class);
     private final Context context;
     private AnalyticsClient analyticsClient;
@@ -156,7 +156,7 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
     @NonNull
     @Override
     public String getPluginKey() {
-        return "awsClickstreamPlugin";
+        return PLUGIN_KEY;
     }
 
     @Override
@@ -171,31 +171,42 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
                     getPluginKey() + " under the analytics category."
             );
         }
-
-        AWSClickstreamPluginConfiguration.Builder configurationBuilder =
-            AWSClickstreamPluginConfiguration.builder();
-
+        ClickstreamConfiguration configuration = ClickstreamConfiguration.getDefaultConfiguration();
         // Read all the data from the configuration object to be used for record event
         try {
-            configurationBuilder.withAppId(pluginConfiguration
-                .getString(ConfigurationKey.APP_ID.getConfigurationKey()));
+            configuration.withAppId(pluginConfiguration.getString(ConfigurationKey.APP_ID));
+            configuration.withEndpoint(pluginConfiguration
+                .getString(ConfigurationKey.ENDPOINT));
 
-            configurationBuilder.withEndpoint(pluginConfiguration
-                .getString(ConfigurationKey.ENDPOINT.getConfigurationKey()));
-
-            if (pluginConfiguration.has(ConfigurationKey.SEND_EVENTS_INTERVAL.getConfigurationKey())) {
-                configurationBuilder.withSendEventsInterval(pluginConfiguration
-                    .getLong(ConfigurationKey.SEND_EVENTS_INTERVAL.getConfigurationKey()));
+            if (pluginConfiguration.has(ConfigurationKey.SEND_EVENTS_INTERVAL)) {
+                configuration.withSendEventsInterval(pluginConfiguration
+                    .getLong(ConfigurationKey.SEND_EVENTS_INTERVAL));
             }
-
-            if (pluginConfiguration.has(ConfigurationKey.COMPRESS_EVENTS.getConfigurationKey())) {
-                configurationBuilder.withCompressEvents(
-                    pluginConfiguration.getBoolean(ConfigurationKey.COMPRESS_EVENTS.getConfigurationKey()));
+            if (pluginConfiguration.has(ConfigurationKey.IS_COMPRESS_EVENTS)) {
+                configuration.withCompressEvents(
+                    pluginConfiguration.getBoolean(ConfigurationKey.IS_COMPRESS_EVENTS));
             }
-
-            if (pluginConfiguration.has(ConfigurationKey.TRACK_APP_EXCEPTION_EVENTS.getConfigurationKey())) {
-                configurationBuilder.withTrackAppExceptionEvents(pluginConfiguration
-                    .getBoolean(ConfigurationKey.TRACK_APP_EXCEPTION_EVENTS.getConfigurationKey()));
+            if (pluginConfiguration.has(ConfigurationKey.IS_TRACK_APP_EXCEPTION_EVENTS)) {
+                configuration.withTrackAppExceptionEvents(pluginConfiguration
+                    .getBoolean(ConfigurationKey.IS_TRACK_APP_EXCEPTION_EVENTS));
+            }
+            if (pluginConfiguration.has(ConfigurationKey.IS_LOG_EVENTS)) {
+                configuration.withLogEvents(pluginConfiguration.getBoolean(ConfigurationKey.IS_LOG_EVENTS));
+            }
+            if (pluginConfiguration.has(ConfigurationKey.IS_TRACK_SCREEN_VIEW_EVENTS)) {
+                configuration.withTrackScreenViewEvents(
+                    pluginConfiguration.getBoolean(ConfigurationKey.IS_TRACK_SCREEN_VIEW_EVENTS));
+            }
+            if (pluginConfiguration.has(ConfigurationKey.SESSION_TIMEOUT_DURATION)) {
+                configuration.withSessionTimeoutDuration(
+                    pluginConfiguration.getLong(ConfigurationKey.SESSION_TIMEOUT_DURATION));
+            }
+            if (pluginConfiguration.has(ConfigurationKey.AUTH_COOKIE)) {
+                configuration.withAuthCookie(pluginConfiguration.getString(ConfigurationKey.AUTH_COOKIE));
+            }
+            if (pluginConfiguration.has(ConfigurationKey.GLOBAL_ATTRIBUTES)) {
+                configuration.withInitialGlobalAttributes(
+                    (ClickstreamAttribute) pluginConfiguration.get(ConfigurationKey.GLOBAL_ATTRIBUTES));
             }
         } catch (JSONException exception) {
             throw new AnalyticsException(
@@ -204,16 +215,10 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
                     "Please take a look at the documentation for expected format of amplifyconfiguration.json."
             );
         }
-
-        AWSClickstreamPluginConfiguration clickstreamPluginConfiguration = configurationBuilder.build();
-        clickstreamManager = ClickstreamManagerFactory.create(
-            context,
-            clickstreamPluginConfiguration
-        );
+        clickstreamManager = new ClickstreamManager(context, configuration);
         this.analyticsClient = clickstreamManager.getAnalyticsClient();
 
-        LOG.debug("AWSClickstreamPlugin create AutoEventSubmitter.");
-        autoEventSubmitter = new AutoEventSubmitter(clickstreamPluginConfiguration.getSendEventsInterval());
+        autoEventSubmitter = new AutoEventSubmitter(configuration.getSendEventsInterval());
         autoEventSubmitter.start();
 
         activityLifecycleManager = new ActivityLifecycleManager(clickstreamManager);
@@ -232,57 +237,20 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
     }
 
     /**
-     * Clickstream configuration in amplifyconfiguration.json contains following values.
+     * The Clickstream configuration keys.
      */
-    public enum ConfigurationKey {
-
-        /**
-         * The Clickstream appId.
-         */
-        APP_ID("appId"),
-
-        /**
-         * the Clickstream Endpoint.
-         */
-        ENDPOINT("endpoint"),
-
-        /**
-         * Time interval after which the events are automatically submitted to server.
-         */
-        SEND_EVENTS_INTERVAL("sendEventsInterval"),
-
-        /**
-         * Whether to compress events.
-         */
-        COMPRESS_EVENTS("isCompressEvents"),
-
-        /**
-         * Whether to track app exception events automatically.
-         */
-        TRACK_APP_EXCEPTION_EVENTS("isTrackAppExceptionEvents");
-
-        /**
-         * The key this property is listed under in the config JSON.
-         */
-        private final String configurationKey;
-
-        /**
-         * Construct the enum with the config key.
-         *
-         * @param configurationKey The key this property is listed under in the config JSON.
-         */
-        ConfigurationKey(final String configurationKey) {
-            this.configurationKey = configurationKey;
-        }
-
-        /**
-         * Returns the key this property is listed under in the config JSON.
-         *
-         * @return The key as a string
-         */
-        public String getConfigurationKey() {
-            return configurationKey;
-        }
+    static class ConfigurationKey {
+        static final String APP_ID = "appId";
+        static final String ENDPOINT = "endpoint";
+        static final String SEND_EVENTS_INTERVAL = "autoFlushEventsInterval";
+        static final String IS_COMPRESS_EVENTS = "isCompressEvents";
+        static final String IS_LOG_EVENTS = "isLogEvents";
+        static final String AUTH_COOKIE = "authCookie";
+        static final String SESSION_TIMEOUT_DURATION = "sessionTimeoutDuration";
+        static final String IS_TRACK_APP_EXCEPTION_EVENTS = "isTrackAppExceptionEvents";
+        static final String IS_TRACK_SCREEN_VIEW_EVENTS = "isTrackScreenViewEvents";
+        static final String IS_TRACK_USER_ENGAGEMENT_EVENTS = "isTrackUserEngagementEvents";
+        static final String GLOBAL_ATTRIBUTES = "globalAttributes";
     }
 }
 

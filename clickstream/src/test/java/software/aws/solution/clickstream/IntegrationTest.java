@@ -40,7 +40,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import software.aws.solution.clickstream.client.AnalyticsClient;
-import software.aws.solution.clickstream.client.ClickstreamConfiguration;
 import software.aws.solution.clickstream.client.ClickstreamContext;
 import software.aws.solution.clickstream.client.Event;
 import software.aws.solution.clickstream.client.EventRecorder;
@@ -115,7 +114,7 @@ public class IntegrationTest {
             Amplify.addPlugin(plugin);
             Amplify.configure(context);
         } else {
-            plugin = (AWSClickstreamPlugin) Amplify.Analytics.getPlugin("awsClickstreamPlugin");
+            plugin = (AWSClickstreamPlugin) Amplify.Analytics.getPlugin(AWSClickstreamPlugin.PLUGIN_KEY);
             application = (Application) ReflectUtil.getFiled(plugin, "context");
         }
         analyticsClient = plugin.getEscapeHatch();

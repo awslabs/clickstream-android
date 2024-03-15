@@ -51,13 +51,10 @@ public class AnalyticsEventTest {
      * @return AnalyticsClient
      */
     public static AnalyticsClient getAnalyticsClient() {
-        AWSClickstreamPluginConfiguration.Builder configurationBuilder = AWSClickstreamPluginConfiguration.builder();
-        configurationBuilder.withEndpoint(
-            "http://click-serve-HCJIDWGD3S9F-1166279006.ap-southeast-1.elb.amazonaws.com/collect");
-        AWSClickstreamPluginConfiguration clickstreamPluginConfiguration = configurationBuilder.build();
+        ClickstreamConfiguration configuration = ClickstreamConfiguration.getDefaultConfiguration()
+            .withEndpoint("http://click-serve-HCJIDWGD3S9F-1166279006.ap-southeast-1.elb.amazonaws.com/collect");
         Context context = ApplicationProvider.getApplicationContext();
-        ClickstreamManager clickstreamManager =
-            ClickstreamManagerFactory.create(context, clickstreamPluginConfiguration);
+        ClickstreamManager clickstreamManager = new ClickstreamManager(context, configuration);
         return clickstreamManager.getAnalyticsClient();
     }
 
