@@ -121,7 +121,7 @@ public class EventRecorderTest {
 
         AWSClickstreamPluginConfiguration.Builder configurationBuilder = AWSClickstreamPluginConfiguration.builder();
         configurationBuilder.withAppId("demo-app")
-            .withEndpoint("http://cs-se-serve-1qtj719j88vwn-1291141553.ap-southeast-1.elb.amazonaws.com/collect")
+            .withEndpoint("http://example.com/collect")
             .withSendEventsInterval(10000);
         AWSClickstreamPluginConfiguration clickstreamPluginConfiguration = configurationBuilder.build();
         ClickstreamManager clickstreamManager =
@@ -137,6 +137,8 @@ public class EventRecorderTest {
             (EventRecorder) ReflectUtil.newInstance(EventRecorder.class, clickstreamContext, dbUtil, executorService);
         log = mock(Log.class);
         ReflectUtil.modifyFiled(eventRecorder, "LOG", log);
+        assertEquals(3, dbUtil.getTotalNumber());
+        dbUtil.deleteBatchEvents(3);
     }
 
     /**
@@ -214,7 +216,7 @@ public class EventRecorderTest {
         String[] result = getBatchOfEvents(cursor);
         assertEquals(result.length, 2);
         assertTrue(result[0].contains(event.getEventId()));
-        assertEquals("1", result[1]);
+        assertEquals("4", result[1]);
         cursor.close();
     }
 
@@ -241,7 +243,7 @@ public class EventRecorderTest {
         assertEquals(result.length, 2);
         assertNotNull(result[0]);
         assertTrue(result[0].length() > 512 * 1024);
-        assertEquals("1", result[1]);
+        assertEquals("4", result[1]);
         cursor.close();
     }
 
@@ -259,7 +261,7 @@ public class EventRecorderTest {
         String[] result = getBatchOfEvents(cursor);
         assertEquals(2, result.length);
         assertEquals(new JSONArray(result[0]).length(), 20);
-        assertEquals("20", result[1]);
+        assertEquals("23", result[1]);
         cursor.close();
     }
 
@@ -277,7 +279,7 @@ public class EventRecorderTest {
         String[] result = getBatchOfEvents(cursor);
         assertEquals(2, result.length);
         assertEquals(new JSONArray(result[0]).length(), 100);
-        assertEquals("100", result[1]);
+        assertEquals("103", result[1]);
         cursor.close();
     }
 
@@ -299,7 +301,7 @@ public class EventRecorderTest {
         assertEquals(2, result.length);
         int length = new JSONArray(result[0]).length();
         assertTrue(length < 30);
-        assertEquals(String.valueOf(length), result[1]);
+        assertEquals(length, Integer.parseInt(result[1]) - 3);
         cursor.close();
     }
 

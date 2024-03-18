@@ -73,6 +73,8 @@ public class AutoRecordEventClientTest {
     private ClickstreamContext clickstreamContext;
     private AutoRecordEventClient client;
     private LifecycleRegistry lifecycle;
+    private LifecycleOwner lifecycleOwner;
+    private ClickstreamManager clickstreamManager;
 
     /**
      * prepare AutoRecordEventClient and context.
@@ -83,21 +85,90 @@ public class AutoRecordEventClientTest {
         dbUtil = new ClickstreamDBUtil(context);
         AWSClickstreamPluginConfiguration.Builder configurationBuilder = AWSClickstreamPluginConfiguration.builder();
         configurationBuilder.withAppId("demo-app")
-            .withEndpoint("http://cs-se-serve-1qtj719j88vwn-1291141553.ap-southeast-1.elb.amazonaws.com/collect")
+            .withEndpoint("http://example.com/collect")
             .withSendEventsInterval(10000)
             .withTrackScreenViewEvents(true)
             .withTrackUserEngagementEvents(true);
         AWSClickstreamPluginConfiguration clickstreamPluginConfiguration = configurationBuilder.build();
-        ClickstreamManager clickstreamManager =
-            ClickstreamManagerFactory.create(context, clickstreamPluginConfiguration);
+        clickstreamManager = ClickstreamManagerFactory.create(context, clickstreamPluginConfiguration);
         client = clickstreamManager.getAutoRecordEventClient();
         clickstreamContext = clickstreamManager.getClickstreamContext();
         callbacks = new ActivityLifecycleManager(clickstreamManager);
 
         ActivityLifecycleManager lifecycleManager = new ActivityLifecycleManager(clickstreamManager);
-        lifecycle = new LifecycleRegistry(mock(LifecycleOwner.class));
+        lifecycleOwner = mock(LifecycleOwner.class);
+        lifecycle = new LifecycleRegistry(lifecycleOwner);
         lifecycleManager.startLifecycleTracking(ApplicationProvider.getApplicationContext(), lifecycle);
     }
+
+    /**
+     * test events after SDK initialization.
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testSDKInitializationEvents() throws Exception {
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            List<String> eventList = new ArrayList<>();
+            while (cursor.moveToNext()) {
+                String eventString = cursor.getString(2);
+                JSONObject jsonObject = new JSONObject(eventString);
+                String eventName = jsonObject.getString("event_type");
+                eventList.add(eventName);
+            }
+            assertEquals(3, eventList.size());
+            assertEquals(Event.PresetEvent.FIRST_OPEN, eventList.get(0));
+            assertEquals(Event.PresetEvent.APP_START, eventList.get(1));
+            assertEquals(Event.PresetEvent.SESSION_START, eventList.get(2));
+        }
+    }
+
+    /**
+     * test SDK initialize with stored session.
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testSDKInitializeWithStoredSession() throws Exception {
+        ReflectUtil.invokeMethod(clickstreamManager, "handleSessionStart");
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            List<String> eventList = new ArrayList<>();
+            while (cursor.moveToNext()) {
+                String eventString = cursor.getString(2);
+                JSONObject jsonObject = new JSONObject(eventString);
+                String eventName = jsonObject.getString("event_type");
+                eventList.add(eventName);
+            }
+            assertEquals(3, eventList.size());
+            assertEquals(Event.PresetEvent.FIRST_OPEN, eventList.get(0));
+            assertEquals(Event.PresetEvent.APP_START, eventList.get(1));
+            assertEquals(Event.PresetEvent.SESSION_START, eventList.get(2));
+        }
+    }
+
+    /**
+     * test SDK lazy initialization.
+     *
+     * @throws Exception exception.
+     */
+    @Test
+    public void testLazyInitialization() throws Exception {
+        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            List<String> eventList = new ArrayList<>();
+            while (cursor.moveToNext()) {
+                String eventString = cursor.getString(2);
+                JSONObject jsonObject = new JSONObject(eventString);
+                String eventName = jsonObject.getString("event_type");
+                eventList.add(eventName);
+            }
+            assertEquals(3, eventList.size());
+            assertEquals(Event.PresetEvent.FIRST_OPEN, eventList.get(0));
+            assertEquals(Event.PresetEvent.APP_START, eventList.get(1));
+            assertEquals(Event.PresetEvent.SESSION_START, eventList.get(2));
+        }
+    }
+
 
     /**
      * test record user engagement event after view screen more than 1 second.
@@ -147,6 +218,7 @@ public class AutoRecordEventClientTest {
         callbacks.onActivityCreated(activity, bundle);
         callbacks.onActivityStarted(activity);
         callbacks.onActivityResumed(activity);
+        assertNotNull(lifecycleOwner);
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_STOP);
         try (Cursor cursor = dbUtil.queryAllEvents()) {
             List<String> eventList = new ArrayList<>();
@@ -864,7 +936,7 @@ public class AutoRecordEventClientTest {
     @Test
     public void testHandleFirstOpen() throws Exception {
         client.handleAppStart();
-        assertEquals(2, dbUtil.getTotalNumber());
+        assertEquals(3, dbUtil.getTotalNumber());
         Cursor cursor = dbUtil.queryAllEvents();
         cursor.moveToFirst();
         String eventString = cursor.getString(2);
@@ -889,7 +961,7 @@ public class AutoRecordEventClientTest {
         client.handleAppStart();
         client.handleAppStart();
         client.handleAppStart();
-        assertEquals(4, dbUtil.getTotalNumber());
+        assertEquals(3, dbUtil.getTotalNumber());
         Cursor cursor = dbUtil.queryAllEvents();
         cursor.moveToFirst();
         String eventString = cursor.getString(2);
@@ -906,14 +978,14 @@ public class AutoRecordEventClientTest {
      */
     @Test
     public void testHandleAppStart() throws Exception {
-        client.handleAppStart();
         Activity activity1 = mock(Activity.class);
         Bundle bundle = mock(Bundle.class);
         callbacks.onActivityCreated(activity1, bundle);
         callbacks.onActivityStarted(activity1);
         callbacks.onActivityResumed(activity1);
+        client.handleAppEnd();
         client.handleAppStart();
-        assertEquals(4, dbUtil.getTotalNumber());
+        assertEquals(6, dbUtil.getTotalNumber());
         try (Cursor cursor = dbUtil.queryAllEvents()) {
             List<JSONObject> eventList = new ArrayList<>();
             while (cursor.moveToNext()) {
@@ -928,10 +1000,11 @@ public class AutoRecordEventClientTest {
             assertFalse(appStart1.has(ReservedAttribute.SCREEN_NAME));
             assertFalse(appStart1.has(Event.ReservedAttribute.SCREEN_ID));
 
-            assertEquals(Event.PresetEvent.SCREEN_VIEW, eventList.get(2).getString("event_type"));
-
-            assertEquals(Event.PresetEvent.APP_START, eventList.get(3).getString("event_type"));
-            JSONObject appStart2 = eventList.get(3).getJSONObject("attributes");
+            assertEquals(Event.PresetEvent.SESSION_START, eventList.get(2).getString("event_type"));
+            assertEquals(Event.PresetEvent.SCREEN_VIEW, eventList.get(3).getString("event_type"));
+            assertEquals(Event.PresetEvent.APP_END, eventList.get(4).getString("event_type"));
+            assertEquals(Event.PresetEvent.APP_START, eventList.get(5).getString("event_type"));
+            JSONObject appStart2 = eventList.get(5).getJSONObject("attributes");
             assertFalse(appStart2.getBoolean(Event.ReservedAttribute.IS_FIRST_TIME));
             assertTrue(appStart2.has(ReservedAttribute.SCREEN_NAME));
             assertTrue(appStart2.has(ReservedAttribute.SCREEN_UNIQUE_ID));

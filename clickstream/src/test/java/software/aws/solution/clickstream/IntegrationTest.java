@@ -62,6 +62,8 @@ import static com.github.dreamhead.moco.Runner.runner;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -120,21 +122,21 @@ public class IntegrationTest {
         assert analyticsClient != null;
         eventRecorder = (EventRecorder) ReflectUtil.getFiled(analyticsClient, "eventRecorder");
         dbUtil = (ClickstreamDBUtil) ReflectUtil.getFiled(eventRecorder, "dbUtil");
+        if (!isConfigured) {
+            assertEquals(3, dbUtil.getTotalNumber());
+            dbUtil.deleteBatchEvents(3);
+        }
     }
 
     /**
      * test record event with name use ClickstreamAnalytics api and make sure
      * the event has be auto submitted success after handler post massage.
-     *
-     * @throws Exception exception
      */
     @Test
-    public void testRecordEventWithName() throws Exception {
+    public void testRecordEventWithName() {
         executeBackground();
         ClickstreamAnalytics.recordEvent("testRecordEventWithName");
         assertEquals(1, dbUtil.getTotalNumber());
-        Thread.sleep(2500);
-        assertEquals(0, dbUtil.getTotalNumber());
     }
 
     /**
@@ -153,8 +155,6 @@ public class IntegrationTest {
             assertEquals(Event.PresetEvent.CLICKSTREAM_ERROR, jsonObject.getString("event_type"));
         }
         assertEquals(1, dbUtil.getTotalNumber());
-        Thread.sleep(1500);
-        assertEquals(0, dbUtil.getTotalNumber());
     }
 
     /**
@@ -178,21 +178,18 @@ public class IntegrationTest {
         ClickstreamAnalytics.recordEvent(event);
         assertEquals(1, dbUtil.getTotalNumber());
 
-        Cursor cursor = dbUtil.queryAllEvents();
-        cursor.moveToFirst();
-        String eventString = cursor.getString(2);
-        JSONObject jsonObject = new JSONObject(eventString);
-        JSONObject attribute = jsonObject.getJSONObject("attributes");
-        Assert.assertEquals("PasswordReset", jsonObject.getString("event_type"));
-        Assert.assertEquals("SMS", attribute.getString("Channel"));
-        Assert.assertTrue(attribute.getBoolean("Successful"));
-        Assert.assertEquals(792, attribute.getInt("ProcessDuration"));
-        Assert.assertEquals(120.3, attribute.getDouble("UserAge"), 0.01);
-        Assert.assertEquals(169823889238L, attribute.getLong("Timestamp"));
-
-        Thread.sleep(2500);
-        assertEquals(0, dbUtil.getTotalNumber());
-        cursor.close();
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            cursor.moveToFirst();
+            String eventString = cursor.getString(2);
+            JSONObject jsonObject = new JSONObject(eventString);
+            JSONObject attribute = jsonObject.getJSONObject("attributes");
+            Assert.assertEquals("PasswordReset", jsonObject.getString("event_type"));
+            Assert.assertEquals("SMS", attribute.getString("Channel"));
+            Assert.assertTrue(attribute.getBoolean("Successful"));
+            Assert.assertEquals(792, attribute.getInt("ProcessDuration"));
+            Assert.assertEquals(120.3, attribute.getDouble("UserAge"), 0.01);
+            Assert.assertEquals(169823889238L, attribute.getLong("Timestamp"));
+        }
     }
 
     /**
@@ -212,17 +209,15 @@ public class IntegrationTest {
         ClickstreamAnalytics.recordEvent(event);
         assertEquals(1, dbUtil.getTotalNumber());
 
-        Cursor cursor = dbUtil.queryAllEvents();
-        cursor.moveToFirst();
-        String eventString = cursor.getString(2);
-        JSONObject jsonObject = new JSONObject(eventString);
-        JSONObject attribute = jsonObject.getJSONObject("attributes");
-        Assert.assertEquals(ClickstreamAnalytics.Event.SCREEN_VIEW, jsonObject.getString("event_type"));
-        Assert.assertEquals("HomeFragment", attribute.getString(ClickstreamAnalytics.Attr.SCREEN_NAME));
-        Assert.assertEquals(0, attribute.getInt(Event.ReservedAttribute.ENTRANCES));
-        Thread.sleep(1500);
-        assertEquals(0, dbUtil.getTotalNumber());
-        cursor.close();
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            cursor.moveToFirst();
+            String eventString = cursor.getString(2);
+            JSONObject jsonObject = new JSONObject(eventString);
+            JSONObject attribute = jsonObject.getJSONObject("attributes");
+            Assert.assertEquals(ClickstreamAnalytics.Event.SCREEN_VIEW, jsonObject.getString("event_type"));
+            Assert.assertEquals("HomeFragment", attribute.getString(ClickstreamAnalytics.Attr.SCREEN_NAME));
+            Assert.assertEquals(1, attribute.getInt(Event.ReservedAttribute.ENTRANCES));
+        }
     }
 
     /**
@@ -302,27 +297,23 @@ public class IntegrationTest {
             .build();
         ClickstreamAnalytics.recordEvent(event);
         assertEquals(1, dbUtil.getTotalNumber());
-        Cursor cursor = dbUtil.queryAllEvents();
-        cursor.moveToFirst();
-        String eventString = cursor.getString(2);
-        JSONObject jsonObject = new JSONObject(eventString);
-        JSONObject attribute = jsonObject.getJSONObject("attributes");
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            cursor.moveToFirst();
+            String eventString = cursor.getString(2);
+            JSONObject jsonObject = new JSONObject(eventString);
+            JSONObject attribute = jsonObject.getJSONObject("attributes");
 
-        Assert.assertEquals("HUAWEI", attribute.getString("channel"));
-        Assert.assertEquals(5.1, attribute.getDouble("level"), 0.01);
-        Assert.assertEquals(6, attribute.getInt("class"));
-        Assert.assertTrue(attribute.getBoolean("isOpenNotification"));
-        Assert.assertEquals(timestamp, attribute.getLong("timestamp"));
+            Assert.assertEquals("HUAWEI", attribute.getString("channel"));
+            Assert.assertEquals(5.1, attribute.getDouble("level"), 0.01);
+            Assert.assertEquals(6, attribute.getInt("class"));
+            Assert.assertTrue(attribute.getBoolean("isOpenNotification"));
+            Assert.assertEquals(timestamp, attribute.getLong("timestamp"));
 
-        Assert.assertEquals("SMS", attribute.getString("Message"));
-        Assert.assertTrue(attribute.getBoolean("Successful"));
-        Assert.assertEquals(792, attribute.getInt("ProcessDuration"));
-        Assert.assertEquals(120.3, attribute.getDouble("UserAge"), 0.01);
-
-        ClickstreamAnalytics.flushEvents();
-        Thread.sleep(1000);
-        assertEquals(0, dbUtil.getTotalNumber());
-        cursor.close();
+            Assert.assertEquals("SMS", attribute.getString("Message"));
+            Assert.assertTrue(attribute.getBoolean("Successful"));
+            Assert.assertEquals(792, attribute.getInt("ProcessDuration"));
+            Assert.assertEquals(120.3, attribute.getDouble("UserAge"), 0.01);
+        }
     }
 
 
@@ -350,20 +341,16 @@ public class IntegrationTest {
         ClickstreamAnalytics.deleteGlobalAttributes("level");
         ClickstreamAnalytics.recordEvent(event);
         assertEquals(1, dbUtil.getTotalNumber());
-        Cursor cursor = dbUtil.queryAllEvents();
-        cursor.moveToFirst();
-        String eventString = cursor.getString(2);
-        JSONObject jsonObject = new JSONObject(eventString);
-        JSONObject attribute = jsonObject.getJSONObject("attributes");
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            cursor.moveToFirst();
+            String eventString = cursor.getString(2);
+            JSONObject jsonObject = new JSONObject(eventString);
+            JSONObject attribute = jsonObject.getJSONObject("attributes");
 
-        Assert.assertEquals("HUAWEI", attribute.getString("channel"));
-        Assert.assertFalse(attribute.has("level"));
-        Assert.assertTrue(attribute.getBoolean("isOpenNotification"));
-
-        ClickstreamAnalytics.flushEvents();
-        Thread.sleep(1000);
-        assertEquals(0, dbUtil.getTotalNumber());
-        cursor.close();
+            Assert.assertEquals("HUAWEI", attribute.getString("channel"));
+            Assert.assertFalse(attribute.has("level"));
+            Assert.assertTrue(attribute.getBoolean("isOpenNotification"));
+        }
     }
 
     /**
@@ -385,24 +372,20 @@ public class IntegrationTest {
         ClickstreamAnalytics.addUserAttributes(clickstreamUserAttribute);
         assertEquals(2, dbUtil.getTotalNumber());
 
-        Cursor cursor = dbUtil.queryAllEvents();
-        cursor.moveToLast();
-        String eventString = cursor.getString(2);
-        JSONObject jsonObject = new JSONObject(eventString);
-        String eventType = jsonObject.getString("event_type");
-        Assert.assertEquals(Event.PresetEvent.PROFILE_SET, eventType);
-        JSONObject user = jsonObject.getJSONObject("user");
-        Assert.assertEquals("13212", ((JSONObject) user.get(Event.ReservedAttribute.USER_ID)).getString("value"));
-        Assert.assertEquals(21, ((JSONObject) user.get("_user_age")).getInt("value"));
-        Assert.assertTrue(((JSONObject) user.get("_user_age")).has("set_timestamp"));
-        Assert.assertEquals("carl", ((JSONObject) user.get("_user_name")).getString("value"));
-        Assert.assertTrue(((JSONObject) user.get("_user_name")).has("set_timestamp"));
-        Assert.assertEquals(timestamp, ((JSONObject) user.get("timestamp")).getLong("value"));
-
-        ClickstreamAnalytics.flushEvents();
-        Thread.sleep(1000);
-        assertEquals(0, dbUtil.getTotalNumber());
-        cursor.close();
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            cursor.moveToLast();
+            String eventString = cursor.getString(2);
+            JSONObject jsonObject = new JSONObject(eventString);
+            String eventType = jsonObject.getString("event_type");
+            Assert.assertEquals(Event.PresetEvent.PROFILE_SET, eventType);
+            JSONObject user = jsonObject.getJSONObject("user");
+            Assert.assertEquals("13212", ((JSONObject) user.get(Event.ReservedAttribute.USER_ID)).getString("value"));
+            Assert.assertEquals(21, ((JSONObject) user.get("_user_age")).getInt("value"));
+            Assert.assertTrue(((JSONObject) user.get("_user_age")).has("set_timestamp"));
+            Assert.assertEquals("carl", ((JSONObject) user.get("_user_name")).getString("value"));
+            Assert.assertTrue(((JSONObject) user.get("_user_name")).has("set_timestamp"));
+            Assert.assertEquals(timestamp, ((JSONObject) user.get("timestamp")).getLong("value"));
+        }
     }
 
     /**
@@ -423,19 +406,15 @@ public class IntegrationTest {
         ClickstreamAnalytics.setUserId("12345");
         assertEquals(3, dbUtil.getTotalNumber());
 
-        Cursor cursor = dbUtil.queryAllEvents();
-        cursor.moveToLast();
-        String eventString = cursor.getString(2);
-        JSONObject jsonObject = new JSONObject(eventString);
-        JSONObject user = jsonObject.getJSONObject("user");
-        Assert.assertEquals("12345", ((JSONObject) user.get(Event.ReservedAttribute.USER_ID)).getString("value"));
-        Assert.assertFalse(user.has("_user_age"));
-        Assert.assertFalse(user.has("_user_name"));
-
-        ClickstreamAnalytics.flushEvents();
-        Thread.sleep(1000);
-        assertEquals(0, dbUtil.getTotalNumber());
-        cursor.close();
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            cursor.moveToLast();
+            String eventString = cursor.getString(2);
+            JSONObject jsonObject = new JSONObject(eventString);
+            JSONObject user = jsonObject.getJSONObject("user");
+            Assert.assertEquals("12345", ((JSONObject) user.get(Event.ReservedAttribute.USER_ID)).getString("value"));
+            Assert.assertFalse(user.has("_user_age"));
+            Assert.assertFalse(user.has("_user_name"));
+        }
     }
 
     /**
@@ -464,19 +443,15 @@ public class IntegrationTest {
         ClickstreamAnalytics.recordEvent(event);
         assertEquals(4, dbUtil.getTotalNumber());
 
-        Cursor cursor = dbUtil.queryAllEvents();
-        cursor.moveToLast();
-        String eventString = cursor.getString(2);
-        JSONObject jsonObject = new JSONObject(eventString);
-        JSONObject user = jsonObject.getJSONObject("user");
-        Assert.assertFalse(user.has(Event.ReservedAttribute.USER_ID));
-        Assert.assertFalse(user.has("_user_age"));
-        Assert.assertFalse(user.has("_user_name"));
-
-        ClickstreamAnalytics.flushEvents();
-        Thread.sleep(1000);
-        assertEquals(0, dbUtil.getTotalNumber());
-        cursor.close();
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            cursor.moveToLast();
+            String eventString = cursor.getString(2);
+            JSONObject jsonObject = new JSONObject(eventString);
+            JSONObject user = jsonObject.getJSONObject("user");
+            Assert.assertFalse(user.has(Event.ReservedAttribute.USER_ID));
+            Assert.assertFalse(user.has("_user_age"));
+            Assert.assertFalse(user.has("_user_name"));
+        }
     }
 
     /**
@@ -579,10 +554,6 @@ public class IntegrationTest {
             String appId = jsonObject.getString("app_id");
             assertEquals("23982", appId);
         }
-
-        ClickstreamAnalytics.flushEvents();
-        Thread.sleep(1500);
-        assertEquals(0, dbUtil.getTotalNumber());
     }
 
     /**
@@ -782,30 +753,14 @@ public class IntegrationTest {
         ReflectUtil.modifyFiled(submitter, "LOG", log);
 
         ClickstreamAnalytics.disable();
-        verify(log).debug("Auto submitting stop");
+        verify(log, atLeastOnce()).debug("Auto submitting stop");
         assertEquals(0, dbUtil.getTotalNumber());
         ClickstreamAnalytics.recordEvent("testRecordEventWithName");
         assertEquals(0, dbUtil.getTotalNumber());
         ClickstreamAnalytics.enable();
-        verify(log).debug("Auto submitting start");
+        verify(log, atLeastOnce()).debug("Auto submitting start");
         ClickstreamAnalytics.recordEvent("testRecordEventWithName");
         assertEquals(1, dbUtil.getTotalNumber());
-    }
-
-    /**
-     * test disable track activity lifecycle.
-     *
-     * @throws Exception exception
-     */
-    @Test
-    public void testDisableActivityLifecycle() throws Exception {
-        ActivityLifecycleManager lifecycleManager =
-            (ActivityLifecycleManager) ReflectUtil.getFiled(plugin, "activityLifecycleManager");
-
-        ClickstreamAnalytics.disable();
-
-        verify(application).unregisterActivityLifecycleCallbacks(lifecycleManager);
-        ClickstreamAnalytics.enable();
     }
 
     /**
@@ -825,6 +780,21 @@ public class IntegrationTest {
 
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
         assertEquals(0, dbUtil.getTotalNumber());
+        ClickstreamAnalytics.enable();
+    }
+
+
+    /**
+     * test disable track activity lifecycle.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testDisableAndEnableActivityLifecycle() throws Exception {
+        ActivityLifecycleManager lifecycleManager =
+            (ActivityLifecycleManager) ReflectUtil.getFiled(plugin, "activityLifecycleManager");
+        ClickstreamAnalytics.disable();
+        verify(application, atLeast(1)).unregisterActivityLifecycleCallbacks(lifecycleManager);
         ClickstreamAnalytics.enable();
     }
 

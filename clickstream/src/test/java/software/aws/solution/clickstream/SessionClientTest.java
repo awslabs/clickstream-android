@@ -50,7 +50,7 @@ public class SessionClientTest {
 
         AWSClickstreamPluginConfiguration.Builder configurationBuilder = AWSClickstreamPluginConfiguration.builder();
         configurationBuilder.withAppId("demo-app")
-            .withEndpoint("http://cs-se-serve-1qtj719j88vwn-1291141553.ap-southeast-1.elb.amazonaws.com/collect")
+            .withEndpoint("http://example.com/collect")
             .withSendEventsInterval(10000)
             .withSessionTimeOut(1800000L);
         AWSClickstreamPluginConfiguration clickstreamPluginConfiguration = configurationBuilder.build();

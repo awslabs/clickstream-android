@@ -60,7 +60,14 @@ public class SessionClient {
     public synchronized boolean initialSession() {
         session = Session.getInstance(clickstreamContext, session);
         this.clickstreamContext.getAnalyticsClient().setSession(session);
-        return session.isNewSession();
+        return session.isNewSession() && !session.isStarted();
+    }
+
+    /**
+     * method for start the session.
+     */
+    public void startSession() {
+        session.start();
     }
 
     /**

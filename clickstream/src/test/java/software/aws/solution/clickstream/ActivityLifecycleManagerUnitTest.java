@@ -30,9 +30,11 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import software.aws.solution.clickstream.client.AutoRecordEventClient;
 import software.aws.solution.clickstream.client.ClickstreamManager;
+import software.aws.solution.clickstream.client.ScreenRefererTool;
 import software.aws.solution.clickstream.client.SessionClient;
 import software.aws.solution.clickstream.util.ReflectUtil;
 
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -47,6 +49,7 @@ public final class ActivityLifecycleManagerUnitTest {
     private Application.ActivityLifecycleCallbacks callbacks;
     private Log log;
     private LifecycleRegistry lifecycle;
+    private LifecycleOwner lifecycleOwner;
     private ActivityLifecycleManager lifecycleManager;
 
     /**
@@ -65,9 +68,10 @@ public final class ActivityLifecycleManagerUnitTest {
         this.callbacks = lifecycleManager;
         log = mock(Log.class);
         ReflectUtil.modifyFiled(this.callbacks, "LOG", log);
-
-        lifecycle = new LifecycleRegistry(mock(LifecycleOwner.class));
+        lifecycleOwner = mock(LifecycleOwner.class);
+        lifecycle = new LifecycleRegistry(lifecycleOwner);
         lifecycleManager.startLifecycleTracking(ApplicationProvider.getApplicationContext(), lifecycle);
+        ScreenRefererTool.clear();
     }
 
     /**
@@ -121,6 +125,7 @@ public final class ActivityLifecycleManagerUnitTest {
      */
     @Test
     public void testOnAppForegrounded() {
+        assertNotNull(lifecycleOwner);
         when(sessionClient.initialSession()).thenReturn(true);
         lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
         verify(autoRecordEventClient).updateStartEngageTimestamp();

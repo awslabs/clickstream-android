@@ -155,6 +155,7 @@ final class ActivityLifecycleManager implements Application.ActivityLifecycleCal
             if (isNewSession) {
                 autoRecordEventClient.handleSessionStart();
                 autoRecordEventClient.setIsEntrances();
+                sessionClient.startSession();
                 recordScreenViewAfterSessionStart();
             }
         }

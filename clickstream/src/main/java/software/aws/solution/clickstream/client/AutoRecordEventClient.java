@@ -50,6 +50,11 @@ public class AutoRecordEventClient {
     private boolean isFirstTime = true;
 
     /**
+     * whether the app has entered the background at least once.
+     */
+    private boolean isAppEndCalled = false;
+
+    /**
      * current screen is entrances.
      */
     private boolean isEntrances;
@@ -252,10 +257,12 @@ public class AutoRecordEventClient {
             preferences.putBoolean("isFirstOpen", false);
             isFirstOpen = false;
         }
-        final AnalyticsEvent event =
-            this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.APP_START);
-        event.addAttribute(Event.ReservedAttribute.IS_FIRST_TIME, isFirstTime);
-        this.clickstreamContext.getAnalyticsClient().recordEvent(event);
+        if (isFirstTime || isAppEndCalled) {
+            final AnalyticsEvent event =
+                this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.APP_START);
+            event.addAttribute(Event.ReservedAttribute.IS_FIRST_TIME, isFirstTime);
+            this.clickstreamContext.getAnalyticsClient().recordEvent(event);
+        }
         isFirstTime = false;
     }
 
@@ -275,6 +282,7 @@ public class AutoRecordEventClient {
         final AnalyticsEvent event =
             this.clickstreamContext.getAnalyticsClient().createEvent(Event.PresetEvent.APP_END);
         this.clickstreamContext.getAnalyticsClient().recordEvent(event);
+        isAppEndCalled = true;
     }
 
     /**
