@@ -13,9 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package software.aws.solution.clickstream.client;
-
-import android.content.Context;
+package software.aws.solution.clickstream;
 
 import okhttp3.Dns;
 
@@ -23,44 +21,40 @@ import okhttp3.Dns;
  * Clickstream Configuration.
  */
 public class ClickstreamConfiguration {
-
-    private Context context;
+    private static final long DEFAULT_SEND_EVENTS_INTERVAL = 10000L;
+    private static final long DEFAULT_CALL_TIME_OUT = 15000L;
+    private static final long DEFAULT_SESSION_TIME_OUT = 1800000L;
     private String appId;
     private String endpoint;
     private Dns dns;
     private long sendEventsInterval;
     private long callTimeOut;
-    private boolean isCompressEvents;
-    private boolean isTrackScreenViewEvents;
-    private boolean isTrackUserEngagementEvents;
-    private boolean isTrackAppExceptionEvents;
-    private boolean isLogEvents;
+    private Boolean isCompressEvents;
+    private Boolean isTrackScreenViewEvents;
+    private Boolean isTrackUserEngagementEvents;
+    private Boolean isTrackAppExceptionEvents;
+    private Boolean isLogEvents;
     private String authCookie;
     private long sessionTimeoutDuration;
+    private ClickstreamAttribute initialGlobalAttributes;
 
     /**
-     * Create an {@link ClickstreamConfiguration} object with the specified parameters.
-     *
-     * @param context  the android context object.
-     * @param appId    the Clickstream appId.
-     * @param endpoint the Clickstream endpoint.
+     * Create an {@link ClickstreamConfiguration} object.
      */
-    public ClickstreamConfiguration(final Context context, final String appId, final String endpoint) {
-        this.context = context;
-        this.appId = appId;
-        this.endpoint = endpoint;
+    public ClickstreamConfiguration() {
     }
 
-    /**
-     * The Android Context. Interface to global information about an application environment.
-     * This is an abstract class whose implementation is provided by the Android system.
-     * It allows access to application-specific resources and classes, as well as up-calls for application-level
-     * operations such as launching activities, broadcasting and receiving intents, etc.
-     *
-     * @return the Android Context object.
-     */
-    public Context getAppContext() {
-        return this.context;
+    static ClickstreamConfiguration getDefaultConfiguration() {
+        ClickstreamConfiguration configuration = new ClickstreamConfiguration();
+        configuration.sendEventsInterval = DEFAULT_SEND_EVENTS_INTERVAL;
+        configuration.sessionTimeoutDuration = DEFAULT_SESSION_TIME_OUT;
+        configuration.callTimeOut = DEFAULT_CALL_TIME_OUT;
+        configuration.isCompressEvents = true;
+        configuration.isTrackScreenViewEvents = true;
+        configuration.isTrackUserEngagementEvents = true;
+        configuration.isTrackAppExceptionEvents = false;
+        configuration.isLogEvents = false;
+        return configuration;
     }
 
     /**
@@ -154,22 +148,11 @@ public class ClickstreamConfiguration {
     }
 
     /**
-     * The http call time out.
-     *
-     * @param callTimeOut call time out.
-     * @return the current ClickstreamConfiguration instance.
-     */
-    public ClickstreamConfiguration withCallTimeOut(final long callTimeOut) {
-        this.callTimeOut = callTimeOut;
-        return this;
-    }
-
-    /**
      * Is compress events.
      *
      * @return Is compress events.
      */
-    public boolean isCompressEvents() {
+    public Boolean isCompressEvents() {
         return this.isCompressEvents;
     }
 
@@ -189,7 +172,7 @@ public class ClickstreamConfiguration {
      *
      * @return Is track appLifecycle events.
      */
-    public boolean isTrackScreenViewEvents() {
+    public Boolean isTrackScreenViewEvents() {
         return this.isTrackScreenViewEvents;
     }
 
@@ -198,7 +181,7 @@ public class ClickstreamConfiguration {
      *
      * @return Is track user engagement events.
      */
-    public boolean isTrackUserEngagementEvents() {
+    public Boolean isTrackUserEngagementEvents() {
         return this.isTrackUserEngagementEvents;
     }
 
@@ -229,7 +212,7 @@ public class ClickstreamConfiguration {
      *
      * @return Is track app exception events.
      */
-    public boolean isTrackAppExceptionEvents() {
+    public Boolean isTrackAppExceptionEvents() {
         return this.isTrackAppExceptionEvents;
     }
 
@@ -249,7 +232,7 @@ public class ClickstreamConfiguration {
      *
      * @return Is log events json when record event.
      */
-    public boolean isLogEvents() {
+    public Boolean isLogEvents() {
         return this.isLogEvents;
     }
 
@@ -302,6 +285,26 @@ public class ClickstreamConfiguration {
     public ClickstreamConfiguration withSessionTimeoutDuration(final long sessionTimeoutDuration) {
         this.sessionTimeoutDuration = sessionTimeoutDuration;
         return this;
+    }
+
+    /**
+     * Set the global attribute when initialize the SDK.
+     *
+     * @param attribute global attributes.
+     * @return the current ClickstreamConfiguration instance.
+     */
+    public ClickstreamConfiguration withInitialGlobalAttributes(ClickstreamAttribute attribute) {
+        this.initialGlobalAttributes = attribute;
+        return this;
+    }
+
+    /**
+     * Get the global attribute.
+     *
+     * @return the global attribute instance.
+     */
+    public ClickstreamAttribute getInitialGlobalAttributes() {
+        return this.initialGlobalAttributes;
     }
 }
 

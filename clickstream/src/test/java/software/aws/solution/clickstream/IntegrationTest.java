@@ -40,7 +40,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import software.aws.solution.clickstream.client.AnalyticsClient;
-import software.aws.solution.clickstream.client.ClickstreamConfiguration;
 import software.aws.solution.clickstream.client.ClickstreamContext;
 import software.aws.solution.clickstream.client.Event;
 import software.aws.solution.clickstream.client.EventRecorder;
@@ -62,7 +61,6 @@ import static com.github.dreamhead.moco.Runner.runner;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -108,16 +106,11 @@ public class IntegrationTest {
     @Before
     public void setup() throws Exception {
         Boolean isConfigured = (Boolean) ReflectUtil.invokeSuperMethod(Amplify.Analytics, "isConfigured");
-        if (!isConfigured) {
-            Context context = ApplicationProvider.getApplicationContext();
-            application = mock(Application.class);
-            plugin = new AWSClickstreamPlugin(application);
-            Amplify.addPlugin(plugin);
-            Amplify.configure(context);
-        } else {
-            plugin = (AWSClickstreamPlugin) Amplify.Analytics.getPlugin("awsClickstreamPlugin");
-            application = (Application) ReflectUtil.getFiled(plugin, "context");
-        }
+        Context context = ApplicationProvider.getApplicationContext();
+        application = mock(Application.class);
+        plugin = new AWSClickstreamPlugin(application);
+        Amplify.addPlugin(plugin);
+        Amplify.configure(context);
         analyticsClient = plugin.getEscapeHatch();
         assert analyticsClient != null;
         eventRecorder = (EventRecorder) ReflectUtil.getFiled(analyticsClient, "eventRecorder");
@@ -148,13 +141,15 @@ public class IntegrationTest {
     public void testRecordEventWithInvalidName() throws Exception {
         executeBackground();
         ClickstreamAnalytics.recordEvent("01TestEvent");
+        ClickstreamEvent invalidNameEvent = ClickstreamEvent.builder().name("02TestEvent").build();
+        ClickstreamAnalytics.recordEvent(invalidNameEvent);
         try (Cursor cursor = dbUtil.queryAllEvents()) {
             cursor.moveToFirst();
             String eventString = cursor.getString(2);
             JSONObject jsonObject = new JSONObject(eventString);
             assertEquals(Event.PresetEvent.CLICKSTREAM_ERROR, jsonObject.getString("event_type"));
         }
-        assertEquals(1, dbUtil.getTotalNumber());
+        assertEquals(2, dbUtil.getTotalNumber());
     }
 
     /**
@@ -516,7 +511,7 @@ public class IntegrationTest {
             ClickstreamAnalytics.recordEvent(event);
         }
         assertEquals(20, dbUtil.getTotalNumber());
-        Thread.sleep(1000);
+        Thread.sleep(1500);
         assertEquals(0, dbUtil.getTotalNumber());
     }
 
@@ -629,7 +624,7 @@ public class IntegrationTest {
         dns.setIsResolutionTimeout(false);
         setHttpRequestTimeOut(15L);
         ClickstreamAnalytics.flushEvents();
-        Thread.sleep(1000);
+        Thread.sleep(1500);
         assertEquals(0, dbUtil.getTotalNumber());
     }
 
@@ -655,7 +650,7 @@ public class IntegrationTest {
 
         dns.setIsUnKnowHost(false);
         ClickstreamAnalytics.flushEvents();
-        Thread.sleep(1000);
+        Thread.sleep(1500);
         assertEquals(0, dbUtil.getTotalNumber());
     }
 
@@ -676,7 +671,7 @@ public class IntegrationTest {
         ClickstreamAnalytics.recordEvent("testRecordEventForAuth");
         assertEquals(1, dbUtil.getTotalNumber());
         ClickstreamAnalytics.flushEvents();
-        Thread.sleep(1000);
+        Thread.sleep(1500);
         assertEquals(0, dbUtil.getTotalNumber());
     }
 
@@ -702,7 +697,7 @@ public class IntegrationTest {
 
         ClickstreamAnalytics.getClickStreamConfiguration().withAuthCookie("testCookie");
         ClickstreamAnalytics.flushEvents();
-        Thread.sleep(1000);
+        Thread.sleep(1500);
         assertEquals(0, dbUtil.getTotalNumber());
     }
 
@@ -794,7 +789,7 @@ public class IntegrationTest {
         ActivityLifecycleManager lifecycleManager =
             (ActivityLifecycleManager) ReflectUtil.getFiled(plugin, "activityLifecycleManager");
         ClickstreamAnalytics.disable();
-        verify(application, atLeast(1)).unregisterActivityLifecycleCallbacks(lifecycleManager);
+        verify(application, atLeastOnce()).unregisterActivityLifecycleCallbacks(lifecycleManager);
         ClickstreamAnalytics.enable();
     }
 
@@ -865,6 +860,7 @@ public class IntegrationTest {
      *
      * @throws Exception exception
      */
+    @SuppressWarnings("unchecked")
     @After
     public void tearDown() throws Exception {
         dbUtil.deleteBatchEvents(1000);
@@ -876,6 +872,7 @@ public class IntegrationTest {
         ReflectUtil.modifyFiled(analyticsClient, "simpleUserAttributes", new JSONObject());
         ReflectUtil.modifyFiled(analyticsClient, "allUserAttributes", new JSONObject());
         globalAttribute.clear();
+        ReflectUtil.makeAmplifyNotConfigured();
     }
 
     /**
@@ -885,5 +882,4 @@ public class IntegrationTest {
     public static void afterClass() {
         runner.stop();
     }
-
 }

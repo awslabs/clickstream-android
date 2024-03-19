@@ -51,13 +51,10 @@ public class AnalyticsEventTest {
      * @return AnalyticsClient
      */
     public static AnalyticsClient getAnalyticsClient() {
-        AWSClickstreamPluginConfiguration.Builder configurationBuilder = AWSClickstreamPluginConfiguration.builder();
-        configurationBuilder.withEndpoint(
-            "http://click-serve-HCJIDWGD3S9F-1166279006.ap-southeast-1.elb.amazonaws.com/collect");
-        AWSClickstreamPluginConfiguration clickstreamPluginConfiguration = configurationBuilder.build();
+        ClickstreamConfiguration configuration = ClickstreamConfiguration.getDefaultConfiguration()
+            .withEndpoint("http://click-serve-HCJIDWGD3S9F-1166279006.ap-southeast-1.elb.amazonaws.com/collect");
         Context context = ApplicationProvider.getApplicationContext();
-        ClickstreamManager clickstreamManager =
-            ClickstreamManagerFactory.create(context, clickstreamPluginConfiguration);
+        ClickstreamManager clickstreamManager = new ClickstreamManager(context, configuration);
         return clickstreamManager.getAnalyticsClient();
     }
 
@@ -249,4 +246,15 @@ public class AnalyticsEventTest {
         Assert.assertEquals(0, eventItems.length());
     }
 
+    /**
+     * test add null and invalid value.
+     */
+    @Test
+    public void testAddNullAndInvalidValue() {
+        AnalyticsEvent event = analyticsClient.createEvent("testEvent");
+        ClickstreamItem[] items = new ClickstreamItem[0];
+        event.addItems(null);
+        event.addItems(items);
+        event.addAttribute(null, null);
+    }
 }
