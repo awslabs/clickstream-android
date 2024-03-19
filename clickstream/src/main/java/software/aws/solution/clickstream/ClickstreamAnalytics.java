@@ -101,7 +101,7 @@ public final class ClickstreamAnalytics {
      *
      * @param clickstreamAttribute the global clickstreamAttribute.
      */
-    public static void addGlobalAttributes(ClickstreamAttribute clickstreamAttribute) {
+    public static void addGlobalAttributes(@NonNull ClickstreamAttribute clickstreamAttribute) {
         Amplify.Analytics.registerGlobalProperties(clickstreamAttribute.getAttributes());
     }
 
@@ -119,7 +119,7 @@ public final class ClickstreamAnalytics {
      *
      * @param userProfile user
      */
-    public static void addUserAttributes(ClickstreamUserAttribute userProfile) {
+    public static void addUserAttributes(@NonNull ClickstreamUserAttribute userProfile) {
         Amplify.Analytics.identifyUser(ReservedAttribute.USER_ID_UNSET, userProfile);
     }
 
@@ -233,7 +233,7 @@ public final class ClickstreamAnalytics {
             if (configuration.getInitialGlobalAttributes() != null) {
                 configureObject.put(ConfigurationKey.GLOBAL_ATTRIBUTES, configuration.getInitialGlobalAttributes());
             }
-        } catch (JSONException exception) {
+        } catch (Exception exception) {
             LOG.error("Parse JSON exception, you may need to check your initial configuration");
         }
         return amplifyConfiguration;

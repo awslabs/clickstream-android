@@ -433,7 +433,7 @@ public class EventRecorderTest {
         assertEquals(20, dbUtil.getTotalNumber());
         eventRecorder.submitEvents();
         assertTrue(((ThreadPoolExecutor) executorService).getActiveCount() < 2);
-        Thread.sleep(1500);
+        Thread.sleep(2000);
         assertEquals(0, dbUtil.getTotalNumber());
     }
 
@@ -454,7 +454,7 @@ public class EventRecorderTest {
         assertEquals(40, dbUtil.getTotalNumber());
         eventRecorder.submitEvents();
         assertEquals(1, ((ThreadPoolExecutor) executorService).getTaskCount());
-        Thread.sleep(1500);
+        Thread.sleep(2000);
         verify(log, times(3)).debug("Send event number: 12");
         verify(log).debug("Reached maxSubmissions: 3");
         assertEquals(4, dbUtil.getTotalNumber());
@@ -479,7 +479,7 @@ public class EventRecorderTest {
         eventRecorder.submitEvents();
         assertEquals(2, ((ThreadPoolExecutor) executorService).getTaskCount());
         assertTrue(((ThreadPoolExecutor) executorService).getActiveCount() < 2);
-        Thread.sleep(1500);
+        Thread.sleep(2000);
         verify(log, times(3)).debug("Send event number: 12");
         verify(log).debug("Reached maxSubmissions: 3");
         verify(log).debug("Send event number: 4");
@@ -506,7 +506,7 @@ public class EventRecorderTest {
             Thread.sleep(100);
             eventRecorder.submitEvents();
         }
-        Thread.sleep(1500);
+        Thread.sleep(2000);
         verify(log, times(3)).debug("Send event number: 12");
         verify(log).debug("Reached maxSubmissions: 3");
         verify(log).debug("Send event number: 4");

@@ -37,6 +37,7 @@ import software.aws.solution.clickstream.client.ClickstreamManager;
 import software.aws.solution.clickstream.client.Event;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * The plugin implementation for Clickstream in Analytics category.
@@ -63,12 +64,10 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
     @Override
     public void identifyUser(@NonNull String userId, @Nullable UserProfile profile) {
         if (userId.equals(Event.ReservedAttribute.USER_ID_UNSET)) {
-            if (profile instanceof ClickstreamUserAttribute) {
-                for (Map.Entry<String, AnalyticsPropertyBehavior<?>> entry :
-                    ((ClickstreamUserAttribute) profile).getUserAttributes()) {
-                    AnalyticsPropertyBehavior<?> property = entry.getValue();
-                    analyticsClient.addUserAttribute(entry.getKey(), property.getValue());
-                }
+            for (Map.Entry<String, AnalyticsPropertyBehavior<?>> entry :
+                ((ClickstreamUserAttribute) Objects.requireNonNull(profile)).getUserAttributes()) {
+                AnalyticsPropertyBehavior<?> property = entry.getValue();
+                analyticsClient.addUserAttribute(entry.getKey(), property.getValue());
             }
         } else {
             analyticsClient.updateUserId(userId);
@@ -114,11 +113,9 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
             analyticsClient.createEvent(event.getName());
 
         if (clickstreamEvent != null) {
-            if (analyticsEvent.getProperties() != null) {
-                for (Map.Entry<String, AnalyticsPropertyBehavior<?>> entry : analyticsEvent.getProperties()) {
-                    AnalyticsPropertyBehavior<?> property = entry.getValue();
-                    clickstreamEvent.addAttribute(entry.getKey(), property.getValue());
-                }
+            for (Map.Entry<String, AnalyticsPropertyBehavior<?>> entry : analyticsEvent.getProperties()) {
+                AnalyticsPropertyBehavior<?> property = entry.getValue();
+                clickstreamEvent.addAttribute(entry.getKey(), property.getValue());
             }
             clickstreamEvent.addItems(event.getItems());
             recordAnalyticsEvent(clickstreamEvent);
@@ -196,6 +193,10 @@ public final class AWSClickstreamPlugin extends AnalyticsPlugin<Object> {
             if (pluginConfiguration.has(ConfigurationKey.IS_TRACK_SCREEN_VIEW_EVENTS)) {
                 configuration.withTrackScreenViewEvents(
                     pluginConfiguration.getBoolean(ConfigurationKey.IS_TRACK_SCREEN_VIEW_EVENTS));
+            }
+            if (pluginConfiguration.has(ConfigurationKey.IS_TRACK_USER_ENGAGEMENT_EVENTS)) {
+                configuration.withTrackUserEngagementEvents(
+                    pluginConfiguration.getBoolean(ConfigurationKey.IS_TRACK_USER_ENGAGEMENT_EVENTS));
             }
             if (pluginConfiguration.has(ConfigurationKey.SESSION_TIMEOUT_DURATION)) {
                 configuration.withSessionTimeoutDuration(

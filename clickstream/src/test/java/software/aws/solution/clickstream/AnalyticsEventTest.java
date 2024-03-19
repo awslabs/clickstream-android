@@ -246,4 +246,15 @@ public class AnalyticsEventTest {
         Assert.assertEquals(0, eventItems.length());
     }
 
+    /**
+     * test add null and invalid value.
+     */
+    @Test
+    public void testAddNullAndInvalidValue() {
+        AnalyticsEvent event = analyticsClient.createEvent("testEvent");
+        ClickstreamItem[] items = new ClickstreamItem[0];
+        event.addItems(null);
+        event.addItems(items);
+        event.addAttribute(null, null);
+    }
 }

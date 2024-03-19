@@ -89,7 +89,7 @@ public class AutoRecordEventClientTest {
             .withSendEventsInterval(10000)
             .withTrackScreenViewEvents(true)
             .withTrackUserEngagementEvents(true);
-        ClickstreamManager clickstreamManager = new ClickstreamManager(context, configuration);
+        clickstreamManager = new ClickstreamManager(context, configuration);
         client = clickstreamManager.getAutoRecordEventClient();
         clickstreamContext = clickstreamManager.getClickstreamContext();
         callbacks = new ActivityLifecycleManager(clickstreamManager);

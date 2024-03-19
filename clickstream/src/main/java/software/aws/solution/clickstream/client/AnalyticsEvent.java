@@ -78,10 +78,8 @@ public class AnalyticsEvent implements JSONSerializable {
         this.timestamp = timestamp;
         this.uniqueId = uniqueId;
         this.eventType = eventType;
-        if (null != attributes) {
-            for (final Map.Entry<String, Object> kvp : globalAttributes.entrySet()) {
-                this.addGlobalAttribute(kvp.getKey(), kvp.getValue());
-            }
+        for (final Map.Entry<String, Object> kvp : globalAttributes.entrySet()) {
+            this.addGlobalAttribute(kvp.getKey(), kvp.getValue());
         }
         this.userAttributes = userAttributes;
     }

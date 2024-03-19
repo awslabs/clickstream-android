@@ -15,11 +15,17 @@
 
 package software.aws.solution.clickstream.util;
 
+import com.amplifyframework.analytics.AnalyticsPlugin;
+import com.amplifyframework.core.Amplify;
+import com.amplifyframework.util.UserAgent;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * reflect Util for test.
@@ -123,5 +129,47 @@ public final class ReflectUtil {
         Constructor<?> declaredConstructor = declaredConstructors[0];
         declaredConstructor.setAccessible(true);
         return declaredConstructor.newInstance(params);
+    }
+
+    /**
+     * Method for make Amplify analytics plugin Not configured.
+     *
+     * @throws Exception exception.
+     */
+    @SuppressWarnings({"unchecked", "Enum"})
+    public static void makeAmplifyNotConfigured() throws Exception {
+        // remove plugin
+        if ((Boolean) ReflectUtil.invokeSuperMethod(Amplify.Analytics, "isConfigured")) {
+            try {
+                AnalyticsPlugin<?> plugin = Amplify.Analytics.getPlugin("awsClickstreamPlugin");
+                Amplify.Analytics.removePlugin(plugin);
+            } catch (IllegalStateException exception) {
+                exception.printStackTrace();
+            }
+        }
+        // change the CONFIGURATION_LOCK
+        Field configurationLockField = Amplify.class.getDeclaredField("CONFIGURATION_LOCK");
+        configurationLockField.setAccessible(true);
+        AtomicBoolean configurationLock = (AtomicBoolean) configurationLockField.get(null);
+        assert configurationLock != null;
+        configurationLock.set(false);
+
+        // Set UserAgent to null
+        Field field = UserAgent.class.getDeclaredField("instance");
+        field.setAccessible(true);
+        field.set(UserAgent.class, null);
+
+        // set Analytics not configured
+        Class<?> categoryClass = Amplify.Analytics.getClass().getSuperclass();
+        assert categoryClass != null;
+        Field stateField = categoryClass.getDeclaredField("state");
+        stateField.setAccessible(true);
+        AtomicReference<Object> state = (AtomicReference<Object>) stateField.get(Amplify.Analytics);
+        Class<?> stateEnumClass = Class.forName(categoryClass.getName() + "$State");
+
+        Enum<?> notConfiguredEnumConstant = (Enum<?>) stateEnumClass.cast(Enum.valueOf(
+            stateEnumClass.asSubclass(Enum.class), "NOT_CONFIGURED"));
+        assert state != null;
+        state.set(notConfiguredEnumConstant);
     }
 }
