@@ -105,7 +105,7 @@ public class IntegrationTest {
      */
     @Before
     public void setup() throws Exception {
-        Boolean isConfigured = (Boolean) ReflectUtil.invokeSuperMethod(Amplify.Analytics, "isConfigured");
+        ReflectUtil.makeAmplifyNotConfigured();
         Context context = ApplicationProvider.getApplicationContext();
         application = mock(Application.class);
         plugin = new AWSClickstreamPlugin(application);
@@ -115,10 +115,8 @@ public class IntegrationTest {
         assert analyticsClient != null;
         eventRecorder = (EventRecorder) ReflectUtil.getFiled(analyticsClient, "eventRecorder");
         dbUtil = (ClickstreamDBUtil) ReflectUtil.getFiled(eventRecorder, "dbUtil");
-        if (!isConfigured) {
-            assertEquals(3, dbUtil.getTotalNumber());
-            dbUtil.deleteBatchEvents(3);
-        }
+        assertEquals(3, dbUtil.getTotalNumber());
+        dbUtil.deleteBatchEvents(3);
     }
 
     /**
