@@ -62,7 +62,7 @@ public class InitClientTest {
         ReflectUtil.makeAmplifyNotConfigured();
         clickstreamPluginConfiguration = ClickstreamConfiguration.getDefaultConfiguration();
         clickstreamPluginConfiguration.withEndpoint(
-                "http://click-serve-HCJIDWGD3S9F-1166279006.ap-southeast-1.elb.amazonaws.com/collect")
+                "http://example.com/collect")
             .withSendEventsInterval(15000);
     }
 
@@ -99,7 +99,7 @@ public class InitClientTest {
         Assert.assertNotNull(clickstreamContext);
 
         Assert.assertEquals(clickstreamContext.getClickstreamConfiguration().getEndpoint(),
-            "http://click-serve-HCJIDWGD3S9F-1166279006.ap-southeast-1.elb.amazonaws.com/collect");
+            "http://example.com/collect");
         Assert.assertEquals(clickstreamContext.getClickstreamConfiguration().getSendEventsInterval(), 15000);
         Assert.assertTrue(clickstreamContext.getClickstreamConfiguration().isCompressEvents());
         Assert.assertTrue(clickstreamContext.getClickstreamConfiguration().isTrackScreenViewEvents());

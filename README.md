@@ -78,7 +78,7 @@ public void onCreate() {
     } 
 }
 ```
-#### 3.1 Initialize the SDK with global attributes and custom configuration
+#### 3.2 Initialize the SDK with global attributes and custom configuration
 ```java
 import software.aws.solution.clickstream.ClickstreamAnalytics;
 

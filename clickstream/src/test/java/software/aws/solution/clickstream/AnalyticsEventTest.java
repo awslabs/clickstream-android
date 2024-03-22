@@ -52,7 +52,7 @@ public class AnalyticsEventTest {
      */
     public static AnalyticsClient getAnalyticsClient() {
         ClickstreamConfiguration configuration = ClickstreamConfiguration.getDefaultConfiguration()
-            .withEndpoint("http://click-serve-HCJIDWGD3S9F-1166279006.ap-southeast-1.elb.amazonaws.com/collect");
+            .withEndpoint("http://example.com/collect");
         Context context = ApplicationProvider.getApplicationContext();
         ClickstreamManager clickstreamManager = new ClickstreamManager(context, configuration);
         return clickstreamManager.getAnalyticsClient();
