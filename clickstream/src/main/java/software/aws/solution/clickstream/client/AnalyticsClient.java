@@ -22,6 +22,7 @@ import com.amazonaws.logging.Log;
 import com.amazonaws.logging.LogFactory;
 import org.json.JSONException;
 import org.json.JSONObject;
+import software.aws.solution.clickstream.ClickstreamConfiguration;
 import software.aws.solution.clickstream.client.util.PreferencesUtil;
 import software.aws.solution.clickstream.client.util.StringUtil;
 

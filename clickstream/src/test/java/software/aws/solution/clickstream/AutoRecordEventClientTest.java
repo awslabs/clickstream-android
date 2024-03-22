@@ -83,14 +83,13 @@ public class AutoRecordEventClientTest {
     public void setup() {
         Context context = ApplicationProvider.getApplicationContext();
         dbUtil = new ClickstreamDBUtil(context);
-        AWSClickstreamPluginConfiguration.Builder configurationBuilder = AWSClickstreamPluginConfiguration.builder();
-        configurationBuilder.withAppId("demo-app")
+        ClickstreamConfiguration configuration = ClickstreamConfiguration.getDefaultConfiguration();
+        configuration.withAppId("demo-app")
             .withEndpoint("http://example.com/collect")
             .withSendEventsInterval(10000)
             .withTrackScreenViewEvents(true)
             .withTrackUserEngagementEvents(true);
-        AWSClickstreamPluginConfiguration clickstreamPluginConfiguration = configurationBuilder.build();
-        clickstreamManager = ClickstreamManagerFactory.create(context, clickstreamPluginConfiguration);
+        clickstreamManager = new ClickstreamManager(context, configuration);
         client = clickstreamManager.getAutoRecordEventClient();
         clickstreamContext = clickstreamManager.getClickstreamContext();
         callbacks = new ActivityLifecycleManager(clickstreamManager);

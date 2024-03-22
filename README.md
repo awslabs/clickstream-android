@@ -16,7 +16,7 @@ Clickstream Android SDK supports Android 4.1 (API level 16) and later.
 
 ## Integrate SDK
 
-**1.Include SDK**
+### 1. Include SDK
 
 Add the following dependency to your `app` module's `build.gradle` file.
 
@@ -28,7 +28,7 @@ dependencies {
 
 then sync your project, if you have problem to build your app, please check [troubleshooting](#Troubleshooting)
 
-**2.Parameter configuration**
+### 2. Parameter configuration
 
 Find the res directory under your  `project/app/src/main` , and manually create a raw folder in the res directory. 
 
@@ -41,7 +41,7 @@ Download your `amplifyconfiguration.json` file from your clickstream control pla
   "analytics": {
     "plugins": {
       "awsClickstreamPlugin": {
-        "appId": "appId",
+        "appId": "your appId",
         "endpoint": "https://example.com/collect",
         "isCompressEvents": true,
         "autoFlushEventsInterval": 10000,
@@ -60,16 +60,16 @@ Your `appId` and `endpoint` are already set up in it, here's an explanation of e
 - **autoFlushEventsInterval**: event sending interval, the default is `10s`
 - **isTrackAppExceptionEvents**: whether auto track exception event in app, default is `false`
 
-**3.Initialize the SDK**
+### 3. Initialize the SDK
 
-It is recommended that you initialize the SDK in the Application `onCreate()` method. Please note that the initialization code needs to run in the main thread.
+It is recommended that you initialize the SDK in your application's `onCreate()` method. Please note that the initialization code needs to run in the main thread.
 
+#### 3.1 Initialize the SDK with default configuration
 ```java
 import software.aws.solution.clickstream.ClickstreamAnalytics;
 
 public void onCreate() {
     super.onCreate();
-
     try{
         ClickstreamAnalytics.init(getApplicationContext());
         Log.i("MyApp", "Initialized ClickstreamAnalytics");
@@ -78,10 +78,36 @@ public void onCreate() {
     } 
 }
 ```
+#### 3.2 Initialize the SDK with global attributes and custom configuration
+```java
+import software.aws.solution.clickstream.ClickstreamAnalytics;
 
-**4.Config the SDK**
+public void onCreate() {
+    super.onCreate();
+    try{
+        ClickstreamAttribute globalAttributes = ClickstreamAttribute.builder()
+            .add("_traffic_source_name", "Summer promotion")
+            .add("_traffic_source_medium", "Search engine")
+            .build();
+        ClickstreamConfiguration configuration = new ClickstreamConfiguration()
+            .withAppId("your appId")
+            .withEndpoint("http://example.com/collect")
+            .withLogEvents(true)
+            .withInitialGlobalAttributes(globalAttributes);
+        ClickstreamAnalytics.init(getApplicationContext(), configuration);
+        Log.i("MyApp", "Initialized ClickstreamAnalytics");
+    } catch (AmplifyException error){
+        Log.e("MyApp", "Could not initialize ClickstreamAnalytics", error);
+    } 
+}
+```
+By default, we will use the configurations in `amplifyconfiguration.json` file. If you add a custom configuration, the added configuration items will override the default values. 
 
-After initial the SDK we can use the following code to custom configure it.
+You can also add all the configuration parameters you need in the `init` method without using the `amplifyconfiguration.json` file.
+
+### 4. Update Configuration
+
+After initial the SDK we can use the following code to up configure it.
 
 ```java
 import software.aws.solution.clickstream.ClickstreamAnalytics;
@@ -145,6 +171,8 @@ ClickstreamAnalytics.addGlobalAttributes(globalAttribute);
 // for delete an global attribute
 ClickstreamAnalytics.deleteGlobalAttributes("level");
 ```
+
+It is recommended to set global attributes when initializing the SDK, global attributes will be included in all events that occur after it is set.
 
 #### Login and logout
 

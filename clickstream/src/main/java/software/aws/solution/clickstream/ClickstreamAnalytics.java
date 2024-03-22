@@ -20,11 +20,16 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.AmplifyConfiguration;
+import com.amplifyframework.core.category.CategoryConfiguration;
+import com.amplifyframework.core.category.CategoryType;
 
 import com.amazonaws.logging.Log;
 import com.amazonaws.logging.LogFactory;
+import org.json.JSONException;
+import org.json.JSONObject;
+import software.aws.solution.clickstream.AWSClickstreamPlugin.ConfigurationKey;
 import software.aws.solution.clickstream.client.AnalyticsClient;
-import software.aws.solution.clickstream.client.ClickstreamConfiguration;
 import software.aws.solution.clickstream.client.Event.PresetEvent;
 import software.aws.solution.clickstream.client.Event.ReservedAttribute;
 import software.aws.solution.clickstream.client.util.ThreadUtil;
@@ -46,11 +51,24 @@ public final class ClickstreamAnalytics {
      * @throws AmplifyException Exception of init.
      */
     public static void init(@NonNull Context context) throws AmplifyException {
+        init(context, new ClickstreamConfiguration());
+    }
+
+    /**
+     * Init ClickstreamAnalytics Plugin.
+     *
+     * @param context       ApplicationContext
+     * @param configuration ClickstreamConfiguration
+     * @throws AmplifyException Exception of init.
+     */
+    public static void init(@NonNull Context context, ClickstreamConfiguration configuration)
+        throws AmplifyException {
         if (ThreadUtil.notInMainThread()) {
             throw new AmplifyException("Clickstream SDK initialization failed", "Please initialize in the main thread");
         }
+        AmplifyConfiguration configure = getAmplifyConfigurationObject(context, configuration);
         Amplify.addPlugin(new AWSClickstreamPlugin(context));
-        Amplify.configure(context);
+        Amplify.configure(configure, context);
     }
 
     /**
@@ -83,7 +101,7 @@ public final class ClickstreamAnalytics {
      *
      * @param clickstreamAttribute the global clickstreamAttribute.
      */
-    public static void addGlobalAttributes(ClickstreamAttribute clickstreamAttribute) {
+    public static void addGlobalAttributes(@NonNull ClickstreamAttribute clickstreamAttribute) {
         Amplify.Analytics.registerGlobalProperties(clickstreamAttribute.getAttributes());
     }
 
@@ -101,7 +119,7 @@ public final class ClickstreamAnalytics {
      *
      * @param userProfile user
      */
-    public static void addUserAttributes(ClickstreamUserAttribute userProfile) {
+    public static void addUserAttributes(@NonNull ClickstreamUserAttribute userProfile) {
         Amplify.Analytics.identifyUser(ReservedAttribute.USER_ID_UNSET, userProfile);
     }
 
@@ -141,16 +159,84 @@ public final class ClickstreamAnalytics {
     }
 
     /**
-     * Get clickstream configuration
-     * please config it after initialize.
+     * Get clickstream configuration please config it after SDK initialize.
      *
      * @return ClickstreamConfiguration configurationF
      */
     public static ClickstreamConfiguration getClickStreamConfiguration() {
         AnalyticsClient client =
-            ((AWSClickstreamPlugin) Amplify.Analytics.getPlugin("awsClickstreamPlugin")).getEscapeHatch();
+            ((AWSClickstreamPlugin) Amplify.Analytics.getPlugin(AWSClickstreamPlugin.PLUGIN_KEY)).getEscapeHatch();
         assert client != null;
         return client.getClickstreamConfiguration();
+    }
+
+    private static AmplifyConfiguration getAmplifyConfigurationObject(Context context,
+                                                                      ClickstreamConfiguration configuration)
+        throws AmplifyException {
+        AmplifyConfiguration amplifyConfiguration;
+        JSONObject configureObject;
+        try {
+            amplifyConfiguration = AmplifyConfiguration.fromConfigFile(context);
+            CategoryConfiguration categoryConfiguration = amplifyConfiguration.forCategoryType(CategoryType.ANALYTICS);
+            configureObject = categoryConfiguration.getPluginConfig(AWSClickstreamPlugin.PLUGIN_KEY);
+        } catch (AmplifyException exception) {
+            LOG.info("Clickstream SDK can not find the amplifyconfiguration.json file, " +
+                "The SDK will initialize using the configuration you set");
+            JSONObject amplifyObject = new JSONObject();
+            JSONObject analyticsObject = new JSONObject();
+            JSONObject pluginsObject = new JSONObject();
+            configureObject = new JSONObject();
+            try {
+                pluginsObject.put(AWSClickstreamPlugin.PLUGIN_KEY, configureObject);
+                analyticsObject.put("plugins", pluginsObject);
+                amplifyObject.put("analytics", analyticsObject);
+            } catch (JSONException jsonException) {
+                throw new AmplifyException("JSONException", "JSONException occurred while constructing a JSON object");
+            }
+            amplifyConfiguration = AmplifyConfiguration.fromJson(amplifyObject);
+        }
+        try {
+            if (configuration.getAppId() != null) {
+                configureObject.put(ConfigurationKey.APP_ID, configuration.getAppId());
+            }
+            if (configuration.getEndpoint() != null) {
+                configureObject.put(ConfigurationKey.ENDPOINT, configuration.getEndpoint());
+            }
+            if (configuration.isLogEvents() != null) {
+                configureObject.put(ConfigurationKey.IS_LOG_EVENTS, configuration.isLogEvents());
+            }
+            if (configuration.isCompressEvents() != null) {
+                configureObject.put(ConfigurationKey.IS_COMPRESS_EVENTS, configuration.isCompressEvents());
+            }
+            if (configuration.isTrackAppExceptionEvents() != null) {
+                configureObject.put(ConfigurationKey.IS_TRACK_APP_EXCEPTION_EVENTS,
+                    configuration.isTrackAppExceptionEvents());
+            }
+            if (configuration.isTrackScreenViewEvents() != null) {
+                configureObject.put(ConfigurationKey.IS_TRACK_SCREEN_VIEW_EVENTS,
+                    configuration.isTrackScreenViewEvents());
+            }
+            if (configuration.isTrackUserEngagementEvents() != null) {
+                configureObject.put(ConfigurationKey.IS_TRACK_USER_ENGAGEMENT_EVENTS,
+                    configuration.isTrackUserEngagementEvents());
+            }
+            if (configuration.getSessionTimeoutDuration() > 0) {
+                configureObject.put(ConfigurationKey.SESSION_TIMEOUT_DURATION,
+                    configuration.getSessionTimeoutDuration());
+            }
+            if (configuration.getSendEventsInterval() > 0) {
+                configureObject.put(ConfigurationKey.SEND_EVENTS_INTERVAL, configuration.getSendEventsInterval());
+            }
+            if (configuration.getAuthCookie() != null) {
+                configureObject.put(ConfigurationKey.AUTH_COOKIE, configuration.getAuthCookie());
+            }
+            if (configuration.getInitialGlobalAttributes() != null) {
+                configureObject.put(ConfigurationKey.GLOBAL_ATTRIBUTES, configuration.getInitialGlobalAttributes());
+            }
+        } catch (Exception exception) {
+            LOG.error("Parse JSON exception, you may need to check your initial configuration");
+        }
+        return amplifyConfiguration;
     }
 
     /**

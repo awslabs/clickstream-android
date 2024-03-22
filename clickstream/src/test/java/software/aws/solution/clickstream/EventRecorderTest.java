@@ -36,7 +36,6 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import software.aws.solution.clickstream.client.AnalyticsClient;
 import software.aws.solution.clickstream.client.AnalyticsEvent;
-import software.aws.solution.clickstream.client.ClickstreamConfiguration;
 import software.aws.solution.clickstream.client.ClickstreamContext;
 import software.aws.solution.clickstream.client.ClickstreamManager;
 import software.aws.solution.clickstream.client.Event;
@@ -81,12 +80,10 @@ public class EventRecorderTest {
     private static Runner runner;
     private static String jsonString;
     private static HttpServer server;
-
     private ClickstreamDBUtil dbUtil;
     private EventRecorder eventRecorder;
     private ClickstreamContext clickstreamContext;
     private AnalyticsEvent event;
-
     private ExecutorService executorService;
     private Log log;
 
@@ -119,13 +116,11 @@ public class EventRecorderTest {
         Context context = ApplicationProvider.getApplicationContext();
         dbUtil = new ClickstreamDBUtil(context);
 
-        AWSClickstreamPluginConfiguration.Builder configurationBuilder = AWSClickstreamPluginConfiguration.builder();
-        configurationBuilder.withAppId("demo-app")
+        ClickstreamConfiguration configuration = ClickstreamConfiguration.getDefaultConfiguration()
+            .withAppId("demo-app")
             .withEndpoint("http://example.com/collect")
             .withSendEventsInterval(10000);
-        AWSClickstreamPluginConfiguration clickstreamPluginConfiguration = configurationBuilder.build();
-        ClickstreamManager clickstreamManager =
-            ClickstreamManagerFactory.create(context, clickstreamPluginConfiguration);
+        ClickstreamManager clickstreamManager = new ClickstreamManager(context, configuration);
         AnalyticsClient analyticsClient = clickstreamManager.getAnalyticsClient();
         event = analyticsClient.createEvent("testEvent");
         clickstreamContext = clickstreamManager.getClickstreamContext();
@@ -438,7 +433,7 @@ public class EventRecorderTest {
         assertEquals(20, dbUtil.getTotalNumber());
         eventRecorder.submitEvents();
         assertTrue(((ThreadPoolExecutor) executorService).getActiveCount() < 2);
-        Thread.sleep(1500);
+        Thread.sleep(2000);
         assertEquals(0, dbUtil.getTotalNumber());
     }
 
@@ -459,7 +454,7 @@ public class EventRecorderTest {
         assertEquals(40, dbUtil.getTotalNumber());
         eventRecorder.submitEvents();
         assertEquals(1, ((ThreadPoolExecutor) executorService).getTaskCount());
-        Thread.sleep(1500);
+        Thread.sleep(2000);
         verify(log, times(3)).debug("Send event number: 12");
         verify(log).debug("Reached maxSubmissions: 3");
         assertEquals(4, dbUtil.getTotalNumber());
@@ -484,7 +479,7 @@ public class EventRecorderTest {
         eventRecorder.submitEvents();
         assertEquals(2, ((ThreadPoolExecutor) executorService).getTaskCount());
         assertTrue(((ThreadPoolExecutor) executorService).getActiveCount() < 2);
-        Thread.sleep(1500);
+        Thread.sleep(2000);
         verify(log, times(3)).debug("Send event number: 12");
         verify(log).debug("Reached maxSubmissions: 3");
         verify(log).debug("Send event number: 4");
@@ -511,7 +506,7 @@ public class EventRecorderTest {
             Thread.sleep(100);
             eventRecorder.submitEvents();
         }
-        Thread.sleep(1500);
+        Thread.sleep(2000);
         verify(log, times(3)).debug("Send event number: 12");
         verify(log).debug("Reached maxSubmissions: 3");
         verify(log).debug("Send event number: 4");
