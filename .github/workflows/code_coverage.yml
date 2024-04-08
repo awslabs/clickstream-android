@@ -30,7 +30,8 @@ jobs:
             clickstream/build/reports/
             clickstream/build/test-results/
       - name: Upload Test Report
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           name: report
           files: clickstream/build/reports/jacoco/jacoco.xml
