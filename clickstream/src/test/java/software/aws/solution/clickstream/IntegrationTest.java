@@ -243,6 +243,8 @@ public class IntegrationTest {
         ClickstreamEvent event = ClickstreamEvent.builder()
             .name("testItem")
             .add(ClickstreamAnalytics.Item.ITEM_ID, 123)
+            .add(ClickstreamAnalytics.Attr.VALUE, 11000)
+            .add(ClickstreamAnalytics.Attr.CURRENCY, "USD")
             .setItems(new ClickstreamItem[] {item1, item2})
             .build();
         ClickstreamAnalytics.recordEvent(event);
@@ -309,6 +311,46 @@ public class IntegrationTest {
         }
     }
 
+    /**
+     * test add traffic source attribute.
+     *
+     * @throws Exception exception
+     */
+    @Test
+    public void testAddGlobalAttributeForTrafficSource() throws Exception {
+        ClickstreamAttribute globalAttribute = ClickstreamAttribute.builder()
+            .add(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_SOURCE, "amazon")
+            .add(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_MEDIUM, "cpc")
+            .add(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_CAMPAIGN, "summer_promotion")
+            .add(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_CAMPAIGN_ID, "summer_promotion_01")
+            .add(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_TERM, "running_shoes")
+            .add(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_CONTENT, "banner_ad_1")
+            .add(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_CLID, "amazon_ad_123")
+            .add(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_CLID_PLATFORM, "amazon_ads")
+            .add(ClickstreamAnalytics.Attr.APP_INSTALL_CHANNEL, "amazon_store")
+            .build();
+        ClickstreamAnalytics.addGlobalAttributes(globalAttribute);
+        ClickstreamAnalytics.recordEvent("testEvent");
+        assertEquals(1, dbUtil.getTotalNumber());
+        try (Cursor cursor = dbUtil.queryAllEvents()) {
+            cursor.moveToFirst();
+            String eventString = cursor.getString(2);
+            JSONObject jsonObject = new JSONObject(eventString);
+            JSONObject attribute = jsonObject.getJSONObject("attributes");
+            Assert.assertEquals("amazon", attribute.getString(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_SOURCE));
+            Assert.assertEquals("cpc", attribute.getString(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_MEDIUM));
+            Assert.assertEquals("summer_promotion",
+                attribute.getString(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_CAMPAIGN));
+            Assert.assertEquals("summer_promotion_01",
+                attribute.getString(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_CAMPAIGN_ID));
+            Assert.assertEquals("running_shoes", attribute.getString(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_TERM));
+            Assert.assertEquals("banner_ad_1", attribute.getString(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_CONTENT));
+            Assert.assertEquals("amazon_ad_123", attribute.getString(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_CLID));
+            Assert.assertEquals("amazon_ads",
+                attribute.getString(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_CLID_PLATFORM));
+            Assert.assertEquals("amazon_store", attribute.getString(ClickstreamAnalytics.Attr.APP_INSTALL_CHANNEL));
+        }
+    }
 
     /**
      * test add delete global attribute.
