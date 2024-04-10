@@ -276,7 +276,7 @@ public class IntegrationTest {
     public void testAddGlobalAttribute() throws Exception {
         long timestamp = System.currentTimeMillis();
         ClickstreamAttribute globalAttribute = ClickstreamAttribute.builder()
-            .add("channel", "HUAWEI")
+            .add(ClickstreamAnalytics.Attr.APP_INSTALL_CHANNEL, "Amazon Store")
             .add("level", 5.1)
             .add("class", 6)
             .add("timestamp", timestamp)
@@ -298,7 +298,8 @@ public class IntegrationTest {
             JSONObject jsonObject = new JSONObject(eventString);
             JSONObject attribute = jsonObject.getJSONObject("attributes");
 
-            Assert.assertEquals("HUAWEI", attribute.getString("channel"));
+            Assert.assertEquals("Amazon Store",
+                attribute.getString(ClickstreamAnalytics.Attr.APP_INSTALL_CHANNEL));
             Assert.assertEquals(5.1, attribute.getDouble("level"), 0.01);
             Assert.assertEquals(6, attribute.getInt("class"));
             Assert.assertTrue(attribute.getBoolean("isOpenNotification"));
@@ -382,7 +383,8 @@ public class IntegrationTest {
             JSONObject jsonObject = new JSONObject(eventString);
             JSONObject attribute = jsonObject.getJSONObject("attributes");
 
-            Assert.assertEquals("Amazon Store", attribute.getString("channel"));
+            Assert.assertEquals("Amazon Store",
+                attribute.getString(ClickstreamAnalytics.Attr.APP_INSTALL_CHANNEL));
             Assert.assertFalse(attribute.has("level"));
             Assert.assertTrue(attribute.getBoolean("isOpenNotification"));
         }
