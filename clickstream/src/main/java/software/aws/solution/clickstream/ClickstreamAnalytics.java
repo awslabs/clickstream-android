@@ -326,5 +326,60 @@ public final class ClickstreamAnalytics {
          * screen unique id.
          */
         public static final String SCREEN_UNIQUE_ID = ReservedAttribute.SCREEN_UNIQUE_ID;
+
+        /**
+         * traffic source source.
+         */
+        public static final String TRAFFIC_SOURCE_SOURCE = "_traffic_source_source";
+
+        /**
+         * traffic source medium.
+         */
+        public static final String TRAFFIC_SOURCE_MEDIUM = "_traffic_source_medium";
+
+        /**
+         * traffic source campaign.
+         */
+        public static final String TRAFFIC_SOURCE_CAMPAIGN = "_traffic_source_campaign";
+
+        /**
+         * traffic source campaign id.
+         */
+        public static final String TRAFFIC_SOURCE_CAMPAIGN_ID = "_traffic_source_campaign_id";
+
+        /**
+         * traffic source term.
+         */
+        public static final String TRAFFIC_SOURCE_TERM = "_traffic_source_term";
+
+        /**
+         * traffic source content.
+         */
+        public static final String TRAFFIC_SOURCE_CONTENT = "_traffic_source_content";
+
+        /**
+         * traffic source clid.
+         */
+        public static final String TRAFFIC_SOURCE_CLID = "_traffic_source_clid";
+
+        /**
+         * traffic source clid platform.
+         */
+        public static final String TRAFFIC_SOURCE_CLID_PLATFORM = "_traffic_source_clid_platform";
+
+        /**
+         * app install channel.
+         */
+        public static final String APP_INSTALL_CHANNEL = "_app_install_channel";
+
+        /**
+         * event value.
+         */
+        public static final String VALUE = "_value";
+
+        /**
+         * event currency.
+         */
+        public static final String CURRENCY = "_currency";
     }
 }

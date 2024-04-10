@@ -79,6 +79,9 @@ public void onCreate() {
 }
 ```
 #### 3.2 Initialize the SDK with global attributes and custom configuration
+
+The following example code shows how to add traffic source fields as global attributes when initializing the SDK.
+
 ```java
 import software.aws.solution.clickstream.ClickstreamAnalytics;
 
@@ -86,8 +89,14 @@ public void onCreate() {
     super.onCreate();
     try{
         ClickstreamAttribute globalAttributes = ClickstreamAttribute.builder()
-            .add("_traffic_source_name", "Summer promotion")
-            .add("_traffic_source_medium", "Search engine")
+            .add(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_SOURCE, "amazon")
+            .add(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_MEDIUM, "cpc")
+            .add(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_CAMPAIGN, "summer_promotion")
+            .add(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_CAMPAIGN_ID, "summer_promotion_01")
+            .add(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_TERM, "running_shoes")
+            .add(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_CONTENT, "banner_ad_1")
+            .add(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_CLID, "amazon_ad_123")
+            .add(ClickstreamAnalytics.Attr.TRAFFIC_SOURCE_CLID_PLATFORM, "amazon_ads")
             .build();
         ClickstreamConfiguration configuration = new ClickstreamConfiguration()
             .withAppId("your appId")
