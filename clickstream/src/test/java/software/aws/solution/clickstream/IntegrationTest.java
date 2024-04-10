@@ -360,7 +360,7 @@ public class IntegrationTest {
     @Test
     public void testDeleteGlobalAttribute() throws Exception {
         ClickstreamAttribute globalAttribute = ClickstreamAttribute.builder()
-            .add("channel", "HUAWEI")
+            .add(ClickstreamAnalytics.Attr.APP_INSTALL_CHANNEL, "Amazon Store")
             .add("level", 5.1)
             .add("class", 6)
             .add("isOpenNotification", true)
@@ -382,7 +382,7 @@ public class IntegrationTest {
             JSONObject jsonObject = new JSONObject(eventString);
             JSONObject attribute = jsonObject.getJSONObject("attributes");
 
-            Assert.assertEquals("HUAWEI", attribute.getString("channel"));
+            Assert.assertEquals("Amazon Store", attribute.getString("channel"));
             Assert.assertFalse(attribute.has("level"));
             Assert.assertTrue(attribute.getBoolean("isOpenNotification"));
         }
