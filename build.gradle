@@ -46,7 +46,7 @@ ext {
     minSdkVersion = 16
     targetSdkVersion = 30
     awsSdkVersion = '2.51.0'
-    amplifySdkVersion = '1.37.2'
+    amplifySdkVersion = '1.38.8'
     lifecycleVersion = "2.6.1"
     dependency = [
         android: [
